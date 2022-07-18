@@ -13,6 +13,47 @@ export class MailerContract {
 		this.contract = new reader.ever.Contract(MAILER_ABI, new Address(this.contractAddress));
 	}
 
+	async setFees(address: string, _contentPartFee: number, _recipientFee: number) {
+		return await this.contract.methods
+			.setFees({
+				// @ts-ignore
+				_contentPartFee: BigInt(_contentPartFee).toString(10),
+				// @ts-ignore
+				_recipientFee: BigInt(_recipientFee).toString(10),
+			})
+			.sendWithResult({
+				from: new Address(address),
+				amount: '200000000',
+				bounce: false,
+			});
+	}
+
+	async transferOwnership(address: string, newOwner: string) {
+		return await this.contract.methods
+			.transferOwnership({
+				// @ts-ignore
+				newOwner,
+			})
+			.sendWithResult({
+				from: new Address(address),
+				amount: '200000000',
+				bounce: false,
+			});
+	}
+
+	async setBeneficiary(address: string, _beneficiary: string) {
+		return await this.contract.methods
+			.setBeneficiary({
+				// @ts-ignore
+				_beneficiary,
+			})
+			.sendWithResult({
+				from: new Address(address),
+				amount: '200000000',
+				bounce: false,
+			});
+	}
+
 	async getMsgId(publicKey: Uint8Array, uniqueId: number) {
 		const { msgId, initTime } = await this.contract.methods
 			// @ts-ignore
@@ -262,6 +303,19 @@ const MAILER_ABI = {
 			outputs: [],
 		},
 		{
+			name: 'setFees',
+			inputs: [
+				{ name: '_contentPartFee', type: 'uint128' },
+				{ name: '_recipientFee', type: 'uint128' },
+			],
+			outputs: [],
+		},
+		{
+			name: 'setBeneficiary',
+			inputs: [{ name: '_beneficiary', type: 'address' }],
+			outputs: [],
+		},
+		{
 			name: 'buildHash',
 			inputs: [
 				{ name: 'pubkey', type: 'uint256' },
@@ -324,8 +378,41 @@ const MAILER_ABI = {
 			],
 			outputs: [],
 		},
+		{
+			name: 'transferOwnership',
+			inputs: [{ name: 'newOwner', type: 'address' }],
+			outputs: [],
+		},
+		{
+			name: 'terminate',
+			inputs: [],
+			outputs: [],
+		},
+		{
+			name: 'owner',
+			inputs: [],
+			outputs: [{ name: 'owner', type: 'address' }],
+		},
+		{
+			name: 'contentPartFee',
+			inputs: [],
+			outputs: [{ name: 'contentPartFee', type: 'uint128' }],
+		},
+		{
+			name: 'recipientFee',
+			inputs: [],
+			outputs: [{ name: 'recipientFee', type: 'uint128' }],
+		},
+		{
+			name: 'beneficiary',
+			inputs: [],
+			outputs: [{ name: 'beneficiary', type: 'address' }],
+		},
 	],
-	'data': [],
+	'data': [
+		{ key: 1, name: 'owner', type: 'address' },
+		{ key: 2, name: 'beneficiary', type: 'address' },
+	],
 	'events': [
 		{
 			name: 'MailPush',
@@ -352,5 +439,9 @@ const MAILER_ABI = {
 		{ name: '_pubkey', type: 'uint256' },
 		{ name: '_timestamp', type: 'uint64' },
 		{ name: '_constructorFlag', type: 'bool' },
+		{ name: 'owner', type: 'address' },
+		{ name: 'contentPartFee', type: 'uint128' },
+		{ name: 'recipientFee', type: 'uint128' },
+		{ name: 'beneficiary', type: 'address' },
 	],
 };

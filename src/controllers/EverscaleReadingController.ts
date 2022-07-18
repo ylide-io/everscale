@@ -27,13 +27,18 @@ export class EverscaleReadingController extends AbstractReadingController {
 	readonly registryContract: RegistryContract;
 
 	constructor(
-		props = {
-			dev: false,
-		},
+		options: {
+			dev?: boolean;
+			mailerContractAddress?: string;
+			registryContractAddress?: string;
+			endpoint?: string;
+		} = {},
 	) {
-		super(props);
+		super(options);
 
-		if (true || props.dev) {
+		if (options.endpoint) {
+			this.gqlAddress = options.endpoint;
+		} else if (options.dev) {
 			this.gqlAddress = 'http://localhost/graphql';
 		} else {
 			this.gqlAddress = 'https://eri01.main.everos.dev/graphql';
@@ -42,12 +47,18 @@ export class EverscaleReadingController extends AbstractReadingController {
 		this.ever = new ProviderRpcClient({
 			fallback: () =>
 				EverscaleStandaloneClient.create({
-					connection: 'local',
+					connection: options.dev ? 'local' : 'mainnet',
 				}),
 		});
 
-		this.mailerContract = new MailerContract(this, props.dev ? DEV_MAILER_ADDRESS : MAILER_ADDRESS);
-		this.registryContract = new RegistryContract(this, props.dev ? DEV_REGISTRY_ADDRESS : REGISTRY_ADDRESS);
+		this.mailerContract = new MailerContract(
+			this,
+			options.mailerContractAddress || (options.dev ? DEV_MAILER_ADDRESS : MAILER_ADDRESS),
+		);
+		this.registryContract = new RegistryContract(
+			this,
+			options.registryContractAddress || (options.dev ? DEV_REGISTRY_ADDRESS : REGISTRY_ADDRESS),
+		);
 	}
 
 	static blockchainType(): string {

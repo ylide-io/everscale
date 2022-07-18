@@ -2,8 +2,11 @@ import { AbstractSendingController, IGenericAccount, MessageContent, YlideUnencr
 import { EverscaleReadingController } from '.';
 export declare class EverscaleSendingController extends AbstractSendingController {
     reader: EverscaleReadingController;
-    constructor(props?: {
-        dev: boolean;
+    constructor(options?: {
+        dev?: boolean;
+        mailerContractAddress?: string;
+        registryContractAddress?: string;
+        endpoint?: string;
     });
     static isWalletAvailable(): Promise<boolean>;
     static walletType(): string;

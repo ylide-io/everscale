@@ -1,4 +1,4 @@
-export declare const DEV_MAILER_ADDRESS = "0:9ede3af8e1381d572161a1a5bca9eb43e59b9d92ea47766930fe2767437bb8d3";
-export declare const DEV_REGISTRY_ADDRESS = "0:69ad1f7c6ee08de8d04f40e4a217573a4a16cf181c78d1b6480718eadb3ef05f";
-export declare const MAILER_ADDRESS = "0:9ede3af8e1381d572161a1a5bca9eb43e59b9d92ea47766930fe2767437bb8d3";
-export declare const REGISTRY_ADDRESS = "0:69ad1f7c6ee08de8d04f40e4a217573a4a16cf181c78d1b6480718eadb3ef05f";
+export declare const DEV_MAILER_ADDRESS = "0:28383df436dbec0ec96ef8473ca7af47143179c59599dddab5ffb0de25b977bc";
+export declare const DEV_REGISTRY_ADDRESS = "0:ed954525ba1d39c0255c286e93af90b658e41c726abae59b0d21b6218bca079b";
+export declare const MAILER_ADDRESS = "0:10ba90c24bec7abb8d2b78e5a8b7f1326f4a750252ec6c841d271726b201109e";
+export declare const REGISTRY_ADDRESS = "0:c68ec196b86fe001c3762e454991b460e115862f64a9f929591557e00fb0cb3a";

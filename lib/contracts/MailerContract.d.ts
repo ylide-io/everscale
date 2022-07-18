@@ -6,6 +6,21 @@ export declare class MailerContract {
     readonly contractAddress: string;
     readonly contract: Contract<typeof MAILER_ABI>;
     constructor(reader: EverscaleReadingController, contractAddress: string);
+    setFees(address: string, _contentPartFee: number, _recipientFee: number): Promise<{
+        parentTransaction: import("everscale-inpage-provider").Transaction<Address>;
+        childTransaction: import("everscale-inpage-provider").Transaction<Address>;
+        output?: undefined;
+    }>;
+    transferOwnership(address: string, newOwner: string): Promise<{
+        parentTransaction: import("everscale-inpage-provider").Transaction<Address>;
+        childTransaction: import("everscale-inpage-provider").Transaction<Address>;
+        output?: undefined;
+    }>;
+    setBeneficiary(address: string, _beneficiary: string): Promise<{
+        parentTransaction: import("everscale-inpage-provider").Transaction<Address>;
+        childTransaction: import("everscale-inpage-provider").Transaction<Address>;
+        output?: undefined;
+    }>;
     getMsgId(publicKey: Uint8Array, uniqueId: number): Promise<{
         msgId: never;
         initTime: never;
@@ -63,7 +78,11 @@ declare const MAILER_ABI: {
             type: string;
         }[];
     }[];
-    data: never[];
+    data: {
+        key: number;
+        name: string;
+        type: string;
+    }[];
     events: {
         name: string;
         inputs: {

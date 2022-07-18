@@ -16,13 +16,16 @@ export class EverscaleSendingController extends AbstractSendingController {
 	reader: EverscaleReadingController;
 
 	constructor(
-		props = {
-			dev: false,
-		},
+		options: {
+			dev?: boolean;
+			mailerContractAddress?: string;
+			registryContractAddress?: string;
+			endpoint?: string;
+		} = {},
 	) {
-		super(props);
+		super(options);
 
-		this.reader = new EverscaleReadingController(props);
+		this.reader = new EverscaleReadingController(options);
 	}
 
 	// wallet block

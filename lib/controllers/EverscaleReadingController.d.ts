@@ -8,8 +8,11 @@ export declare class EverscaleReadingController extends AbstractReadingControlle
     readonly MESSAGES_FETCH_LIMIT = 50;
     readonly mailerContract: MailerContract;
     readonly registryContract: RegistryContract;
-    constructor(props?: {
-        dev: boolean;
+    constructor(options?: {
+        dev?: boolean;
+        mailerContractAddress?: string;
+        registryContractAddress?: string;
+        endpoint?: string;
     });
     static blockchainType(): string;
     getRecipientReadingRules(address: string): Promise<any>;
