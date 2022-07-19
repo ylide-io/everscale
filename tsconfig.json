@@ -5,6 +5,7 @@
 		"declaration": true,
 		"outDir": "./lib",
 		"sourceMap": true,
+		"esModuleInterop": true,
 		"strict": true
 	},
 	"include": ["src"],
