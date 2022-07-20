@@ -41,7 +41,7 @@ export class EverscaleReadingController extends AbstractReadingController {
 		} else if (options.dev) {
 			this.gqlAddress = 'http://localhost/graphql';
 		} else {
-			this.gqlAddress = 'https://eri01.main.everos.dev/graphql';
+			this.gqlAddress = 'https://gra02.main.everos.dev/graphql';
 		}
 
 		this.ever = new ProviderRpcClient({
