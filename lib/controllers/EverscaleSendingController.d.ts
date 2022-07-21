@@ -16,8 +16,16 @@ export declare class EverscaleSendingController extends AbstractSendingControlle
     attachPublicKey(publicKey: Uint8Array): Promise<void>;
     requestAuthentication(): Promise<null | IGenericAccount>;
     disconnectAccount(): Promise<void>;
+    publishMessage(me: IGenericAccount, publicKey: Uint8Array, chunks: Uint8Array[], recipientKeys: {
+        address: string;
+        key: Uint8Array;
+    }[]): Promise<string>;
     sendMessage(serviceCode: [number, number, number, number], keypair: YlideUnencryptedKeyPair, content: MessageContent, recipients: {
         address: string;
         publicKey: Uint8Array;
+    }[]): Promise<string>;
+    sendNativeMessage(serviceCode: [number, number, number, number], encryptedContent: Uint8Array, key: Uint8Array, recipients: {
+        address: string;
+        publicKey: string;
     }[]): Promise<string | null>;
 }

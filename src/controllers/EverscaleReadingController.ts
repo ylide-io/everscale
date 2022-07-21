@@ -1,7 +1,7 @@
 import SmartBuffer from '@ylide/smart-buffer';
 import { EverscaleStandaloneClient } from 'everscale-standalone-client';
 import core from 'everscale-standalone-client/core';
-import { ProviderRpcClient } from 'everscale-inpage-provider';
+import { Address, ProviderRpcClient } from 'everscale-inpage-provider';
 
 import {
 	AbstractReadingController,
@@ -11,6 +11,7 @@ import {
 	IMessageContent,
 	IMessageCorruptedContent,
 	MessageContentFailure,
+	unpackSymmetricalyEncryptedData,
 } from '@ylide/sdk';
 import { DEV_MAILER_ADDRESS, DEV_REGISTRY_ADDRESS, MAILER_ADDRESS, REGISTRY_ADDRESS } from '../misc/constants';
 import { MailerContract, RegistryContract } from '../contracts';
@@ -75,6 +76,22 @@ export class EverscaleReadingController extends AbstractReadingController {
 
 	async extractPublicKeyFromAddress(address: string): Promise<Uint8Array | null> {
 		return this.registryContract.getPublicKeyByAddress(address);
+	}
+
+	async extractNativePublicKeyFromAddress(addressStr: string): Promise<Uint8Array | null> {
+		const nt = core.nekoton;
+		await core.ensureNekotonLoaded();
+		const address = new Address(addressStr);
+		const boc = await this.ever.getFullContractState({ address });
+		if (!boc.state) {
+			return null;
+		}
+		try {
+			const pk = nt.extractPublicKey(boc.state.boc);
+			return pk ? SmartBuffer.ofHexString(pk).bytes : null;
+		} catch (err) {
+			return null;
+		}
 	}
 
 	// message history block
@@ -184,6 +201,9 @@ export class EverscaleReadingController extends AbstractReadingController {
 			getContractMessagesQuery(fakeAddress, this.mailerContract.contractAddress),
 			{},
 		);
+		if (!messages.length) {
+			return null;
+		}
 		let decodedChunks: { msg: IEverscaleMessage; body: IEverscaleContentMessageBody }[];
 		try {
 			decodedChunks = messages.map((m: IEverscaleMessage) => ({
@@ -270,26 +290,23 @@ export class EverscaleReadingController extends AbstractReadingController {
 		};
 	}
 
-	async decodeMailText(
-		senderAddress: string,
-		recipient: IGenericAccount,
-		data: string,
-		nonce: string,
-	): Promise<string> {
+	async decodeNativeKey(
+		senderPublicKey: Uint8Array,
+		recipientPublicKey: Uint8Array,
+		key: Uint8Array,
+	): Promise<Uint8Array> {
 		try {
-			const senderPublicKey = await this.extractPublicKeyFromAddress(senderAddress);
-			if (!senderPublicKey) {
-				throw new Error('Error decrypting message text: no sender public key found');
-			}
+			const { encData, nonce } = unpackSymmetricalyEncryptedData(key);
+
 			const decryptedText = await this.ever.decryptData({
 				algorithm: 'ChaCha20Poly1305',
-				data,
-				nonce,
-				recipientPublicKey: recipient.publicKey,
+				data: new SmartBuffer(encData).toBase64String(),
+				nonce: new SmartBuffer(nonce).toBase64String(),
+				recipientPublicKey: new SmartBuffer(recipientPublicKey).toHexString(),
 				sourcePublicKey: new SmartBuffer(senderPublicKey).toHexString(),
 			});
 			if (decryptedText) {
-				return Buffer.from(decryptedText, 'base64').toString('utf8');
+				return SmartBuffer.ofBase64String(decryptedText).bytes;
 			} else {
 				throw new Error('Error decrypting message text');
 			}

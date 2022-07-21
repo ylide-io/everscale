@@ -6,6 +6,7 @@ export declare class MailerContract {
     readonly contractAddress: string;
     readonly contract: Contract<typeof MAILER_ABI>;
     constructor(reader: EverscaleReadingController, contractAddress: string);
+    buildHash(pubkey: Uint8Array, uniqueId: number, time: number): Promise<string>;
     setFees(address: string, _contentPartFee: number, _recipientFee: number): Promise<{
         parentTransaction: import("everscale-inpage-provider").Transaction<Address>;
         childTransaction: import("everscale-inpage-provider").Transaction<Address>;
@@ -21,9 +22,10 @@ export declare class MailerContract {
         childTransaction: import("everscale-inpage-provider").Transaction<Address>;
         output?: undefined;
     }>;
-    getMsgId(publicKey: Uint8Array, uniqueId: number): Promise<{
-        msgId: never;
-        initTime: never;
+    addRecipients(address: string, publicKey: Uint8Array, uniqueId: number, initTime: number, recipients: string[], keys: Uint8Array[]): Promise<{
+        parentTransaction: import("everscale-inpage-provider").Transaction<Address>;
+        childTransaction: import("everscale-inpage-provider").Transaction<Address>;
+        output?: undefined;
     }>;
     sendMultipartMailPart(address: string, publicKey: Uint8Array, uniqueId: number, initTime: number, parts: number, partIdx: number, content: Uint8Array): Promise<{
         parentTransaction: import("everscale-inpage-provider").Transaction<Address>;
@@ -35,27 +37,7 @@ export declare class MailerContract {
         childTransaction: import("everscale-inpage-provider").Transaction<Address>;
         output?: undefined;
     }>;
-    sendSmallMail0(address: string, publicKey: Uint8Array, uniqueId: number, recipient: string, key: Uint8Array, content: Uint8Array): Promise<{
-        parentTransaction: import("everscale-inpage-provider").Transaction<Address>;
-        childTransaction: import("everscale-inpage-provider").Transaction<Address>;
-        output?: undefined;
-    }>;
-    sendSmallMail1(address: string, publicKey: Uint8Array, uniqueId: number, recipient: string, key: Uint8Array, content: Uint8Array): Promise<{
-        parentTransaction: import("everscale-inpage-provider").Transaction<Address>;
-        childTransaction: import("everscale-inpage-provider").Transaction<Address>;
-        output?: undefined;
-    }>;
-    sendSmallMail2(address: string, publicKey: Uint8Array, uniqueId: number, recipient: string, key: Uint8Array, content: Uint8Array): Promise<{
-        parentTransaction: import("everscale-inpage-provider").Transaction<Address>;
-        childTransaction: import("everscale-inpage-provider").Transaction<Address>;
-        output?: undefined;
-    }>;
-    sendSmallMail4(address: string, publicKey: Uint8Array, uniqueId: number, recipient: string, key: Uint8Array, content: Uint8Array): Promise<{
-        parentTransaction: import("everscale-inpage-provider").Transaction<Address>;
-        childTransaction: import("everscale-inpage-provider").Transaction<Address>;
-        output?: undefined;
-    }>;
-    sendBulkMail(address: string, publicKey: Uint8Array, uniqueId: number, recipients: string, keys: Uint8Array[], content: Uint8Array): Promise<{
+    sendBulkMail(address: string, publicKey: Uint8Array, uniqueId: number, recipients: string[], keys: Uint8Array[], content: Uint8Array): Promise<{
         parentTransaction: import("everscale-inpage-provider").Transaction<Address>;
         childTransaction: import("everscale-inpage-provider").Transaction<Address>;
         output?: undefined;

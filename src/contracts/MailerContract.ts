@@ -13,6 +13,17 @@ export class MailerContract {
 		this.contract = new reader.ever.Contract(MAILER_ABI, new Address(this.contractAddress));
 	}
 
+	async buildHash(pubkey: Uint8Array, uniqueId: number, time: number): Promise<string> {
+		const args = {
+			pubkey: publicKeyToBigIntString(pubkey),
+			uniqueId,
+			time,
+		};
+		// @ts-ignore
+		const result: any = await this.contract.methods.buildHash(args).call();
+		return BigInt(result._hash).toString(16);
+	}
+
 	async setFees(address: string, _contentPartFee: number, _recipientFee: number) {
 		return await this.contract.methods
 			.setFees({
@@ -54,15 +65,33 @@ export class MailerContract {
 			});
 	}
 
-	async getMsgId(publicKey: Uint8Array, uniqueId: number) {
-		const { msgId, initTime } = await this.contract.methods
-			// @ts-ignore
-			.getMsgId({ publicKey: publicKeyToBigIntString(publicKey), uniqueId })
-			.call();
-		return {
-			msgId,
-			initTime,
-		};
+	async addRecipients(
+		address: string,
+		publicKey: Uint8Array,
+		uniqueId: number,
+		initTime: number,
+		recipients: string[],
+		keys: Uint8Array[],
+	) {
+		// uint256 publicKey, uint32 uniqueId, uint32 initTime, address[] recipients, bytes[] keys
+		return await this.contract.methods
+			.addRecipients({
+				// @ts-ignore
+				publicKey: publicKeyToBigIntString(publicKey),
+				// @ts-ignore
+				uniqueId,
+				// @ts-ignore
+				initTime,
+				// @ts-ignore
+				recipients,
+				// @ts-ignore
+				keys: keys.map(k => new SmartBuffer(k).toBase64String()),
+			})
+			.sendWithResult({
+				from: new Address(address),
+				amount: '1000000000',
+				bounce: false,
+			});
 	}
 
 	async sendMultipartMailPart(
@@ -125,133 +154,27 @@ export class MailerContract {
 			});
 	}
 
-	async sendSmallMail0(
-		address: string,
-		publicKey: Uint8Array,
-		uniqueId: number,
-		recipient: string,
-		key: Uint8Array,
-		content: Uint8Array,
-	) {
-		return await this.contract.methods
-			// @ts-ignore
-			.sendSmallMail0({
-				// @ts-ignore
-				publicKey: publicKeyToBigIntString(publicKey),
-				// @ts-ignore
-				uniqueId,
-				// @ts-ignore
-				recipient,
-				// @ts-ignore
-				key: new SmartBuffer(key).toBase64String(),
-				// @ts-ignore
-				content: new SmartBuffer(content).toBase64String(),
-			})
-			.sendWithResult({
-				from: new Address(address),
-				amount: '1000000000',
-				bounce: false,
-			});
-	}
-
-	async sendSmallMail1(
-		address: string,
-		publicKey: Uint8Array,
-		uniqueId: number,
-		recipient: string,
-		key: Uint8Array,
-		content: Uint8Array,
-	) {
-		return await this.contract.methods
-			// @ts-ignore
-			.sendSmallMail1({
-				// @ts-ignore
-				publicKey: publicKeyToBigIntString(publicKey),
-				// @ts-ignore
-				uniqueId,
-				// @ts-ignore
-				recipient,
-				// @ts-ignore
-				key: new SmartBuffer(key).toBase64String(),
-				// @ts-ignore
-				content: new SmartBuffer(content).toBase64String(),
-			})
-			.sendWithResult({
-				from: new Address(address),
-				amount: '1000000000',
-				bounce: false,
-			});
-	}
-
-	async sendSmallMail2(
-		address: string,
-		publicKey: Uint8Array,
-		uniqueId: number,
-		recipient: string,
-		key: Uint8Array,
-		content: Uint8Array,
-	) {
-		return await this.contract.methods
-			// @ts-ignore
-			.sendSmallMail2({
-				// @ts-ignore
-				publicKey: publicKeyToBigIntString(publicKey),
-				// @ts-ignore
-				uniqueId,
-				// @ts-ignore
-				recipient,
-				// @ts-ignore
-				key: new SmartBuffer(key).toBase64String(),
-				// @ts-ignore
-				content: new SmartBuffer(content).toBase64String(),
-			})
-			.sendWithResult({
-				from: new Address(address),
-				amount: '1000000000',
-				bounce: false,
-			});
-	}
-
-	async sendSmallMail4(
-		address: string,
-		publicKey: Uint8Array,
-		uniqueId: number,
-		recipient: string,
-		key: Uint8Array,
-		content: Uint8Array,
-	) {
-		return await this.contract.methods
-			// @ts-ignore
-			.sendSmallMail4({
-				// @ts-ignore
-				publicKey: publicKeyToBigIntString(publicKey),
-				// @ts-ignore
-				uniqueId,
-				// @ts-ignore
-				recipient,
-				// @ts-ignore
-				key: new SmartBuffer(key).toBase64String(),
-				// @ts-ignore
-				content: new SmartBuffer(content).toBase64String(),
-			})
-			.sendWithResult({
-				from: new Address(address),
-				amount: '1000000000',
-				bounce: false,
-			});
-	}
-
 	async sendBulkMail(
 		address: string,
 		publicKey: Uint8Array,
 		uniqueId: number,
-		recipients: string,
+		recipients: string[],
 		keys: Uint8Array[],
 		content: Uint8Array,
 	) {
 		return await this.contract.methods
-			// @ts-ignore
-			.sendBulkMail({ publicKey, uniqueId, recipients, keys, content })
+			.sendBulkMail({
+				// @ts-ignore
+				publicKey: publicKeyToBigIntString(publicKey),
+				// @ts-ignore
+				uniqueId,
+				// @ts-ignore
+				recipients,
+				// @ts-ignore
+				keys: keys.map(k => new SmartBuffer(k).toBase64String()),
+				// @ts-ignore
+				content: new SmartBuffer(content).toBase64String(),
+			})
 			.sendWithResult({
 				from: new Address(address),
 				amount: '1000000000',
