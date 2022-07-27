@@ -1,2 +1,2 @@
-export * from './EverscaleReadingController';
-export * from './EverscaleSendingController';
+export * from './EverscaleBlockchainController';
+export * from './EverscaleWalletController';

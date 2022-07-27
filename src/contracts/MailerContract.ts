@@ -1,14 +1,14 @@
 import SmartBuffer from '@ylide/smart-buffer';
 import { Address, Contract } from 'everscale-inpage-provider';
 import core from 'everscale-standalone-client/core';
-import { EverscaleReadingController } from '../controllers/EverscaleReadingController';
+import { EverscaleBlockchainController } from '../controllers/EverscaleBlockchainController';
 import { IEverscaleContentMessageBody, IEverscalePushMessageBody, publicKeyToBigIntString } from '../misc';
 
 export class MailerContract {
 	readonly contractAddress: string;
 	readonly contract: Contract<typeof MAILER_ABI>;
 
-	constructor(private readonly reader: EverscaleReadingController, contractAddress: string) {
+	constructor(private readonly reader: EverscaleBlockchainController, contractAddress: string) {
 		this.contractAddress = contractAddress;
 		this.contract = new reader.ever.Contract(MAILER_ABI, new Address(this.contractAddress));
 	}
@@ -65,19 +65,10 @@ export class MailerContract {
 			});
 	}
 
-	async addRecipients(
-		address: string,
-		publicKey: Uint8Array,
-		uniqueId: number,
-		initTime: number,
-		recipients: string[],
-		keys: Uint8Array[],
-	) {
+	async addRecipients(address: string, uniqueId: number, initTime: number, recipients: string[], keys: Uint8Array[]) {
 		// uint256 publicKey, uint32 uniqueId, uint32 initTime, address[] recipients, bytes[] keys
 		return await this.contract.methods
 			.addRecipients({
-				// @ts-ignore
-				publicKey: publicKeyToBigIntString(publicKey),
 				// @ts-ignore
 				uniqueId,
 				// @ts-ignore
@@ -96,7 +87,6 @@ export class MailerContract {
 
 	async sendMultipartMailPart(
 		address: string,
-		publicKey: Uint8Array,
 		uniqueId: number,
 		initTime: number,
 		parts: number,
@@ -105,8 +95,6 @@ export class MailerContract {
 	) {
 		return await this.contract.methods
 			.sendMultipartMailPart({
-				// @ts-ignore
-				publicKey: publicKeyToBigIntString(publicKey),
 				// @ts-ignore
 				uniqueId,
 				// @ts-ignore
@@ -125,19 +113,10 @@ export class MailerContract {
 			});
 	}
 
-	async sendSmallMail(
-		address: string,
-		publicKey: Uint8Array,
-		uniqueId: number,
-		recipient: string,
-		key: Uint8Array,
-		content: Uint8Array,
-	) {
+	async sendSmallMail(address: string, uniqueId: number, recipient: string, key: Uint8Array, content: Uint8Array) {
 		return await this.contract.methods
 			// @ts-ignore
 			.sendSmallMail({
-				// @ts-ignore
-				publicKey: publicKeyToBigIntString(publicKey),
 				// @ts-ignore
 				uniqueId,
 				// @ts-ignore
@@ -156,7 +135,6 @@ export class MailerContract {
 
 	async sendBulkMail(
 		address: string,
-		publicKey: Uint8Array,
 		uniqueId: number,
 		recipients: string[],
 		keys: Uint8Array[],
@@ -164,8 +142,6 @@ export class MailerContract {
 	) {
 		return await this.contract.methods
 			.sendBulkMail({
-				// @ts-ignore
-				publicKey: publicKeyToBigIntString(publicKey),
 				// @ts-ignore
 				uniqueId,
 				// @ts-ignore
@@ -259,7 +235,6 @@ const MAILER_ABI = {
 		{
 			name: 'sendMultipartMailPart',
 			inputs: [
-				{ name: 'publicKey', type: 'uint256' },
 				{ name: 'uniqueId', type: 'uint32' },
 				{ name: 'initTime', type: 'uint32' },
 				{ name: 'parts', type: 'uint16' },
@@ -271,7 +246,6 @@ const MAILER_ABI = {
 		{
 			name: 'addRecipients',
 			inputs: [
-				{ name: 'publicKey', type: 'uint256' },
 				{ name: 'uniqueId', type: 'uint32' },
 				{ name: 'initTime', type: 'uint32' },
 				{ name: 'recipients', type: 'address[]' },
@@ -282,7 +256,6 @@ const MAILER_ABI = {
 		{
 			name: 'sendSmallMail',
 			inputs: [
-				{ name: 'publicKey', type: 'uint256' },
 				{ name: 'uniqueId', type: 'uint32' },
 				{ name: 'recipient', type: 'address' },
 				{ name: 'key', type: 'bytes' },
@@ -293,7 +266,6 @@ const MAILER_ABI = {
 		{
 			name: 'sendBulkMail',
 			inputs: [
-				{ name: 'publicKey', type: 'uint256' },
 				{ name: 'uniqueId', type: 'uint32' },
 				{ name: 'recipients', type: 'address[]' },
 				{ name: 'keys', type: 'bytes[]' },

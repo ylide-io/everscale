@@ -1,10 +1,10 @@
 import { Contract } from 'everscale-inpage-provider';
-import { EverscaleReadingController } from '../controllers';
+import { EverscaleBlockchainController } from '../controllers';
 export declare class RegistryContract {
-    private readonly reader;
+    private readonly blockchainController;
     private readonly contractAddress;
     readonly contract: Contract<typeof REGISTRY_ABI>;
-    constructor(reader: EverscaleReadingController, contractAddress: string);
+    constructor(blockchainController: EverscaleBlockchainController, contractAddress: string);
     private publicKeyToAddress;
     getAddressByPublicKey(publicKey: Uint8Array): Promise<string | null>;
     getPublicKeyByAddress(address: string): Promise<Uint8Array | null>;

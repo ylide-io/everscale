@@ -1,6 +1,6 @@
 import { ProviderRpcClient } from 'everscale-inpage-provider';
 import {
-	AbstractReadingController,
+	AbstractBlockchainController,
 	IMessage,
 	RetrievingMessagesOptions,
 	IGenericAccount,
@@ -8,7 +8,7 @@ import {
 } from '@ylide/sdk';
 import { RegistryContract } from './RegistryContract';
 import { MailerContract } from './MailerContract';
-export declare class EverscaleReadingController extends AbstractReadingController {
+export declare class EverscaleBlockchainController extends AbstractBlockchainController {
 	ever: ProviderRpcClient;
 	gqlAddress: string;
 	readonly MESSAGES_FETCH_LIMIT = 50;

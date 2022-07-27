@@ -1,16 +1,16 @@
 import SmartBuffer from '@ylide/smart-buffer';
 import { Address, Contract } from 'everscale-inpage-provider';
 import core from 'everscale-standalone-client/core';
-import { EverscaleReadingController } from '../controllers';
+import { EverscaleBlockchainController } from '../controllers';
 import { publicKeyToBigIntString, getContractMessagesQuery } from '../misc';
 
 export class RegistryContract {
 	private readonly contractAddress: string;
 	readonly contract: Contract<typeof REGISTRY_ABI>;
 
-	constructor(private readonly reader: EverscaleReadingController, contractAddress: string) {
+	constructor(private readonly blockchainController: EverscaleBlockchainController, contractAddress: string) {
 		this.contractAddress = contractAddress;
-		this.contract = new reader.ever.Contract(REGISTRY_ABI, new Address(this.contractAddress));
+		this.contract = new blockchainController.ever.Contract(REGISTRY_ABI, new Address(this.contractAddress));
 	}
 
 	private publicKeyToAddress(publicKey: Uint8Array) {
@@ -19,7 +19,7 @@ export class RegistryContract {
 
 	async getAddressByPublicKey(publicKey: Uint8Array): Promise<string | null> {
 		await core.ensureNekotonLoaded();
-		const messages = await this.reader.gqlQueryMessages(
+		const messages = await this.blockchainController.gqlQueryMessages(
 			getContractMessagesQuery(this.publicKeyToAddress(publicKey), this.contractAddress),
 		);
 		if (messages.length) {
@@ -31,7 +31,7 @@ export class RegistryContract {
 
 	async getPublicKeyByAddress(address: string): Promise<Uint8Array | null> {
 		await core.ensureNekotonLoaded();
-		const messages = await this.reader.gqlQueryMessages(
+		const messages = await this.blockchainController.gqlQueryMessages(
 			getContractMessagesQuery(address.substring(1), this.contractAddress),
 		);
 		if (messages.length) {
