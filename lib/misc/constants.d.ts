@@ -1,4 +1,4 @@
 export declare const DEV_MAILER_ADDRESS = "0:b771e0af22c6c2a21096ea460b6276d11f4d0c1a7c391d85cd7d83c9fdbfd091";
 export declare const DEV_REGISTRY_ADDRESS = "0:ed954525ba1d39c0255c286e93af90b658e41c726abae59b0d21b6218bca079b";
-export declare const MAILER_ADDRESS = "0:ba23961bf4bb1f1e9c8d1bbbd83f46ef395524344a25877696481bd9ce6ebce2";
+export declare const MAILER_ADDRESS = "0:967b424b4da7467902bae5656560edb4d5ed44a3c575f4fb6029559f083ecf7f";
 export declare const REGISTRY_ADDRESS = "0:c68ec196b86fe001c3762e454991b460e115862f64a9f929591557e00fb0cb3a";
