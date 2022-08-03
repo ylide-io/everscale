@@ -5,12 +5,8 @@ export declare class RegistryContract {
     private readonly contractAddress;
     readonly contract: Contract<typeof REGISTRY_ABI>;
     constructor(blockchainController: EverscaleBlockchainController, contractAddress: string);
-    private publicKeyToAddress;
-    getAddressByPublicKey(publicKey: Uint8Array): Promise<string | null>;
     getPublicKeyByAddress(address: string): Promise<Uint8Array | null>;
     attachPublicKey(address: string, publicKey: Uint8Array): Promise<boolean>;
-    attachAddress(address: string, publicKey: Uint8Array): Promise<boolean>;
-    private decodePublicKeyToAddressMessageBody;
     private decodeAddressToPublicKeyMessageBody;
 }
 declare const REGISTRY_ABI: {

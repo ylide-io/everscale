@@ -1,3 +1,4 @@
+import { Uint256 } from '@ylide/sdk';
 import SmartBuffer from '@ylide/smart-buffer';
 import { Address, Contract } from 'everscale-inpage-provider';
 import core from 'everscale-standalone-client/core';
@@ -13,27 +14,12 @@ export class RegistryContract {
 		this.contract = new blockchainController.ever.Contract(REGISTRY_ABI, new Address(this.contractAddress));
 	}
 
-	private publicKeyToAddress(publicKey: Uint8Array) {
-		return `:${new SmartBuffer(publicKey).toHexString()}`;
-	}
-
-	async getAddressByPublicKey(publicKey: Uint8Array): Promise<string | null> {
-		await core.ensureNekotonLoaded();
-		const messages = await this.blockchainController.gqlQueryMessages(
-			getContractMessagesQuery(this.publicKeyToAddress(publicKey), this.contractAddress),
-		);
-		if (messages.length) {
-			return this.decodePublicKeyToAddressMessageBody(messages[0].body);
-		} else {
-			return null;
-		}
-	}
-
 	async getPublicKeyByAddress(address: string): Promise<Uint8Array | null> {
 		await core.ensureNekotonLoaded();
 		const messages = await this.blockchainController.gqlQueryMessages(
-			getContractMessagesQuery(address.substring(1), this.contractAddress),
+			getContractMessagesQuery(address, this.contractAddress),
 		);
+		console.log(`pk ${address} messages: `, messages);
 		if (messages.length) {
 			return this.decodeAddressToPublicKeyMessageBody(messages[0].body);
 		} else {
@@ -51,26 +37,6 @@ export class RegistryContract {
 				bounce: false,
 			});
 		return true;
-	}
-
-	async attachAddress(address: string, publicKey: Uint8Array): Promise<boolean> {
-		const result: any = await this.contract.methods
-			// @ts-ignore
-			.attachAddress({ publicKey: publicKeyToBigIntString(publicKey) })
-			.sendWithResult({
-				from: new Address(address),
-				amount: '1000000000',
-				bounce: false,
-			});
-		return true;
-	}
-
-	private decodePublicKeyToAddressMessageBody(body: string): string {
-		const data = core.nekoton.decodeEvent(body, JSON.stringify(REGISTRY_ABI), 'PublicKeyToAddress');
-		if (!data) {
-			throw new Error('PublicKeyToAddressMessage format is not supported');
-		}
-		return data.data.addr as string;
 	}
 
 	private decodeAddressToPublicKeyMessageBody(body: string): Uint8Array {

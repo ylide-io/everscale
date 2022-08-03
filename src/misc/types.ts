@@ -1,3 +1,5 @@
+import { Uint256 } from '@ylide/sdk';
+
 export interface IEverscaleMessage {
 	id: string;
 
@@ -12,7 +14,7 @@ export interface IEverscaleMessage {
 
 export interface IEverscalePushMessageBody {
 	sender: string;
-	msgId: string;
+	msgId: Uint256;
 	key: Uint8Array;
 }
 
@@ -20,7 +22,7 @@ export interface IEverscalePushMessage extends IEverscaleMessage, IEverscalePush
 
 export interface IEverscaleContentMessageBody {
 	sender: string;
-	msgId: string;
+	msgId: Uint256;
 	parts: number;
 	partIdx: number;
 	content: Uint8Array;

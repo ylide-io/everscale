@@ -1,3 +1,4 @@
+import { Uint256 } from '@ylide/sdk';
 import { Address, Contract } from 'everscale-inpage-provider';
 import { EverscaleBlockchainController } from '../controllers/EverscaleBlockchainController';
 import { IEverscaleContentMessageBody, IEverscalePushMessageBody } from '../misc';
@@ -6,7 +7,7 @@ export declare class MailerContract {
     readonly contractAddress: string;
     readonly contract: Contract<typeof MAILER_ABI>;
     constructor(reader: EverscaleBlockchainController, contractAddress: string);
-    buildHash(pubkey: Uint8Array, uniqueId: number, time: number): Promise<string>;
+    buildHash(pubkey: Uint8Array, uniqueId: number, time: number): Promise<Uint256>;
     setFees(address: string, _contentPartFee: number, _recipientFee: number): Promise<{
         parentTransaction: import("everscale-inpage-provider").Transaction<Address>;
         childTransaction: import("everscale-inpage-provider").Transaction<Address>;
@@ -22,7 +23,7 @@ export declare class MailerContract {
         childTransaction: import("everscale-inpage-provider").Transaction<Address>;
         output?: undefined;
     }>;
-    addRecipients(address: string, uniqueId: number, initTime: number, recipients: string[], keys: Uint8Array[]): Promise<{
+    addRecipients(address: string, uniqueId: number, initTime: number, recipients: Uint256[], keys: Uint8Array[]): Promise<{
         parentTransaction: import("everscale-inpage-provider").Transaction<Address>;
         childTransaction: import("everscale-inpage-provider").Transaction<Address>;
         output?: undefined;
@@ -37,7 +38,7 @@ export declare class MailerContract {
         childTransaction: import("everscale-inpage-provider").Transaction<Address>;
         output?: undefined;
     }>;
-    sendBulkMail(address: string, uniqueId: number, recipients: string[], keys: Uint8Array[], content: Uint8Array): Promise<{
+    sendBulkMail(address: string, uniqueId: number, recipients: Uint256[], keys: Uint8Array[], content: Uint8Array): Promise<{
         parentTransaction: import("everscale-inpage-provider").Transaction<Address>;
         childTransaction: import("everscale-inpage-provider").Transaction<Address>;
         output?: undefined;

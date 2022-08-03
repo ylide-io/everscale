@@ -1,4 +1,4 @@
-import { IGenericAccount, AbstractWalletController, PublicKey, MessageKey, WalletControllerFactory } from '@ylide/sdk';
+import { IGenericAccount, AbstractWalletController, PublicKey, MessageKey, WalletControllerFactory, Uint256 } from '@ylide/sdk';
 import { EverscaleBlockchainController } from '.';
 export declare class EverscaleWalletController extends AbstractWalletController {
     readonly blockchainController: EverscaleBlockchainController;
@@ -14,9 +14,9 @@ export declare class EverscaleWalletController extends AbstractWalletController 
     requestAuthentication(): Promise<null | IGenericAccount>;
     disconnectAccount(): Promise<void>;
     publishMessage(me: IGenericAccount, contentData: Uint8Array, recipients: {
-        address: string;
+        address: Uint256;
         messageKey: MessageKey;
-    }[]): Promise<string | null>;
+    }[]): Promise<Uint256 | null>;
     decryptMessageKey(senderPublicKey: PublicKey, recipientAccount: IGenericAccount, encryptedKey: Uint8Array): Promise<Uint8Array>;
 }
 export declare const everscaleWalletFactory: WalletControllerFactory;

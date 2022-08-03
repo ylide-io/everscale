@@ -10,6 +10,7 @@ import {
 	WalletControllerFactory,
 	sha256,
 	unpackSymmetricalyEncryptedData,
+	Uint256,
 } from '@ylide/sdk';
 import SmartBuffer from '@ylide/smart-buffer';
 import { EverscaleBlockchainController } from '.';
@@ -33,7 +34,7 @@ export class EverscaleWalletController extends AbstractWalletController {
 			throw new Error(`Can't derive without auth`);
 		}
 		const result = await this.blockchainController.ever.signData({
-			publicKey: me.publicKey.toHex(),
+			publicKey: me.publicKey!.toHex(),
 			data: SmartBuffer.ofUTF8String(magicString).toBase64String(),
 		});
 		return sha256(SmartBuffer.ofHexString(result.signatureHex).bytes);
@@ -87,8 +88,8 @@ export class EverscaleWalletController extends AbstractWalletController {
 	async publishMessage(
 		me: IGenericAccount,
 		contentData: Uint8Array,
-		recipients: { address: string; messageKey: MessageKey }[],
-	): Promise<string | null> {
+		recipients: { address: Uint256; messageKey: MessageKey }[],
+	): Promise<Uint256 | null> {
 		const uniqueId = Math.floor(Math.random() * 4 * 10 ** 9);
 		const chunks = MessageChunks.splitMessageChunks(contentData);
 		if (chunks.length === 1 && recipients.length === 1) {
@@ -126,7 +127,7 @@ export class EverscaleWalletController extends AbstractWalletController {
 		} else {
 			const initTime = Math.floor(Date.now() / 1000);
 			const msgId = await this.blockchainController.mailerContract.buildHash(
-				me.publicKey.bytes,
+				me.publicKey!.bytes,
 				uniqueId,
 				initTime,
 			);
@@ -166,7 +167,7 @@ export class EverscaleWalletController extends AbstractWalletController {
 		const decryptionResultBase64 = await this.blockchainController.ever.decryptData({
 			algorithm: 'ChaCha20Poly1305',
 			sourcePublicKey: senderPublicKey.toHex(),
-			recipientPublicKey: recipientAccount.publicKey.toHex(),
+			recipientPublicKey: recipientAccount.publicKey!.toHex(),
 			data: new SmartBuffer(encData).toBase64String(),
 			nonce: new SmartBuffer(nonce).toBase64String(),
 		});

@@ -1,5 +1,5 @@
 import { ProviderRpcClient } from 'everscale-inpage-provider';
-import { AbstractBlockchainController, IMessage, RetrievingMessagesOptions, IMessageContent, IMessageCorruptedContent, IExtraEncryptionStrateryBulk, IExtraEncryptionStrateryEntry, MessageKey, PublicKey, BlockchainControllerFactory } from '@ylide/sdk';
+import { AbstractBlockchainController, IMessage, RetrievingMessagesOptions, IMessageContent, IMessageCorruptedContent, IExtraEncryptionStrateryBulk, IExtraEncryptionStrateryEntry, MessageKey, PublicKey, BlockchainControllerFactory, Uint256 } from '@ylide/sdk';
 import { MailerContract, RegistryContract } from '../contracts';
 import { IEverscaleMessage } from '../misc';
 import { GqlSender } from '../misc/GqlSender';
@@ -17,10 +17,9 @@ export declare class EverscaleBlockchainController extends AbstractBlockchainCon
         registryContractAddress?: string;
         endpoints?: string[];
     });
-    getRecipientReadingRules(address: string): Promise<any>;
-    extractAddressFromPublicKey(publicKey: PublicKey): Promise<string | null>;
+    getRecipientReadingRules(address: Uint256): Promise<any>;
     extractPublicKeyFromAddress(address: string): Promise<PublicKey | null>;
-    retrieveMessageHistoryByDates(recipientAddress: string, options?: RetrievingMessagesOptions): Promise<IMessage[]>;
+    retrieveMessageHistoryByDates(recipientAddress: Uint256 | null, options?: RetrievingMessagesOptions): Promise<IMessage[]>;
     gqlQueryMessages(query: string, variables?: Record<string, any>): Promise<IEverscaleMessage[]>;
     private gqlQuery;
     private convertMsgIdToAddress;
@@ -35,6 +34,7 @@ export declare class EverscaleBlockchainController extends AbstractBlockchainCon
     getSupportedExtraEncryptionStrategies(): string[];
     prepareExtraEncryptionStrategyBulk(entries: IExtraEncryptionStrateryEntry[]): Promise<IExtraEncryptionStrateryBulk>;
     executeExtraEncryptionStrategy(entries: IExtraEncryptionStrateryEntry[], bulk: IExtraEncryptionStrateryBulk, addedPublicKeyIndex: number | null, messageKey: Uint8Array): Promise<MessageKey[]>;
-    uint256ToAddress(value: Uint8Array, withPrefix?: boolean): string;
+    addressToUint256(address: string): Uint256;
+    uint256ToAddress(value: Uint256, withPrefix?: boolean, nullPrefix?: boolean): string;
 }
 export declare const everscaleBlockchainFactory: BlockchainControllerFactory;

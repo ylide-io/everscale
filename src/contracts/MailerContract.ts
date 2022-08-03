@@ -1,3 +1,4 @@
+import { bigIntToUint256, Uint256 } from '@ylide/sdk';
 import SmartBuffer from '@ylide/smart-buffer';
 import { Address, Contract } from 'everscale-inpage-provider';
 import core from 'everscale-standalone-client/core';
@@ -13,7 +14,7 @@ export class MailerContract {
 		this.contract = new reader.ever.Contract(MAILER_ABI, new Address(this.contractAddress));
 	}
 
-	async buildHash(pubkey: Uint8Array, uniqueId: number, time: number): Promise<string> {
+	async buildHash(pubkey: Uint8Array, uniqueId: number, time: number): Promise<Uint256> {
 		const args = {
 			pubkey: publicKeyToBigIntString(pubkey),
 			uniqueId,
@@ -21,7 +22,7 @@ export class MailerContract {
 		};
 		// @ts-ignore
 		const result: any = await this.contract.methods.buildHash(args).call();
-		return BigInt(result._hash).toString(16);
+		return bigIntToUint256(BigInt(result._hash).toString(10));
 	}
 
 	async setFees(address: string, _contentPartFee: number, _recipientFee: number) {
@@ -65,7 +66,13 @@ export class MailerContract {
 			});
 	}
 
-	async addRecipients(address: string, uniqueId: number, initTime: number, recipients: string[], keys: Uint8Array[]) {
+	async addRecipients(
+		address: string,
+		uniqueId: number,
+		initTime: number,
+		recipients: Uint256[],
+		keys: Uint8Array[],
+	) {
 		// uint256 publicKey, uint32 uniqueId, uint32 initTime, address[] recipients, bytes[] keys
 		return await this.contract.methods
 			.addRecipients({
@@ -74,7 +81,7 @@ export class MailerContract {
 				// @ts-ignore
 				initTime,
 				// @ts-ignore
-				recipients,
+				recipients: recipients.map(r => this.reader.uint256ToAddress(r)),
 				// @ts-ignore
 				keys: keys.map(k => new SmartBuffer(k).toBase64String()),
 			})
@@ -120,7 +127,7 @@ export class MailerContract {
 				// @ts-ignore
 				uniqueId,
 				// @ts-ignore
-				recipient,
+				recipient: this.reader.uint256ToAddress(recipient),
 				// @ts-ignore
 				key: new SmartBuffer(key).toBase64String(),
 				// @ts-ignore
@@ -136,7 +143,7 @@ export class MailerContract {
 	async sendBulkMail(
 		address: string,
 		uniqueId: number,
-		recipients: string[],
+		recipients: Uint256[],
 		keys: Uint8Array[],
 		content: Uint8Array,
 	) {
@@ -145,7 +152,7 @@ export class MailerContract {
 				// @ts-ignore
 				uniqueId,
 				// @ts-ignore
-				recipients,
+				recipients: recipients.map(r => this.reader.uint256ToAddress(r)),
 				// @ts-ignore
 				keys: keys.map(k => new SmartBuffer(k).toBase64String()),
 				// @ts-ignore
@@ -167,9 +174,7 @@ export class MailerContract {
 			sender: (data.data.sender as string).startsWith(':')
 				? `0${data.data.sender}`
 				: (data.data.sender as string),
-			msgId: BigInt(data.data.msgId as string)
-				.toString(16)
-				.padStart(64, '0'),
+			msgId: bigIntToUint256(data.data.msgId as string),
 			key: SmartBuffer.ofBase64String(data.data.key as string).bytes,
 		};
 	}
@@ -181,9 +186,7 @@ export class MailerContract {
 		}
 		return {
 			sender: data.data.sender as string,
-			msgId: BigInt(data.data.msgId as string)
-				.toString(16)
-				.padStart(64, '0'),
+			msgId: bigIntToUint256(data.data.msgId as string),
 			parts: Number(data.data.parts as string),
 			partIdx: Number(data.data.partIdx as string),
 			content: SmartBuffer.ofBase64String(data.data.content as string).bytes,
