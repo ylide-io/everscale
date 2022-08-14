@@ -1,7 +1,7 @@
 import { Uint256 } from '@ylide/sdk';
 import { Address, Contract } from 'everscale-inpage-provider';
 import { EverscaleBlockchainController } from '../controllers/EverscaleBlockchainController';
-import { IEverscaleContentMessageBody, IEverscalePushMessageBody } from '../misc';
+import { IEverscaleBroadcastMessageBody, IEverscaleContentMessageBody, IEverscalePushMessageBody } from '../misc';
 export declare class MailerContract {
     private readonly reader;
     readonly contractAddress: string;
@@ -33,6 +33,16 @@ export declare class MailerContract {
         childTransaction: import("everscale-inpage-provider").Transaction<Address>;
         output?: undefined;
     }>;
+    broadcastMail(address: string, uniqueId: number, content: Uint8Array): Promise<{
+        parentTransaction: import("everscale-inpage-provider").Transaction<Address>;
+        childTransaction: import("everscale-inpage-provider").Transaction<Address>;
+        output?: undefined;
+    }>;
+    broadcastMailHeader(address: string, uniqueId: number, initTime: number): Promise<{
+        parentTransaction: import("everscale-inpage-provider").Transaction<Address>;
+        childTransaction: import("everscale-inpage-provider").Transaction<Address>;
+        output?: undefined;
+    }>;
     sendSmallMail(address: string, uniqueId: number, recipient: string, key: Uint8Array, content: Uint8Array): Promise<{
         parentTransaction: import("everscale-inpage-provider").Transaction<Address>;
         childTransaction: import("everscale-inpage-provider").Transaction<Address>;
@@ -44,6 +54,7 @@ export declare class MailerContract {
         output?: undefined;
     }>;
     decodePushMessageBody(body: string): IEverscalePushMessageBody;
+    decodeBroadcastMessageBody(body: string): IEverscaleBroadcastMessageBody;
     decodeContentMessageBody(body: string): IEverscaleContentMessageBody;
 }
 declare const MAILER_ABI: {

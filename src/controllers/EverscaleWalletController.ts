@@ -155,6 +155,46 @@ export class EverscaleWalletController extends AbstractWalletController {
 		}
 	}
 
+	async broadcastMessage(me: IGenericAccount, contentData: Uint8Array): Promise<Uint256 | null> {
+		const uniqueId = Math.floor(Math.random() * 4 * 10 ** 9);
+		const chunks = MessageChunks.splitMessageChunks(contentData);
+		if (chunks.length === 1) {
+			const transaction = await this.blockchainController.mailerContract.broadcastMail(
+				me.address,
+				uniqueId,
+				chunks[0],
+			);
+
+			const om = transaction.childTransaction.outMessages;
+			const contentMsg = om.length ? om[0] : null;
+			if (!contentMsg || !contentMsg.body) {
+				throw new Error('Content event was not found');
+			}
+			const decodedEvent = this.blockchainController.mailerContract.decodeContentMessageBody(contentMsg.body!);
+			return decodedEvent.msgId;
+		} else {
+			const initTime = Math.floor(Date.now() / 1000);
+			const msgId = await this.blockchainController.mailerContract.buildHash(
+				me.publicKey!.bytes,
+				uniqueId,
+				initTime,
+			);
+			for (let i = 0; i < chunks.length; i++) {
+				await this.blockchainController.mailerContract.sendMultipartMailPart(
+					me.address,
+					uniqueId,
+					initTime,
+					chunks.length,
+					i,
+					chunks[i],
+				);
+			}
+
+			await this.blockchainController.mailerContract.broadcastMailHeader(me.address, uniqueId, initTime);
+			return msgId;
+		}
+	}
+
 	async decryptMessageKey(
 		senderPublicKey: PublicKey,
 		recipientAccount: IGenericAccount,

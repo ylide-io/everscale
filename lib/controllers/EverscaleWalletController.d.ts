@@ -17,6 +17,7 @@ export declare class EverscaleWalletController extends AbstractWalletController 
         address: Uint256;
         messageKey: MessageKey;
     }[]): Promise<Uint256 | null>;
+    broadcastMessage(me: IGenericAccount, contentData: Uint8Array): Promise<Uint256 | null>;
     decryptMessageKey(senderPublicKey: PublicKey, recipientAccount: IGenericAccount, encryptedKey: Uint8Array): Promise<Uint8Array>;
 }
 export declare const everscaleWalletFactory: WalletControllerFactory;

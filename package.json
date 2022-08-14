@@ -39,6 +39,7 @@
         "chacha": "^2.1.0",
         "everscale-inpage-provider": "^0.3.20",
         "everscale-standalone-client": "^2.0.10",
+        "moment": "^2.29.4",
         "tweetnacl": "^1.0.3"
     },
     "devDependencies": {

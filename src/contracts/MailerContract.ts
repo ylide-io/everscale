@@ -3,7 +3,12 @@ import SmartBuffer from '@ylide/smart-buffer';
 import { Address, Contract } from 'everscale-inpage-provider';
 import core from 'everscale-standalone-client/core';
 import { EverscaleBlockchainController } from '../controllers/EverscaleBlockchainController';
-import { IEverscaleContentMessageBody, IEverscalePushMessageBody, publicKeyToBigIntString } from '../misc';
+import {
+	IEverscaleBroadcastMessageBody,
+	IEverscaleContentMessageBody,
+	IEverscalePushMessageBody,
+	publicKeyToBigIntString,
+} from '../misc';
 
 export class MailerContract {
 	readonly contractAddress: string;
@@ -120,6 +125,38 @@ export class MailerContract {
 			});
 	}
 
+	async broadcastMail(address: string, uniqueId: number, content: Uint8Array) {
+		return await this.contract.methods
+			// @ts-ignore
+			.broadcastMail({
+				// @ts-ignore
+				uniqueId,
+				// @ts-ignore
+				content: new SmartBuffer(content).toBase64String(),
+			})
+			.sendWithResult({
+				from: new Address(address),
+				amount: '1000000000',
+				bounce: false,
+			});
+	}
+
+	async broadcastMailHeader(address: string, uniqueId: number, initTime: number) {
+		return await this.contract.methods
+			// @ts-ignore
+			.broadcastMail({
+				// @ts-ignore
+				uniqueId,
+				// @ts-ignore
+				initTime,
+			})
+			.sendWithResult({
+				from: new Address(address),
+				amount: '1000000000',
+				bounce: false,
+			});
+	}
+
 	async sendSmallMail(address: string, uniqueId: number, recipient: string, key: Uint8Array, content: Uint8Array) {
 		return await this.contract.methods
 			// @ts-ignore
@@ -176,6 +213,16 @@ export class MailerContract {
 				: (data.data.sender as string),
 			msgId: bigIntToUint256(data.data.msgId as string),
 			key: SmartBuffer.ofBase64String(data.data.key as string).bytes,
+		};
+	}
+
+	decodeBroadcastMessageBody(body: string): IEverscaleBroadcastMessageBody {
+		const data = core.nekoton.decodeEvent(body, JSON.stringify(MAILER_ABI), 'MailPush');
+		if (!data) {
+			throw new Error('PushMessage format is not supported');
+		}
+		return {
+			msgId: bigIntToUint256(data.data.msgId as string),
 		};
 	}
 
@@ -277,6 +324,22 @@ const MAILER_ABI = {
 			outputs: [],
 		},
 		{
+			name: 'broadcastMail',
+			inputs: [
+				{ name: 'uniqueId', type: 'uint32' },
+				{ name: 'content', type: 'bytes' },
+			],
+			outputs: [],
+		},
+		{
+			name: 'broadcastMailHeader',
+			inputs: [
+				{ name: 'uniqueId', type: 'uint32' },
+				{ name: 'initTime', type: 'uint32' },
+			],
+			outputs: [],
+		},
+		{
 			name: 'transferOwnership',
 			inputs: [{ name: 'newOwner', type: 'address' }],
 			outputs: [],
@@ -330,6 +393,11 @@ const MAILER_ABI = {
 				{ name: 'partIdx', type: 'uint16' },
 				{ name: 'content', type: 'bytes' },
 			],
+			outputs: [],
+		},
+		{
+			name: 'MailBroadcast',
+			inputs: [{ name: 'msgId', type: 'uint256' }],
 			outputs: [],
 		},
 	],

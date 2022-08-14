@@ -18,6 +18,10 @@ export interface IEverscalePushMessageBody {
 	key: Uint8Array;
 }
 
+export interface IEverscaleBroadcastMessageBody {
+	msgId: Uint256;
+}
+
 export interface IEverscalePushMessage extends IEverscaleMessage, IEverscalePushMessageBody {}
 
 export interface IEverscaleContentMessageBody {

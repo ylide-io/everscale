@@ -6,7 +6,6 @@ import nacl from 'tweetnacl';
 import {
 	AbstractBlockchainController,
 	IMessage,
-	RetrievingMessagesOptions,
 	IMessageContent,
 	IMessageCorruptedContent,
 	MessageContentFailure,
@@ -20,6 +19,8 @@ import {
 	BlockchainControllerFactory,
 	Uint256,
 	hexToUint256,
+	ISourceSubject,
+	BlockchainSourceSubjectType,
 } from '@ylide/sdk';
 import { DEV_MAILER_ADDRESS, DEV_REGISTRY_ADDRESS, MAILER_ADDRESS, REGISTRY_ADDRESS } from '../misc/constants';
 import { MailerContract, RegistryContract } from '../contracts';
@@ -27,6 +28,7 @@ import { IEverscaleContentMessageBody, IEverscaleMessage } from '../misc';
 import { getContractMessagesQuery } from '../misc';
 import { GqlSender } from '../misc/GqlSender';
 import initSync, { encrypt, generate_ephemeral, get_public_key } from '@ylide/everscale-encrypt';
+import moment from 'moment';
 
 export class EverscaleBlockchainController extends AbstractBlockchainController {
 	ever: ProviderRpcClient;
@@ -91,6 +93,10 @@ export class EverscaleBlockchainController extends AbstractBlockchainController 
 		);
 	}
 
+	getDefaultMailerAddress() {
+		return this.mailerContract.contractAddress;
+	}
+
 	async getRecipientReadingRules(address: Uint256): Promise<any> {
 		return [];
 	}
@@ -103,49 +109,162 @@ export class EverscaleBlockchainController extends AbstractBlockchainController 
 		return PublicKey.fromBytes(PublicKeyType.YLIDE, rawKey);
 	}
 
-	// message history block
-	// Query messages by interval options.since (included) - options.to (excluded)
-	async retrieveMessageHistoryByDates(
-		recipientAddress: Uint256 | null,
-		options?: RetrievingMessagesOptions,
+	private async _retrieveMessageHistoryByTime(
+		mailerAddress: string,
+		subject: ISourceSubject,
+		fromTimestamp?: number,
+		toTimestamp?: number,
+		limit?: number,
 	): Promise<IMessage[]> {
 		await core.ensureNekotonLoaded();
-		console.log('ttt');
-		const fullMessages: IMessage[] = [];
-
-		while (true) {
-			const messages = await this.queryMessagesList(recipientAddress, {
-				nextPageAfterMessage: options?.fromMessage,
-				messagesLimit: 50,
-			});
-
-			if (!messages.length) break;
-
-			let foundDuplicate = false;
-
-			fullMessages.push(
-				...(await Promise.all(
-					messages.map(async m => {
-						if (m.id === options?.toMessage?.blockchainMeta.id) {
-							foundDuplicate = true;
-						}
-						const pushMessage = this.formatPushMessage(m);
-						const content = await this.retrieveMessageContentByMsgId(pushMessage.msgId);
-						if (content && !content.corrupted) {
-							pushMessage.isContentLoaded = true;
-							pushMessage.contentLink = content;
-						}
-						return pushMessage;
-					}),
-				)),
-			);
-
-			if (foundDuplicate) break;
-			if (messages.length < this.MESSAGES_FETCH_LIMIT) break;
+		if (!mailerAddress) {
+			mailerAddress = this.getDefaultMailerAddress();
 		}
-
-		return fullMessages;
+		const events = await this.queryMessagesList(mailerAddress, subject, limit, {
+			fromDate: fromTimestamp ? moment.unix(fromTimestamp).utc().toISOString() : undefined,
+			toDate: toTimestamp ? moment.unix(toTimestamp).utc().toISOString() : undefined,
+		});
+		const result = events.map(m => this.formatPushMessage(m));
+		return result.filter(
+			r =>
+				(!fromTimestamp || r.blockchainMeta.block.timestamp > fromTimestamp) &&
+				(!toTimestamp || r.blockchainMeta.block.timestamp <= toTimestamp),
+		);
 	}
+
+	private async _retrieveMessageHistoryByBounds(
+		mailerAddress: string,
+		subject: ISourceSubject,
+		fromMessage?: IMessage,
+		toMessage?: IMessage,
+		limit?: number,
+	): Promise<IMessage[]> {
+		await core.ensureNekotonLoaded();
+		const events = await this.queryMessagesList(mailerAddress, subject, limit, {
+			fromMessage: fromMessage?.blockchainMeta,
+			toMessage: toMessage?.blockchainMeta,
+		});
+		const result = events.map(m => this.formatPushMessage(m));
+		const topBound = toMessage ? result.findIndex(r => r.msgId === toMessage.msgId) : -1;
+		const bottomBound = fromMessage ? result.findIndex(r => r.msgId === fromMessage.msgId) : -1;
+		return result.slice(bottomBound === -1 ? 0 : bottomBound + 1, topBound === -1 ? undefined : topBound);
+	}
+
+	async retrieveMessageHistoryByTime(
+		recipient: Uint256 | null,
+		mailerAddress?: string,
+		fromTimestamp?: number,
+		toTimestamp?: number,
+		limit?: number,
+	): Promise<IMessage[]> {
+		if (!mailerAddress) {
+			mailerAddress = this.getDefaultMailerAddress();
+		}
+		return this._retrieveMessageHistoryByTime(
+			mailerAddress,
+			{ type: BlockchainSourceSubjectType.RECIPIENT, address: recipient },
+			fromTimestamp,
+			toTimestamp,
+			limit,
+		);
+	}
+
+	async retrieveMessageHistoryByBounds(
+		recipient: Uint256 | null,
+		mailerAddress?: string,
+		fromMessage?: IMessage,
+		toMessage?: IMessage,
+		limit?: number,
+	): Promise<IMessage[]> {
+		if (!mailerAddress) {
+			mailerAddress = this.getDefaultMailerAddress();
+		}
+		return this._retrieveMessageHistoryByBounds(
+			mailerAddress,
+			{ type: BlockchainSourceSubjectType.RECIPIENT, address: recipient },
+			fromMessage,
+			toMessage,
+			limit,
+		);
+	}
+
+	async retrieveBroadcastHistoryByTime(
+		sender: Uint256 | null,
+		mailerAddress?: string,
+		fromTimestamp?: number,
+		toTimestamp?: number,
+		limit?: number,
+	): Promise<IMessage[]> {
+		if (!mailerAddress) {
+			mailerAddress = this.getDefaultMailerAddress();
+		}
+		return this._retrieveMessageHistoryByTime(
+			mailerAddress,
+			{ type: BlockchainSourceSubjectType.AUTHOR, address: sender },
+			fromTimestamp,
+			toTimestamp,
+			limit,
+		);
+	}
+
+	async retrieveBroadcastHistoryByBounds(
+		sender: Uint256 | null,
+		mailerAddress?: string,
+		fromMessage?: IMessage,
+		toMessage?: IMessage,
+		limit?: number,
+	): Promise<IMessage[]> {
+		if (!mailerAddress) {
+			mailerAddress = this.getDefaultMailerAddress();
+		}
+		return this._retrieveMessageHistoryByBounds(
+			mailerAddress,
+			{ type: BlockchainSourceSubjectType.AUTHOR, address: sender },
+			fromMessage,
+			toMessage,
+			limit,
+		);
+	}
+
+	// // message history block
+	// // Query messages by interval options.since (included) - options.to (excluded)
+	// async retrieveMessageHistoryByDates(
+	// 	recipientAddress: Uint256 | null,
+	// 	options?: RetrievingMessagesOptions,
+	// ): Promise<IMessage[]> {
+	// 	await core.ensureNekotonLoaded();
+	// 	console.log('ttt');
+	// 	const fullMessages: IMessage[] = [];
+
+	// 	const messages = await this.queryMessagesList(recipientAddress, 50, {
+	// 		nextPageAfterMessage: options?.fromMessage,
+	// 		messagesLimit: 50,
+	// 	});
+
+	// 	while (true) {
+	// 		fullMessages.push(
+	// 			...(await Promise.all(
+	// 				messages.map(async m => {
+	// 					if (m.id === options?.toMessage?.blockchainMeta.id) {
+	// 						foundDuplicate = true;
+	// 					}
+	// 					const pushMessage = this.formatPushMessage(m);
+	// 					const content = await this.retrieveMessageContentByMsgId(pushMessage.msgId);
+	// 					if (content && !content.corrupted) {
+	// 						pushMessage.isContentLoaded = true;
+	// 						pushMessage.contentLink = content;
+	// 					}
+	// 					return pushMessage;
+	// 				}),
+	// 			)),
+	// 		);
+
+	// 		if (foundDuplicate) break;
+	// 		if (messages.length < this.MESSAGES_FETCH_LIMIT) break;
+	// 	}
+
+	// 	return fullMessages;
+	// }
 
 	async gqlQueryMessages(query: string, variables: Record<string, any> = {}) {
 		const data = await this.gqlQuery(query, variables);
@@ -311,41 +430,63 @@ export class EverscaleBlockchainController extends AbstractBlockchainController 
 
 	// Query messages by interval sinceDate(excluded) - untilDate (excluded)
 	private async queryMessagesList(
-		recipientAddress: Uint256 | null,
-		options: {
-			messagesLimit?: number;
-			nextPageAfterMessage?: IMessage;
+		mailerAddress: string,
+		subject: ISourceSubject,
+		limit?: number,
+		filter?: {
+			fromDate?: string;
+			toDate?: string;
+			fromMessage?: IEverscaleMessage;
+			toMessage?: IEverscaleMessage;
 		},
-	) {
-		const receiverAddress = recipientAddress ? this.uint256ToAddress(recipientAddress, true, true) : null;
+		nextPageAfterMessage?: IEverscaleMessage,
+	): Promise<IEverscaleMessage[]> {
+		const address = subject.address ? this.uint256ToAddress(subject.address, true, true) : null;
 
-		return await this.gqlQueryMessages(
+		const result = await this.gqlQueryMessages(
 			`
-		query {
-			messages(
-			  filter: {
-				msg_type: { eq: 2 },
-				${receiverAddress ? `dst: { eq: "${receiverAddress}" },` : ''}
-				src: { eq: "${this.mailerContract.contractAddress}" },
-				created_lt: { ${
-					options?.nextPageAfterMessage?.blockchainMeta.created_lt
-						? `lt: "${options.nextPageAfterMessage.blockchainMeta.created_lt}"`
-						: ''
-				} }
-			  }
-			  orderBy: [{path: "created_at", direction: DESC}]
-			  limit: ${options?.messagesLimit || this.MESSAGES_FETCH_LIMIT}
-			) {
-			  body
-			  id
-			  src
-			  created_at
-			  created_lt
-			  dst
+			query {
+				messages(
+				filter: {
+					msg_type: { eq: 2 },
+					${address ? `dst: { eq: "${address}" },` : ''}
+					src: { eq: "${mailerAddress}" },
+					created_lt: { ${nextPageAfterMessage?.created_lt ? `lt: "${nextPageAfterMessage.created_lt}"` : ''} }
+					${filter?.fromDate ? `, created_at: { gt: ${filter.fromDate} }` : ``}
+					${filter?.toDate ? `, created_at: { lt: ${filter.toDate} }` : ``}
+					${filter?.fromMessage ? `, created_lt: { gt: ${filter.fromMessage.created_lt} }` : ``}
+					${filter?.toMessage ? `, created_lt: { lt: ${filter.toMessage.created_lt} }` : ``}
+				}
+				orderBy: [{path: "created_at", direction: DESC}]
+				limit: ${Math.min(limit || this.MESSAGES_FETCH_LIMIT, this.MESSAGES_FETCH_LIMIT)}
+				) {
+				body
+				id
+				src
+				created_at
+				created_lt
+				dst
+				}
 			}
-		  }
 		  `,
 		);
+
+		if (limit && result.length === limit) {
+			return result;
+		} else {
+			if (result.length === 0) {
+				return [];
+			} else {
+				const after = await this.queryMessagesList(
+					mailerAddress,
+					subject,
+					limit ? limit - result.length : undefined,
+					filter,
+					result[result.length - 1],
+				);
+				return result.concat(after);
+			}
+		}
 	}
 
 	async extractNativePublicKeyFromAddress(addressStr: string): Promise<Uint8Array | null> {
@@ -462,6 +603,14 @@ export class EverscaleBlockchainController extends AbstractBlockchainController 
 			throw new Error('Value must have 32-bytes');
 		}
 		return `${withPrefix ? (nullPrefix ? ':' : '0:') : ''}${value}`;
+	}
+
+	compareMessagesTime(a: IMessage, b: IMessage): number {
+		if (a.createdAt === b.createdAt) {
+			return 0;
+		} else {
+			return a.createdAt - b.createdAt;
+		}
 	}
 }
 

@@ -1,5 +1,5 @@
 import { ProviderRpcClient } from 'everscale-inpage-provider';
-import { AbstractBlockchainController, IMessage, RetrievingMessagesOptions, IMessageContent, IMessageCorruptedContent, IExtraEncryptionStrateryBulk, IExtraEncryptionStrateryEntry, MessageKey, PublicKey, BlockchainControllerFactory, Uint256 } from '@ylide/sdk';
+import { AbstractBlockchainController, IMessage, IMessageContent, IMessageCorruptedContent, IExtraEncryptionStrateryBulk, IExtraEncryptionStrateryEntry, MessageKey, PublicKey, BlockchainControllerFactory, Uint256 } from '@ylide/sdk';
 import { MailerContract, RegistryContract } from '../contracts';
 import { IEverscaleMessage } from '../misc';
 import { GqlSender } from '../misc/GqlSender';
@@ -17,9 +17,15 @@ export declare class EverscaleBlockchainController extends AbstractBlockchainCon
         registryContractAddress?: string;
         endpoints?: string[];
     });
+    getDefaultMailerAddress(): string;
     getRecipientReadingRules(address: Uint256): Promise<any>;
     extractPublicKeyFromAddress(address: string): Promise<PublicKey | null>;
-    retrieveMessageHistoryByDates(recipientAddress: Uint256 | null, options?: RetrievingMessagesOptions): Promise<IMessage[]>;
+    private _retrieveMessageHistoryByTime;
+    private _retrieveMessageHistoryByBounds;
+    retrieveMessageHistoryByTime(recipient: Uint256 | null, mailerAddress?: string, fromTimestamp?: number, toTimestamp?: number, limit?: number): Promise<IMessage[]>;
+    retrieveMessageHistoryByBounds(recipient: Uint256 | null, mailerAddress?: string, fromMessage?: IMessage, toMessage?: IMessage, limit?: number): Promise<IMessage[]>;
+    retrieveBroadcastHistoryByTime(sender: Uint256 | null, mailerAddress?: string, fromTimestamp?: number, toTimestamp?: number, limit?: number): Promise<IMessage[]>;
+    retrieveBroadcastHistoryByBounds(sender: Uint256 | null, mailerAddress?: string, fromMessage?: IMessage, toMessage?: IMessage, limit?: number): Promise<IMessage[]>;
     gqlQueryMessages(query: string, variables?: Record<string, any>): Promise<IEverscaleMessage[]>;
     private gqlQuery;
     private convertMsgIdToAddress;
@@ -36,5 +42,6 @@ export declare class EverscaleBlockchainController extends AbstractBlockchainCon
     executeExtraEncryptionStrategy(entries: IExtraEncryptionStrateryEntry[], bulk: IExtraEncryptionStrateryBulk, addedPublicKeyIndex: number | null, messageKey: Uint8Array): Promise<MessageKey[]>;
     addressToUint256(address: string): Uint256;
     uint256ToAddress(value: Uint256, withPrefix?: boolean, nullPrefix?: boolean): string;
+    compareMessagesTime(a: IMessage, b: IMessage): number;
 }
 export declare const everscaleBlockchainFactory: BlockchainControllerFactory;

@@ -1,5 +1,5 @@
 // Dev addresses
-export const DEV_MAILER_ADDRESS = '0:b771e0af22c6c2a21096ea460b6276d11f4d0c1a7c391d85cd7d83c9fdbfd091';
+export const DEV_MAILER_ADDRESS = '0:2fdbd26c38f049f14ce6c0e7090e2279945c91a4f316c3e7ce6b92426cf004b7';
 export const DEV_REGISTRY_ADDRESS = '0:ed954525ba1d39c0255c286e93af90b658e41c726abae59b0d21b6218bca079b';
 
 // Mainnet addresses
