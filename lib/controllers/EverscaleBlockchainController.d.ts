@@ -5,7 +5,7 @@ import { GqlSender } from '../misc/GqlSender';
 export declare class EverscaleBlockchainController extends AbstractBlockchainController {
     ever: ProviderRpcClient;
     gql: GqlSender;
-    readonly everscaleEncryptCore: Promise<import("@ylide/everscale-encrypt").InitOutput>;
+    readonly everscaleEncryptCore: Promise<any>;
     readonly MESSAGES_FETCH_LIMIT = 50;
     readonly mailerContractAddress: string;
     readonly registryContractAddress: string;

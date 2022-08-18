@@ -26,7 +26,7 @@ import { DEV_MAILER_ADDRESS, DEV_REGISTRY_ADDRESS, MAILER_ADDRESS, REGISTRY_ADDR
 import { IEverscaleContentMessageBody, IEverscaleMessage, uint256ToAddress } from '../misc';
 import { getContractMessagesQuery } from '../misc';
 import { GqlSender } from '../misc/GqlSender';
-import initSync, { encrypt, generate_ephemeral, get_public_key } from '@ylide/everscale-encrypt';
+import { initAsync, encrypt, generate_ephemeral, get_public_key } from '../encrypt';
 import moment from 'moment';
 import {
 	decodeAddressToPublicKeyMessageBody,
@@ -38,7 +38,7 @@ export class EverscaleBlockchainController extends AbstractBlockchainController 
 	ever: ProviderRpcClient;
 	gql: GqlSender;
 
-	readonly everscaleEncryptCore = initSync();
+	readonly everscaleEncryptCore = initAsync();
 
 	readonly MESSAGES_FETCH_LIMIT = 50;
 
