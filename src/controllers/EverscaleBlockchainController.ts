@@ -401,33 +401,33 @@ export class EverscaleBlockchainController extends AbstractBlockchainController 
 	): Promise<IEverscaleMessage[]> {
 		const address = subject.address ? uint256ToAddress(subject.address, true, true) : null;
 
-		const created_at: {
+		const createdAt: {
 			gt?: number;
 			lt?: number;
 		} = {};
 
-		const created_lt: {
+		const createdLt: {
 			gt?: BigInt;
 			lt?: BigInt;
 		} = {};
 
 		if (nextPageAfterMessage && nextPageAfterMessage.created_lt) {
-			created_lt.lt = BigInt(nextPageAfterMessage.created_lt);
+			createdLt.lt = BigInt(nextPageAfterMessage.created_lt);
 		}
 		if (filter?.fromMessage) {
-			created_lt.gt = BigInt(filter.fromMessage.created_lt);
+			createdLt.gt = BigInt(filter.fromMessage.created_lt);
 		}
 		if (filter?.toMessage) {
 			const v = BigInt(filter.toMessage.created_lt);
-			if (created_lt.lt === undefined || v < created_lt.lt) {
-				created_lt.lt = v;
+			if (createdLt.lt === undefined || v < createdLt.lt) {
+				createdLt.lt = v;
 			}
 		}
 		if (filter?.fromDate !== undefined) {
-			created_at.gt = filter?.fromDate;
+			createdAt.gt = filter?.fromDate;
 		}
 		if (filter?.toDate !== undefined) {
-			created_at.lt = filter?.toDate;
+			createdAt.lt = filter?.toDate;
 		}
 		// ${filter?.fromMessage ? `, created_lt: { gt: "${filter.fromMessage.created_lt}" }` : ``}
 		// ${filter?.toMessage ? `, created_lt: { lt: "${filter.toMessage.created_lt}" }` : ``}
@@ -435,8 +435,8 @@ export class EverscaleBlockchainController extends AbstractBlockchainController 
 		// ${filter?.fromDate ? `, created_at: { gt: ${filter.fromDate} }` : ``}
 		// ${filter?.toDate ? `, created_at: { lt: ${filter.toDate} }` : ``}
 
-		const _at = created_at.gt !== undefined || created_at.lt !== undefined;
-		const _lt = created_lt.gt !== undefined || created_lt.lt !== undefined;
+		const _at = createdAt.gt !== undefined || createdAt.lt !== undefined;
+		const _lt = createdLt.gt !== undefined || createdLt.lt !== undefined;
 
 		const result = await this.gqlQueryMessages(
 			`
@@ -449,12 +449,12 @@ export class EverscaleBlockchainController extends AbstractBlockchainController 
 					${
 						_at
 							? `created_at: { ${
-									created_at.lt !== undefined
-										? `lt: "${moment.unix(created_at.lt).utc().toISOString()}", `
+									createdAt.lt !== undefined
+										? `lt: "${moment.unix(createdAt.lt).utc().toISOString()}", `
 										: ''
 							  } ${
-									created_at.gt !== undefined
-										? `gt: "${moment.unix(created_at.gt).utc().toISOString()}", `
+									createdAt.gt !== undefined
+										? `gt: "${moment.unix(createdAt.gt).utc().toISOString()}", `
 										: ''
 							  } }, `
 							: ''
@@ -462,10 +462,8 @@ export class EverscaleBlockchainController extends AbstractBlockchainController 
 					${
 						_lt
 							? `created_lt: { ${
-									created_lt.lt !== undefined ? `lt: "${'0x' + created_lt.lt.toString(16)}", ` : ''
-							  } ${
-									created_lt.gt !== undefined ? `gt: "${'0x' + created_lt.gt.toString(16)}", ` : ''
-							  } }, `
+									createdLt.lt !== undefined ? `lt: "${'0x' + createdLt.lt.toString(16)}", ` : ''
+							  } ${createdLt.gt !== undefined ? `gt: "${'0x' + createdLt.gt.toString(16)}", ` : ''} }, `
 							: ''
 					}
 				}
@@ -549,7 +547,7 @@ export class EverscaleBlockchainController extends AbstractBlockchainController 
 				{
 					ylide: false,
 					blockchain: 'everscale',
-					address: address,
+					address,
 					type: 'everscale-native',
 					data: {
 						nativePublicKey: native,
