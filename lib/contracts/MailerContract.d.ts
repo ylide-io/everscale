@@ -1,12 +1,10 @@
 import { Uint256 } from '@ylide/sdk';
-import { Address, Contract } from 'everscale-inpage-provider';
-import { EverscaleBlockchainController } from '../controllers/EverscaleBlockchainController';
-import { IEverscaleBroadcastMessageBody, IEverscaleContentMessageBody, IEverscalePushMessageBody } from '../misc';
+import { Address, Contract, ProviderRpcClient } from 'everscale-inpage-provider';
 export declare class MailerContract {
-    private readonly reader;
+    private readonly ever;
     readonly contractAddress: string;
     readonly contract: Contract<typeof MAILER_ABI>;
-    constructor(reader: EverscaleBlockchainController, contractAddress: string);
+    constructor(ever: ProviderRpcClient, contractAddress: string);
     buildHash(pubkey: Uint8Array, uniqueId: number, time: number): Promise<Uint256>;
     setFees(address: string, _contentPartFee: number, _recipientFee: number): Promise<{
         parentTransaction: import("everscale-inpage-provider").Transaction<Address>;
@@ -53,11 +51,8 @@ export declare class MailerContract {
         childTransaction: import("everscale-inpage-provider").Transaction<Address>;
         output?: undefined;
     }>;
-    decodePushMessageBody(body: string): IEverscalePushMessageBody;
-    decodeBroadcastMessageBody(body: string): IEverscaleBroadcastMessageBody;
-    decodeContentMessageBody(body: string): IEverscaleContentMessageBody;
 }
-declare const MAILER_ABI: {
+export declare const MAILER_ABI: {
     'ABI version': number;
     version: string;
     header: string[];
@@ -90,4 +85,3 @@ declare const MAILER_ABI: {
         type: string;
     }[];
 };
-export {};

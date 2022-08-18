@@ -1,15 +1,12 @@
-import { Contract } from 'everscale-inpage-provider';
-import { EverscaleBlockchainController } from '../controllers';
+import { Contract, ProviderRpcClient } from 'everscale-inpage-provider';
 export declare class RegistryContract {
-    private readonly blockchainController;
-    private readonly contractAddress;
+    private readonly ever;
+    readonly contractAddress: string;
     readonly contract: Contract<typeof REGISTRY_ABI>;
-    constructor(blockchainController: EverscaleBlockchainController, contractAddress: string);
-    getPublicKeyByAddress(address: string): Promise<Uint8Array | null>;
+    constructor(ever: ProviderRpcClient, contractAddress: string);
     attachPublicKey(address: string, publicKey: Uint8Array): Promise<boolean>;
-    private decodeAddressToPublicKeyMessageBody;
 }
-declare const REGISTRY_ABI: {
+export declare const REGISTRY_ABI: {
     'ABI version': number;
     version: string;
     header: string[];
@@ -35,4 +32,3 @@ declare const REGISTRY_ABI: {
         type: string;
     }[];
 };
-export {};

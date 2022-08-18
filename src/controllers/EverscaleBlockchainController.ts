@@ -23,12 +23,16 @@ import {
 	BlockchainSourceSubjectType,
 } from '@ylide/sdk';
 import { DEV_MAILER_ADDRESS, DEV_REGISTRY_ADDRESS, MAILER_ADDRESS, REGISTRY_ADDRESS } from '../misc/constants';
-import { MailerContract, RegistryContract } from '../contracts';
-import { IEverscaleContentMessageBody, IEverscaleMessage } from '../misc';
+import { IEverscaleContentMessageBody, IEverscaleMessage, uint256ToAddress } from '../misc';
 import { getContractMessagesQuery } from '../misc';
 import { GqlSender } from '../misc/GqlSender';
 import initSync, { encrypt, generate_ephemeral, get_public_key } from '@ylide/everscale-encrypt';
 import moment from 'moment';
+import {
+	decodeAddressToPublicKeyMessageBody,
+	decodeContentMessageBody,
+	decodePushMessageBody,
+} from '../contracts/contractUtils';
 
 export class EverscaleBlockchainController extends AbstractBlockchainController {
 	ever: ProviderRpcClient;
@@ -38,8 +42,8 @@ export class EverscaleBlockchainController extends AbstractBlockchainController 
 
 	readonly MESSAGES_FETCH_LIMIT = 50;
 
-	readonly mailerContract: MailerContract;
-	readonly registryContract: RegistryContract;
+	readonly mailerContractAddress: string;
+	readonly registryContractAddress: string;
 
 	private readonly mainnetEndpoints = [
 		'eri01.main.everos.dev',
@@ -83,26 +87,32 @@ export class EverscaleBlockchainController extends AbstractBlockchainController 
 				}),
 		});
 
-		this.mailerContract = new MailerContract(
-			this,
-			options.mailerContractAddress || (options.dev ? DEV_MAILER_ADDRESS : MAILER_ADDRESS),
-		);
-		this.registryContract = new RegistryContract(
-			this,
-			options.registryContractAddress || (options.dev ? DEV_REGISTRY_ADDRESS : REGISTRY_ADDRESS),
-		);
+		this.mailerContractAddress =
+			options.mailerContractAddress || (options.dev ? DEV_MAILER_ADDRESS : MAILER_ADDRESS);
+		this.registryContractAddress =
+			options.registryContractAddress || (options.dev ? DEV_REGISTRY_ADDRESS : REGISTRY_ADDRESS);
 	}
 
 	getDefaultMailerAddress() {
-		return this.mailerContract.contractAddress;
+		return this.mailerContractAddress;
 	}
 
 	async getRecipientReadingRules(address: Uint256): Promise<any> {
 		return [];
 	}
 
+	private async getPublicKeyByAddress(address: string): Promise<Uint8Array | null> {
+		await core.ensureNekotonLoaded();
+		const messages = await this.gqlQueryMessages(getContractMessagesQuery(address, this.registryContractAddress));
+		if (messages.length) {
+			return decodeAddressToPublicKeyMessageBody(messages[0].body);
+		} else {
+			return null;
+		}
+	}
+
 	async extractPublicKeyFromAddress(address: string): Promise<PublicKey | null> {
-		const rawKey = await this.registryContract.getPublicKeyByAddress(':' + address.split(':')[1]);
+		const rawKey = await this.getPublicKeyByAddress(':' + address.split(':')[1]);
 		if (!rawKey) {
 			return null;
 		}
@@ -121,8 +131,8 @@ export class EverscaleBlockchainController extends AbstractBlockchainController 
 			mailerAddress = this.getDefaultMailerAddress();
 		}
 		const events = await this.queryMessagesList(mailerAddress, subject, limit, {
-			fromDate: fromTimestamp ? moment.unix(fromTimestamp).utc().toISOString() : undefined,
-			toDate: toTimestamp ? moment.unix(toTimestamp).utc().toISOString() : undefined,
+			fromDate: fromTimestamp,
+			toDate: toTimestamp,
 		});
 		const result = events.map(m => this.formatPushMessage(m));
 		return result.filter(
@@ -152,14 +162,11 @@ export class EverscaleBlockchainController extends AbstractBlockchainController 
 
 	async retrieveMessageHistoryByTime(
 		recipient: Uint256 | null,
-		mailerAddress?: string,
 		fromTimestamp?: number,
 		toTimestamp?: number,
 		limit?: number,
 	): Promise<IMessage[]> {
-		if (!mailerAddress) {
-			mailerAddress = this.getDefaultMailerAddress();
-		}
+		const mailerAddress = this.getDefaultMailerAddress();
 		return this._retrieveMessageHistoryByTime(
 			mailerAddress,
 			{ type: BlockchainSourceSubjectType.RECIPIENT, address: recipient },
@@ -171,14 +178,11 @@ export class EverscaleBlockchainController extends AbstractBlockchainController 
 
 	async retrieveMessageHistoryByBounds(
 		recipient: Uint256 | null,
-		mailerAddress?: string,
 		fromMessage?: IMessage,
 		toMessage?: IMessage,
 		limit?: number,
 	): Promise<IMessage[]> {
-		if (!mailerAddress) {
-			mailerAddress = this.getDefaultMailerAddress();
-		}
+		const mailerAddress = this.getDefaultMailerAddress();
 		return this._retrieveMessageHistoryByBounds(
 			mailerAddress,
 			{ type: BlockchainSourceSubjectType.RECIPIENT, address: recipient },
@@ -190,14 +194,11 @@ export class EverscaleBlockchainController extends AbstractBlockchainController 
 
 	async retrieveBroadcastHistoryByTime(
 		sender: Uint256 | null,
-		mailerAddress?: string,
 		fromTimestamp?: number,
 		toTimestamp?: number,
 		limit?: number,
 	): Promise<IMessage[]> {
-		if (!mailerAddress) {
-			mailerAddress = this.getDefaultMailerAddress();
-		}
+		const mailerAddress = this.getDefaultMailerAddress();
 		return this._retrieveMessageHistoryByTime(
 			mailerAddress,
 			{ type: BlockchainSourceSubjectType.AUTHOR, address: sender },
@@ -209,14 +210,11 @@ export class EverscaleBlockchainController extends AbstractBlockchainController 
 
 	async retrieveBroadcastHistoryByBounds(
 		sender: Uint256 | null,
-		mailerAddress?: string,
 		fromMessage?: IMessage,
 		toMessage?: IMessage,
 		limit?: number,
 	): Promise<IMessage[]> {
-		if (!mailerAddress) {
-			mailerAddress = this.getDefaultMailerAddress();
-		}
+		const mailerAddress = this.getDefaultMailerAddress();
 		return this._retrieveMessageHistoryByBounds(
 			mailerAddress,
 			{ type: BlockchainSourceSubjectType.AUTHOR, address: sender },
@@ -225,46 +223,6 @@ export class EverscaleBlockchainController extends AbstractBlockchainController 
 			limit,
 		);
 	}
-
-	// // message history block
-	// // Query messages by interval options.since (included) - options.to (excluded)
-	// async retrieveMessageHistoryByDates(
-	// 	recipientAddress: Uint256 | null,
-	// 	options?: RetrievingMessagesOptions,
-	// ): Promise<IMessage[]> {
-	// 	await core.ensureNekotonLoaded();
-	// 	console.log('ttt');
-	// 	const fullMessages: IMessage[] = [];
-
-	// 	const messages = await this.queryMessagesList(recipientAddress, 50, {
-	// 		nextPageAfterMessage: options?.fromMessage,
-	// 		messagesLimit: 50,
-	// 	});
-
-	// 	while (true) {
-	// 		fullMessages.push(
-	// 			...(await Promise.all(
-	// 				messages.map(async m => {
-	// 					if (m.id === options?.toMessage?.blockchainMeta.id) {
-	// 						foundDuplicate = true;
-	// 					}
-	// 					const pushMessage = this.formatPushMessage(m);
-	// 					const content = await this.retrieveMessageContentByMsgId(pushMessage.msgId);
-	// 					if (content && !content.corrupted) {
-	// 						pushMessage.isContentLoaded = true;
-	// 						pushMessage.contentLink = content;
-	// 					}
-	// 					return pushMessage;
-	// 				}),
-	// 			)),
-	// 		);
-
-	// 		if (foundDuplicate) break;
-	// 		if (messages.length < this.MESSAGES_FETCH_LIMIT) break;
-	// 	}
-
-	// 	return fullMessages;
-	// }
 
 	async gqlQueryMessages(query: string, variables: Record<string, any> = {}) {
 		const data = await this.gqlQuery(query, variables);
@@ -316,7 +274,7 @@ export class EverscaleBlockchainController extends AbstractBlockchainController 
 		await core.ensureNekotonLoaded();
 		const fakeAddress = this.convertMsgIdToAddress(msgId);
 		const messages = await this.gqlQueryMessages(
-			getContractMessagesQuery(fakeAddress, this.mailerContract.contractAddress),
+			getContractMessagesQuery(fakeAddress, this.mailerContractAddress),
 			{},
 		);
 		if (!messages.length) {
@@ -326,7 +284,7 @@ export class EverscaleBlockchainController extends AbstractBlockchainController 
 		try {
 			decodedChunks = messages.map((m: IEverscaleMessage) => ({
 				msg: m,
-				body: this.mailerContract.decodeContentMessageBody(m.body),
+				body: decodeContentMessageBody(m.body),
 			}));
 		} catch (err) {
 			return {
@@ -387,7 +345,7 @@ export class EverscaleBlockchainController extends AbstractBlockchainController 
 	}
 
 	private formatPushMessage(message: IEverscaleMessage): IMessage {
-		const body = this.mailerContract.decodePushMessageBody(message.body);
+		const body = decodePushMessageBody(message.body);
 
 		return {
 			msgId: body.msgId,
@@ -434,14 +392,51 @@ export class EverscaleBlockchainController extends AbstractBlockchainController 
 		subject: ISourceSubject,
 		limit?: number,
 		filter?: {
-			fromDate?: string;
-			toDate?: string;
+			fromDate?: number;
+			toDate?: number;
 			fromMessage?: IEverscaleMessage;
 			toMessage?: IEverscaleMessage;
 		},
 		nextPageAfterMessage?: IEverscaleMessage,
 	): Promise<IEverscaleMessage[]> {
-		const address = subject.address ? this.uint256ToAddress(subject.address, true, true) : null;
+		const address = subject.address ? uint256ToAddress(subject.address, true, true) : null;
+
+		const created_at: {
+			gt?: number;
+			lt?: number;
+		} = {};
+
+		const created_lt: {
+			gt?: BigInt;
+			lt?: BigInt;
+		} = {};
+
+		if (nextPageAfterMessage && nextPageAfterMessage.created_lt) {
+			created_lt.lt = BigInt(nextPageAfterMessage.created_lt);
+		}
+		if (filter?.fromMessage) {
+			created_lt.gt = BigInt(filter.fromMessage.created_lt);
+		}
+		if (filter?.toMessage) {
+			const v = BigInt(filter.toMessage.created_lt);
+			if (created_lt.lt === undefined || v < created_lt.lt) {
+				created_lt.lt = v;
+			}
+		}
+		if (filter?.fromDate !== undefined) {
+			created_at.gt = filter?.fromDate;
+		}
+		if (filter?.toDate !== undefined) {
+			created_at.lt = filter?.toDate;
+		}
+		// ${filter?.fromMessage ? `, created_lt: { gt: "${filter.fromMessage.created_lt}" }` : ``}
+		// ${filter?.toMessage ? `, created_lt: { lt: "${filter.toMessage.created_lt}" }` : ``}
+		// created_lt: { ${nextPageAfterMessage?.created_lt ? `lt: "${nextPageAfterMessage.created_lt}"` : ''} }
+		// ${filter?.fromDate ? `, created_at: { gt: ${filter.fromDate} }` : ``}
+		// ${filter?.toDate ? `, created_at: { lt: ${filter.toDate} }` : ``}
+
+		const _at = created_at.gt !== undefined || created_at.lt !== undefined;
+		const _lt = created_lt.gt !== undefined || created_lt.lt !== undefined;
 
 		const result = await this.gqlQueryMessages(
 			`
@@ -451,11 +446,28 @@ export class EverscaleBlockchainController extends AbstractBlockchainController 
 					msg_type: { eq: 2 },
 					${address ? `dst: { eq: "${address}" },` : ''}
 					src: { eq: "${mailerAddress}" },
-					created_lt: { ${nextPageAfterMessage?.created_lt ? `lt: "${nextPageAfterMessage.created_lt}"` : ''} }
-					${filter?.fromDate ? `, created_at: { gt: ${filter.fromDate} }` : ``}
-					${filter?.toDate ? `, created_at: { lt: ${filter.toDate} }` : ``}
-					${filter?.fromMessage ? `, created_lt: { gt: ${filter.fromMessage.created_lt} }` : ``}
-					${filter?.toMessage ? `, created_lt: { lt: ${filter.toMessage.created_lt} }` : ``}
+					${
+						_at
+							? `created_at: { ${
+									created_at.lt !== undefined
+										? `lt: "${moment.unix(created_at.lt).utc().toISOString()}", `
+										: ''
+							  } ${
+									created_at.gt !== undefined
+										? `gt: "${moment.unix(created_at.gt).utc().toISOString()}", `
+										: ''
+							  } }, `
+							: ''
+					}
+					${
+						_lt
+							? `created_lt: { ${
+									created_lt.lt !== undefined ? `lt: "${'0x' + created_lt.lt.toString(16)}", ` : ''
+							  } ${
+									created_lt.gt !== undefined ? `gt: "${'0x' + created_lt.gt.toString(16)}", ` : ''
+							  } }, `
+							: ''
+					}
 				}
 				orderBy: [{path: "created_at", direction: DESC}]
 				limit: ${Math.min(limit || this.MESSAGES_FETCH_LIMIT, this.MESSAGES_FETCH_LIMIT)}
@@ -598,13 +610,6 @@ export class EverscaleBlockchainController extends AbstractBlockchainController 
 		return hexToUint256(address.split(':')[1].toLowerCase());
 	}
 
-	uint256ToAddress(value: Uint256, withPrefix: boolean = true, nullPrefix: boolean = false): string {
-		if (value.length !== 64) {
-			throw new Error('Value must have 32-bytes');
-		}
-		return `${withPrefix ? (nullPrefix ? ':' : '0:') : ''}${value}`;
-	}
-
 	compareMessagesTime(a: IMessage, b: IMessage): number {
 		if (a.createdAt === b.createdAt) {
 			return 0;
@@ -617,4 +622,5 @@ export class EverscaleBlockchainController extends AbstractBlockchainController 
 export const everscaleBlockchainFactory: BlockchainControllerFactory = {
 	create: (options?: any) => new EverscaleBlockchainController(options),
 	blockchain: 'everscale',
+	blockchainGroup: 'everscale',
 };

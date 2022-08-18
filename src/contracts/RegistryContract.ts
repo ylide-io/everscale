@@ -1,30 +1,18 @@
 import { Uint256 } from '@ylide/sdk';
 import SmartBuffer from '@ylide/smart-buffer';
-import { Address, Contract } from 'everscale-inpage-provider';
+import { Address, Contract, ProviderRpcClient } from 'everscale-inpage-provider';
 import core from 'everscale-standalone-client/core';
 import { EverscaleBlockchainController } from '../controllers';
 import { publicKeyToBigIntString, getContractMessagesQuery } from '../misc';
+import { decodeAddressToPublicKeyMessageBody } from './contractUtils';
 
 export class RegistryContract {
-	private readonly contractAddress: string;
+	readonly contractAddress: string;
 	readonly contract: Contract<typeof REGISTRY_ABI>;
 
-	constructor(private readonly blockchainController: EverscaleBlockchainController, contractAddress: string) {
+	constructor(private readonly ever: ProviderRpcClient, contractAddress: string) {
 		this.contractAddress = contractAddress;
-		this.contract = new blockchainController.ever.Contract(REGISTRY_ABI, new Address(this.contractAddress));
-	}
-
-	async getPublicKeyByAddress(address: string): Promise<Uint8Array | null> {
-		await core.ensureNekotonLoaded();
-		const messages = await this.blockchainController.gqlQueryMessages(
-			getContractMessagesQuery(address, this.contractAddress),
-		);
-		console.log(`pk ${address} messages: `, messages);
-		if (messages.length) {
-			return this.decodeAddressToPublicKeyMessageBody(messages[0].body);
-		} else {
-			return null;
-		}
+		this.contract = new ever.Contract(REGISTRY_ABI, new Address(this.contractAddress));
 	}
 
 	async attachPublicKey(address: string, publicKey: Uint8Array): Promise<boolean> {
@@ -38,21 +26,9 @@ export class RegistryContract {
 			});
 		return true;
 	}
-
-	private decodeAddressToPublicKeyMessageBody(body: string): Uint8Array {
-		const data = core.nekoton.decodeEvent(body, JSON.stringify(REGISTRY_ABI), 'AddressToPublicKey');
-		if (!data) {
-			throw new Error('AddressToPublicKeyMessage format is not supported');
-		}
-		return SmartBuffer.ofHexString(
-			BigInt(data.data.publicKey as string)
-				.toString(16)
-				.padStart(64, '0'),
-		).bytes;
-	}
 }
 
-const REGISTRY_ABI = {
+export const REGISTRY_ABI = {
 	'ABI version': 2,
 	'version': '2.2',
 	'header': ['pubkey', 'time', 'expire'],

@@ -1,22 +1,15 @@
 import { bigIntToUint256, Uint256 } from '@ylide/sdk';
 import SmartBuffer from '@ylide/smart-buffer';
-import { Address, Contract } from 'everscale-inpage-provider';
-import core from 'everscale-standalone-client/core';
-import { EverscaleBlockchainController } from '../controllers/EverscaleBlockchainController';
-import {
-	IEverscaleBroadcastMessageBody,
-	IEverscaleContentMessageBody,
-	IEverscalePushMessageBody,
-	publicKeyToBigIntString,
-} from '../misc';
+import { Address, Contract, ProviderRpcClient } from 'everscale-inpage-provider';
+import { publicKeyToBigIntString, uint256ToAddress } from '../misc';
 
 export class MailerContract {
 	readonly contractAddress: string;
 	readonly contract: Contract<typeof MAILER_ABI>;
 
-	constructor(private readonly reader: EverscaleBlockchainController, contractAddress: string) {
+	constructor(private readonly ever: ProviderRpcClient, contractAddress: string) {
 		this.contractAddress = contractAddress;
-		this.contract = new reader.ever.Contract(MAILER_ABI, new Address(this.contractAddress));
+		this.contract = new ever.Contract(MAILER_ABI, new Address(this.contractAddress));
 	}
 
 	async buildHash(pubkey: Uint8Array, uniqueId: number, time: number): Promise<Uint256> {
@@ -86,7 +79,7 @@ export class MailerContract {
 				// @ts-ignore
 				initTime,
 				// @ts-ignore
-				recipients: recipients.map(r => this.reader.uint256ToAddress(r)),
+				recipients: recipients.map(r => uint256ToAddress(r)),
 				// @ts-ignore
 				keys: keys.map(k => new SmartBuffer(k).toBase64String()),
 			})
@@ -164,7 +157,7 @@ export class MailerContract {
 				// @ts-ignore
 				uniqueId,
 				// @ts-ignore
-				recipient: this.reader.uint256ToAddress(recipient),
+				recipient: uint256ToAddress(recipient),
 				// @ts-ignore
 				key: new SmartBuffer(key).toBase64String(),
 				// @ts-ignore
@@ -189,7 +182,7 @@ export class MailerContract {
 				// @ts-ignore
 				uniqueId,
 				// @ts-ignore
-				recipients: recipients.map(r => this.reader.uint256ToAddress(r)),
+				recipients: recipients.map(r => uint256ToAddress(r)),
 				// @ts-ignore
 				keys: keys.map(k => new SmartBuffer(k).toBase64String()),
 				// @ts-ignore
@@ -201,47 +194,9 @@ export class MailerContract {
 				bounce: false,
 			});
 	}
-
-	decodePushMessageBody(body: string): IEverscalePushMessageBody {
-		const data = core.nekoton.decodeEvent(body, JSON.stringify(MAILER_ABI), 'MailPush');
-		if (!data) {
-			throw new Error('PushMessage format is not supported');
-		}
-		return {
-			sender: (data.data.sender as string).startsWith(':')
-				? `0${data.data.sender}`
-				: (data.data.sender as string),
-			msgId: bigIntToUint256(data.data.msgId as string),
-			key: SmartBuffer.ofBase64String(data.data.key as string).bytes,
-		};
-	}
-
-	decodeBroadcastMessageBody(body: string): IEverscaleBroadcastMessageBody {
-		const data = core.nekoton.decodeEvent(body, JSON.stringify(MAILER_ABI), 'MailPush');
-		if (!data) {
-			throw new Error('PushMessage format is not supported');
-		}
-		return {
-			msgId: bigIntToUint256(data.data.msgId as string),
-		};
-	}
-
-	decodeContentMessageBody(body: string): IEverscaleContentMessageBody {
-		const data = core.nekoton.decodeEvent(body, JSON.stringify(MAILER_ABI), 'MailContent');
-		if (!data) {
-			throw new Error('ContentMessage format is not supported');
-		}
-		return {
-			sender: data.data.sender as string,
-			msgId: bigIntToUint256(data.data.msgId as string),
-			parts: Number(data.data.parts as string),
-			partIdx: Number(data.data.partIdx as string),
-			content: SmartBuffer.ofBase64String(data.data.content as string).bytes,
-		};
-	}
 }
 
-const MAILER_ABI = {
+export const MAILER_ABI = {
 	'ABI version': 2,
 	'version': '2.2',
 	'header': ['pubkey', 'time', 'expire'],
