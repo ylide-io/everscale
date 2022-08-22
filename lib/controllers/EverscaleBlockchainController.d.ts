@@ -8,11 +8,13 @@ export declare class EverscaleBlockchainController extends AbstractBlockchainCon
     readonly everscaleEncryptCore: Promise<any>;
     readonly MESSAGES_FETCH_LIMIT = 50;
     readonly mailerContractAddress: string;
+    readonly broadcasterContractAddress: string;
     readonly registryContractAddress: string;
     private readonly mainnetEndpoints;
     constructor(options?: {
         dev?: boolean;
         mailerContractAddress?: string;
+        broadcasterContractAddress?: string;
         registryContractAddress?: string;
         endpoints?: string[];
     });
@@ -32,6 +34,7 @@ export declare class EverscaleBlockchainController extends AbstractBlockchainCon
     retrieveAndVerifyMessageContent(msg: IMessage): Promise<IMessageContent | IMessageCorruptedContent | null>;
     retrieveMessageContentByMsgId(msgId: string): Promise<IMessageContent | IMessageCorruptedContent | null>;
     private formatPushMessage;
+    private formatBroadcastMessage;
     isAddressValid(address: string): boolean;
     private queryMessagesList;
     extractNativePublicKeyFromAddress(addressStr: string): Promise<Uint8Array | null>;

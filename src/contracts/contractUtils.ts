@@ -5,6 +5,16 @@ import { IEverscalePushMessageBody, IEverscaleBroadcastMessageBody, IEverscaleCo
 import { MAILER_ABI } from './MailerContract';
 import { REGISTRY_ABI } from './RegistryContract';
 
+export function decodeBroadcastMessageBody(body: string): IEverscaleBroadcastMessageBody {
+	const data = core.nekoton.decodeEvent(body, JSON.stringify(MAILER_ABI), 'MailBroadcast');
+	if (!data) {
+		throw new Error('PushMessage format is not supported');
+	}
+	return {
+		msgId: bigIntToUint256(data.data.msgId as string),
+	};
+}
+
 export function decodePushMessageBody(body: string): IEverscalePushMessageBody {
 	const data = core.nekoton.decodeEvent(body, JSON.stringify(MAILER_ABI), 'MailPush');
 	if (!data) {
@@ -14,16 +24,6 @@ export function decodePushMessageBody(body: string): IEverscalePushMessageBody {
 		sender: (data.data.sender as string).startsWith(':') ? `0${data.data.sender}` : (data.data.sender as string),
 		msgId: bigIntToUint256(data.data.msgId as string),
 		key: SmartBuffer.ofBase64String(data.data.key as string).bytes,
-	};
-}
-
-export function decodeBroadcastMessageBody(body: string): IEverscaleBroadcastMessageBody {
-	const data = core.nekoton.decodeEvent(body, JSON.stringify(MAILER_ABI), 'MailPush');
-	if (!data) {
-		throw new Error('PushMessage format is not supported');
-	}
-	return {
-		msgId: bigIntToUint256(data.data.msgId as string),
 	};
 }
 
