@@ -18,6 +18,7 @@ export declare class EverscaleWalletController extends AbstractWalletController 
     requestYlidePrivateKey(me: IGenericAccount): Promise<Uint8Array | null>;
     signMagicString(account: IGenericAccount, magicString: string): Promise<Uint8Array>;
     getAuthenticatedAccount(): Promise<IGenericAccount | null>;
+    getCurrentBlockchain(): Promise<string>;
     attachPublicKey(account: IGenericAccount, publicKey: Uint8Array): Promise<void>;
     requestAuthentication(): Promise<null | IGenericAccount>;
     disconnectAccount(account: IGenericAccount): Promise<void>;

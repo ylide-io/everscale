@@ -110,6 +110,10 @@ export class EverscaleWalletController extends AbstractWalletController {
 		}
 	}
 
+	async getCurrentBlockchain(): Promise<string> {
+		return 'everscale';
+	}
+
 	async attachPublicKey(account: IGenericAccount, publicKey: Uint8Array) {
 		await this.ensureAccount(account);
 		await this.registryContract.attachPublicKey(account.address, publicKey);
