@@ -4,7 +4,7 @@
 	"publishConfig": {
 		"access": "public"
 	},
-	"version": "0.5.1",
+	"version": "0.5.2",
 	"description": "Ylide Protocol SDK implementation for EverScale blockchain",
 	"main": "lib/index.js",
 	"types": "lib/index.d.ts",
@@ -34,7 +34,7 @@
 	"author": "Danila Simonov",
 	"license": "ISC",
 	"dependencies": {
-		"@ylide/sdk": "0.5.1",
+		"@ylide/sdk": "0.5.2",
 		"@ylide/smart-buffer": "0.0.9",
 		"chacha": "^2.1.0",
 		"everscale-inpage-provider": "^0.3.20",
