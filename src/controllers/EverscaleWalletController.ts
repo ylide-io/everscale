@@ -89,7 +89,8 @@ export class EverscaleWalletController extends AbstractWalletController {
 			publicKey: me.publicKey!.toHex(),
 			data: SmartBuffer.ofUTF8String(magicString).toBase64String(),
 		});
-		return sha256(SmartBuffer.ofHexString(result.signatureHex).bytes);
+		// @ts-ignore
+		return sha256(SmartBuffer.ofHexString(result.signatureHex || result.signature_hex).bytes);
 	}
 
 	// account block
