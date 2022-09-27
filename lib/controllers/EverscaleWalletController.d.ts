@@ -1,18 +1,22 @@
 import { ProviderRpcClient } from 'everscale-inpage-provider';
-import { IGenericAccount, AbstractWalletController, PublicKey, MessageKey, WalletControllerFactory, Uint256 } from '@ylide/sdk';
+import { IGenericAccount, AbstractWalletController, PublicKey, MessageKey, WalletControllerFactory, Uint256, SwitchAccountCallback } from '@ylide/sdk';
 import { MailerContract, RegistryContract } from '../contracts';
 export declare class EverscaleWalletController extends AbstractWalletController {
     ever: ProviderRpcClient;
     readonly mailerContract: MailerContract;
     readonly broadcasterContract: MailerContract;
     readonly registryContract: RegistryContract;
+    private lastCurrentAccount;
     constructor(options?: {
         dev?: boolean;
         mailerContractAddress?: string;
         broadcasterContractAddress?: string;
         registryContractAddress?: string;
         endpoint?: string;
+        onSwitchAccountRequest?: SwitchAccountCallback;
     });
+    isMultipleAccountsSupported(): boolean;
+    init(): Promise<void>;
     private ensureAccount;
     addressToUint256(address: string): Uint256;
     requestYlidePrivateKey(me: IGenericAccount): Promise<Uint8Array | null>;

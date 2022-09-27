@@ -1,5 +1,5 @@
 import { ProviderRpcClient } from 'everscale-inpage-provider';
-import { AbstractBlockchainController, IMessage, IMessageContent, IMessageCorruptedContent, IExtraEncryptionStrateryBulk, IExtraEncryptionStrateryEntry, MessageKey, PublicKey, BlockchainControllerFactory, Uint256 } from '@ylide/sdk';
+import { AbstractBlockchainController, IMessage, IMessageContent, IMessageCorruptedContent, IExtraEncryptionStrateryBulk, IExtraEncryptionStrateryEntry, MessageKey, PublicKey, BlockchainControllerFactory, Uint256, AbstractNameService } from '@ylide/sdk';
 import { IEverscaleMessage } from '../misc';
 import { GqlSender } from '../misc/GqlSender';
 export declare class EverscaleBlockchainController extends AbstractBlockchainController {
@@ -18,6 +18,9 @@ export declare class EverscaleBlockchainController extends AbstractBlockchainCon
         registryContractAddress?: string;
         endpoints?: string[];
     });
+    defaultNameService(): AbstractNameService | null;
+    init(): Promise<void>;
+    getBalance(address: string): Promise<string>;
     getDefaultMailerAddress(): string;
     getRecipientReadingRules(address: Uint256): Promise<any>;
     private getPublicKeyByAddress;

@@ -4,7 +4,7 @@
 	"publishConfig": {
 		"access": "public"
 	},
-	"version": "0.5.5",
+	"version": "0.6.0",
 	"description": "Ylide Protocol SDK implementation for EverScale blockchain",
 	"main": "lib/index.js",
 	"types": "lib/index.d.ts",
@@ -18,7 +18,7 @@
 	],
 	"scripts": {
 		"test": "echo \"Error: no test specified\" && exit 0",
-		"build": "tsc",
+		"build": "rimraf ./lib && tsc",
 		"start": "ts-node ./src/index.ts",
 		"format": "prettier --write \"src/**/*.ts\"",
 		"lint": "tslint -p tsconfig.json",
@@ -34,16 +34,17 @@
 	"author": "Danila Simonov",
 	"license": "ISC",
 	"dependencies": {
-		"@ylide/sdk": "0.5.2",
+		"@ylide/sdk": "file:../sdk",
 		"@ylide/smart-buffer": "0.0.9",
-		"chacha": "^2.1.0",
-		"everscale-inpage-provider": "^0.3.20",
-		"everscale-standalone-client": "^2.0.10",
-		"moment": "^2.29.4",
-		"tweetnacl": "^1.0.3"
+		"chacha": "2.1.0",
+		"everscale-inpage-provider": "0.3.41",
+		"everscale-standalone-client": "2.0.27",
+		"moment": "2.29.4",
+		"tweetnacl": "1.0.3"
 	},
 	"devDependencies": {
 		"prettier": "^2.7.1",
+		"rimraf": "^3.0.2",
 		"ts-node": "^10.8.2",
 		"tslint": "^6.1.3",
 		"tslint-config-prettier": "^1.18.0",

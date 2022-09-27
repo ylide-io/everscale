@@ -12,6 +12,10 @@ import {
 	unpackSymmetricalyEncryptedData,
 	Uint256,
 	hexToUint256,
+	WalletEvent,
+	YlideError,
+	YlideErrorType,
+	SwitchAccountCallback,
 } from '@ylide/sdk';
 import SmartBuffer from '@ylide/smart-buffer';
 import { EverscaleStandaloneClient } from 'everscale-standalone-client';
@@ -32,6 +36,13 @@ export class EverscaleWalletController extends AbstractWalletController {
 	readonly broadcasterContract: MailerContract;
 	readonly registryContract: RegistryContract;
 
+	private lastCurrentAccount: IGenericAccount | null = null;
+
+	// on(event: WalletEvent.ACCOUNT_CHANGED, fn: (newAccount: IGenericAccount) => void, context?: any): this;
+	// on(event: WalletEvent.BLOCKCHAIN_CHANGED, fn: (newBlockchain: string) => void, context?: any): this;
+	// on(event: WalletEvent.LOGIN, fn: (newAccount: IGenericAccount) => void, context?: any): this;
+	// on(event: WalletEvent.LOGOUT, fn: () => void, context?: any): this;
+
 	constructor(
 		options: {
 			dev?: boolean;
@@ -39,14 +50,30 @@ export class EverscaleWalletController extends AbstractWalletController {
 			broadcasterContractAddress?: string;
 			registryContractAddress?: string;
 			endpoint?: string;
+			onSwitchAccountRequest?: SwitchAccountCallback;
 		} = {},
 	) {
 		super(options);
 
+		this.onSwitchAccountRequest = options?.onSwitchAccountRequest || null;
+
 		this.ever = new ProviderRpcClient({
 			fallback: () =>
 				EverscaleStandaloneClient.create({
-					connection: options.dev ? 'local' : 'mainnet',
+					connection: options.dev
+						? 'local'
+						: {
+								id: 1,
+								group: 'Ylide',
+								type: 'graphql',
+								data: {
+									endpoints: [
+										options.endpoint ||
+											'https://mainnet.evercloud.dev/695e40eeac6b4e3fa4a11666f6e0d6af/graphql',
+									],
+									local: false,
+								},
+						  },
 				}),
 		});
 
@@ -64,10 +91,54 @@ export class EverscaleWalletController extends AbstractWalletController {
 		);
 	}
 
+	isMultipleAccountsSupported() {
+		return false;
+	}
+
+	async init(): Promise<void> {
+		await this.getAuthenticatedAccount();
+
+		const logoutSubscription = await this.ever.subscribe('loggedOut');
+		logoutSubscription.on('data', () => this.emit(WalletEvent.LOGOUT));
+
+		const networkSubscription = await this.ever.subscribe('networkChanged');
+		networkSubscription.on('data', data => {
+			console.log('networkSubscription data: ', data);
+		});
+
+		const permissionsSubscription = await this.ever.subscribe('permissionsChanged');
+		permissionsSubscription.on('data', data => {
+			const oldAccount = this.lastCurrentAccount;
+			if (data.permissions.accountInteraction) {
+				this.lastCurrentAccount = {
+					blockchain: 'everscale',
+					address: data.permissions.accountInteraction.address.toString(),
+					publicKey: PublicKey.fromHexString(
+						PublicKeyType.EVERSCALE_NATIVE,
+						data.permissions.accountInteraction.publicKey,
+					),
+				};
+				if (oldAccount) {
+					this.emit(WalletEvent.ACCOUNT_CHANGED, this.lastCurrentAccount);
+				} else {
+					this.emit(WalletEvent.LOGIN, this.lastCurrentAccount);
+				}
+			} else {
+				if (oldAccount) {
+					this.emit(WalletEvent.LOGOUT);
+				}
+			}
+		});
+	}
+
 	private async ensureAccount(needAccount: IGenericAccount) {
-		const me = await this.getAuthenticatedAccount();
+		let me = await this.getAuthenticatedAccount();
 		if (!me || me.address !== needAccount.address) {
-			throw new Error(`Need ${needAccount.address} account, got from wallet ${me?.address}`);
+			await this.switchAccountRequest(me, needAccount);
+			me = await this.getAuthenticatedAccount();
+		}
+		if (!me || me.address !== needAccount.address) {
+			throw new YlideError(YlideErrorType.ACCOUNT_UNREACHABLE, { currentAccount: me, needAccount });
 		}
 	}
 
@@ -98,7 +169,7 @@ export class EverscaleWalletController extends AbstractWalletController {
 		await this.ever.ensureInitialized();
 		const providerState = await this.ever.getProviderState();
 		if (providerState.permissions.accountInteraction) {
-			return {
+			this.lastCurrentAccount = {
 				blockchain: 'everscale',
 				address: providerState.permissions.accountInteraction.address.toString(),
 				publicKey: PublicKey.fromHexString(
@@ -106,7 +177,9 @@ export class EverscaleWalletController extends AbstractWalletController {
 					providerState.permissions.accountInteraction.publicKey,
 				),
 			};
+			return this.lastCurrentAccount;
 		} else {
+			this.lastCurrentAccount = null;
 			return null;
 		}
 	}
@@ -265,7 +338,7 @@ export class EverscaleWalletController extends AbstractWalletController {
 }
 
 export const everscaleWalletFactory: WalletControllerFactory = {
-	create: (options?: any) => new EverscaleWalletController(options),
+	create: async (options?: any) => new EverscaleWalletController(options),
 	isWalletAvailable: () => new ProviderRpcClient().hasProvider(),
 	blockchainGroup: 'everscale',
 	wallet: 'everwallet',

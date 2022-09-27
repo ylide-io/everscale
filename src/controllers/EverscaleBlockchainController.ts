@@ -21,6 +21,7 @@ import {
 	hexToUint256,
 	ISourceSubject,
 	BlockchainSourceSubjectType,
+	AbstractNameService,
 } from '@ylide/sdk';
 import {
 	BROADCASTER_ADDRESS,
@@ -54,13 +55,7 @@ export class EverscaleBlockchainController extends AbstractBlockchainController 
 	readonly broadcasterContractAddress: string;
 	readonly registryContractAddress: string;
 
-	private readonly mainnetEndpoints = [
-		'eri01.main.everos.dev',
-		'gra01.main.everos.dev',
-		'gra02.main.everos.dev',
-		'lim01.main.everos.dev',
-		'rbx01.main.everos.dev',
-	];
+	private readonly mainnetEndpoints = ['https://mainnet.evercloud.dev/695e40eeac6b4e3fa4a11666f6e0d6af/graphql'];
 
 	constructor(
 		options: {
@@ -103,6 +98,18 @@ export class EverscaleBlockchainController extends AbstractBlockchainController 
 			options.broadcasterContractAddress || (options.dev ? DEV_BROADCASTER_ADDRESS : BROADCASTER_ADDRESS);
 		this.registryContractAddress =
 			options.registryContractAddress || (options.dev ? DEV_REGISTRY_ADDRESS : REGISTRY_ADDRESS);
+	}
+
+	defaultNameService(): AbstractNameService | null {
+		return null;
+	}
+
+	async init(): Promise<void> {
+		// np
+	}
+
+	async getBalance(address: string): Promise<string> {
+		return this.ever.getBalance(new Address(address));
 	}
 
 	getDefaultMailerAddress() {
@@ -722,7 +729,7 @@ export class EverscaleBlockchainController extends AbstractBlockchainController 
 }
 
 export const everscaleBlockchainFactory: BlockchainControllerFactory = {
-	create: (options?: any) => new EverscaleBlockchainController(options),
+	create: async (options?: any) => new EverscaleBlockchainController(options),
 	blockchain: 'everscale',
 	blockchainGroup: 'everscale',
 };

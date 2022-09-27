@@ -25,6 +25,7 @@ export class MailerContract {
 
 	async setFees(address: string, _contentPartFee: number, _recipientFee: number) {
 		return await this.contract.methods
+			// @ts-ignore
 			.setFees({
 				// @ts-ignore
 				_contentPartFee: BigInt(_contentPartFee).toString(10),
@@ -40,6 +41,7 @@ export class MailerContract {
 
 	async transferOwnership(address: string, newOwner: string) {
 		return await this.contract.methods
+			// @ts-ignore
 			.transferOwnership({
 				// @ts-ignore
 				newOwner,
@@ -53,6 +55,7 @@ export class MailerContract {
 
 	async setBeneficiary(address: string, _beneficiary: string) {
 		return await this.contract.methods
+			// @ts-ignore
 			.setBeneficiary({
 				// @ts-ignore
 				_beneficiary,
@@ -73,6 +76,7 @@ export class MailerContract {
 	) {
 		// uint256 publicKey, uint32 uniqueId, uint32 initTime, address[] recipients, bytes[] keys
 		return await this.contract.methods
+			// @ts-ignore
 			.addRecipients({
 				// @ts-ignore
 				uniqueId,
@@ -99,6 +103,7 @@ export class MailerContract {
 		content: Uint8Array,
 	) {
 		return await this.contract.methods
+			// @ts-ignore
 			.sendMultipartMailPart({
 				// @ts-ignore
 				uniqueId,
@@ -178,6 +183,7 @@ export class MailerContract {
 		content: Uint8Array,
 	) {
 		return await this.contract.methods
+			// @ts-ignore
 			.sendBulkMail({
 				// @ts-ignore
 				uniqueId,
