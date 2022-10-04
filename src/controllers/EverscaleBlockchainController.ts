@@ -20,7 +20,7 @@ import {
 	Uint256,
 	hexToUint256,
 	ISourceSubject,
-	BlockchainSourceSubjectType,
+	BlockchainSourceType,
 	AbstractNameService,
 } from '@ylide/sdk';
 import {
@@ -154,14 +154,14 @@ export class EverscaleBlockchainController extends AbstractBlockchainController 
 			toDate: toTimestamp,
 		});
 		const result = events.map(m =>
-			subject.type === BlockchainSourceSubjectType.RECIPIENT
+			subject.type === BlockchainSourceType.DIRECT
 				? this.formatPushMessage(m)
-				: this.formatBroadcastMessage(subject.address!, m),
+				: this.formatBroadcastMessage(subject.sender!, m),
 		);
 		return result.filter(
 			r =>
-				(!fromTimestamp || r.blockchainMeta.block.timestamp > fromTimestamp) &&
-				(!toTimestamp || r.blockchainMeta.block.timestamp <= toTimestamp),
+				(!fromTimestamp || r.$$blockchainMetaDontUseThisField.block.timestamp > fromTimestamp) &&
+				(!toTimestamp || r.$$blockchainMetaDontUseThisField.block.timestamp <= toTimestamp),
 		);
 	}
 
@@ -174,13 +174,13 @@ export class EverscaleBlockchainController extends AbstractBlockchainController 
 	): Promise<IMessage[]> {
 		await core.ensureNekotonLoaded();
 		const events = await this.queryMessagesList(contractAddress, subject, limit, {
-			fromMessage: fromMessage?.blockchainMeta,
-			toMessage: toMessage?.blockchainMeta,
+			fromMessage: fromMessage?.$$blockchainMetaDontUseThisField,
+			toMessage: toMessage?.$$blockchainMetaDontUseThisField,
 		});
 		const result = events.map(m =>
-			subject.type === BlockchainSourceSubjectType.RECIPIENT
+			subject.type === BlockchainSourceType.DIRECT
 				? this.formatPushMessage(m)
-				: this.formatBroadcastMessage(subject.address!, m),
+				: this.formatBroadcastMessage(subject.sender!, m),
 		);
 		const topBound = toMessage ? result.findIndex(r => r.msgId === toMessage.msgId) : -1;
 		const bottomBound = fromMessage ? result.findIndex(r => r.msgId === fromMessage.msgId) : -1;
@@ -188,6 +188,7 @@ export class EverscaleBlockchainController extends AbstractBlockchainController 
 	}
 
 	async retrieveMessageHistoryByTime(
+		sender: Uint256 | null,
 		recipient: Uint256 | null,
 		fromTimestamp?: number,
 		toTimestamp?: number,
@@ -196,7 +197,7 @@ export class EverscaleBlockchainController extends AbstractBlockchainController 
 		const mailerAddress = this.getDefaultMailerAddress();
 		return this._retrieveMessageHistoryByTime(
 			mailerAddress,
-			{ type: BlockchainSourceSubjectType.RECIPIENT, address: recipient },
+			{ type: BlockchainSourceType.DIRECT, sender, recipient },
 			fromTimestamp,
 			toTimestamp,
 			limit,
@@ -204,6 +205,7 @@ export class EverscaleBlockchainController extends AbstractBlockchainController 
 	}
 
 	async retrieveMessageHistoryByBounds(
+		sender: Uint256 | null,
 		recipient: Uint256 | null,
 		fromMessage?: IMessage,
 		toMessage?: IMessage,
@@ -212,7 +214,7 @@ export class EverscaleBlockchainController extends AbstractBlockchainController 
 		const mailerAddress = this.getDefaultMailerAddress();
 		return this._retrieveMessageHistoryByBounds(
 			mailerAddress,
-			{ type: BlockchainSourceSubjectType.RECIPIENT, address: recipient },
+			{ type: BlockchainSourceType.DIRECT, sender, recipient },
 			fromMessage,
 			toMessage,
 			limit,
@@ -228,7 +230,7 @@ export class EverscaleBlockchainController extends AbstractBlockchainController 
 		const broadcasterAddress = this.broadcasterContractAddress;
 		return this._retrieveMessageHistoryByTime(
 			broadcasterAddress,
-			{ type: BlockchainSourceSubjectType.AUTHOR, address: sender },
+			{ type: BlockchainSourceType.BROADCAST, sender },
 			fromTimestamp,
 			toTimestamp,
 			limit,
@@ -244,7 +246,7 @@ export class EverscaleBlockchainController extends AbstractBlockchainController 
 		const broadcasterAddress = this.broadcasterContractAddress;
 		return this._retrieveMessageHistoryByBounds(
 			broadcasterAddress,
-			{ type: BlockchainSourceSubjectType.AUTHOR, address: sender },
+			{ type: BlockchainSourceType.BROADCAST, sender },
 			fromMessage,
 			toMessage,
 			limit,
@@ -390,13 +392,7 @@ export class EverscaleBlockchainController extends AbstractBlockchainController 
 
 			key: body.key,
 
-			isContentLoaded: false,
-			isContentDecrypted: false,
-			contentLink: null,
-			decryptedContent: null,
-
-			blockchainMeta: message,
-			userspaceMeta: null,
+			$$blockchainMetaDontUseThisField: message,
 		};
 	}
 
@@ -414,13 +410,7 @@ export class EverscaleBlockchainController extends AbstractBlockchainController 
 
 			key: new Uint8Array(),
 
-			isContentLoaded: false,
-			isContentDecrypted: false,
-			contentLink: null,
-			decryptedContent: null,
-
-			blockchainMeta: message,
-			userspaceMeta: null,
+			$$blockchainMetaDontUseThisField: message,
 		};
 	}
 
@@ -457,7 +447,14 @@ export class EverscaleBlockchainController extends AbstractBlockchainController 
 		},
 		nextPageAfterMessage?: IEverscaleMessage,
 	): Promise<IEverscaleMessage[]> {
-		const address = subject.address ? uint256ToAddress(subject.address, true, true) : null;
+		const address =
+			subject.type === BlockchainSourceType.DIRECT
+				? subject.recipient
+					? uint256ToAddress(subject.recipient, true, true)
+					: null
+				: subject.sender
+				? uint256ToAddress(subject.sender, true, true)
+				: null;
 
 		const createdAt: {
 			gt?: number;
@@ -496,7 +493,7 @@ export class EverscaleBlockchainController extends AbstractBlockchainController 
 		const _at = createdAt.gt !== undefined || createdAt.lt !== undefined;
 		const _lt = createdLt.gt !== undefined || createdLt.lt !== undefined;
 		let result: IEverscaleMessage[];
-		if (subject.type === BlockchainSourceSubjectType.RECIPIENT) {
+		if (subject.type === BlockchainSourceType.DIRECT) {
 			result = await this.gqlQueryMessages(
 				`
 				query {

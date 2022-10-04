@@ -27,8 +27,8 @@ export declare class EverscaleBlockchainController extends AbstractBlockchainCon
     extractPublicKeyFromAddress(address: string): Promise<PublicKey | null>;
     private _retrieveMessageHistoryByTime;
     private _retrieveMessageHistoryByBounds;
-    retrieveMessageHistoryByTime(recipient: Uint256 | null, fromTimestamp?: number, toTimestamp?: number, limit?: number): Promise<IMessage[]>;
-    retrieveMessageHistoryByBounds(recipient: Uint256 | null, fromMessage?: IMessage, toMessage?: IMessage, limit?: number): Promise<IMessage[]>;
+    retrieveMessageHistoryByTime(sender: Uint256 | null, recipient: Uint256 | null, fromTimestamp?: number, toTimestamp?: number, limit?: number): Promise<IMessage[]>;
+    retrieveMessageHistoryByBounds(sender: Uint256 | null, recipient: Uint256 | null, fromMessage?: IMessage, toMessage?: IMessage, limit?: number): Promise<IMessage[]>;
     retrieveBroadcastHistoryByTime(sender: Uint256 | null, fromTimestamp?: number, toTimestamp?: number, limit?: number): Promise<IMessage[]>;
     retrieveBroadcastHistoryByBounds(sender: Uint256 | null, fromMessage?: IMessage, toMessage?: IMessage, limit?: number): Promise<IMessage[]>;
     gqlQueryMessages(query: string, variables?: Record<string, any>): Promise<IEverscaleMessage[]>;
