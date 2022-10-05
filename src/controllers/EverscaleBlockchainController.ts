@@ -86,9 +86,20 @@ export class EverscaleBlockchainController extends AbstractBlockchainController 
 		}
 
 		this.ever = new ProviderRpcClient({
+			forceUseFallback: true,
 			fallback: () =>
 				EverscaleStandaloneClient.create({
-					connection: options.dev ? 'local' : 'mainnet',
+					connection: options.dev
+						? 'local'
+						: {
+								id: 1,
+								group: 'mainnet',
+								type: 'graphql',
+								data: {
+									local: false,
+									endpoints: this.mainnetEndpoints,
+								},
+						  },
 				}),
 		});
 
