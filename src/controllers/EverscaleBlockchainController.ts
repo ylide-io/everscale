@@ -54,13 +54,7 @@ export class EverscaleBlockchainController extends AbstractBlockchainController 
 	readonly broadcasterContractAddress: string;
 	readonly registryContractAddress: string;
 
-	private readonly mainnetEndpoints = [
-		'eri01.main.everos.dev',
-		'gra01.main.everos.dev',
-		'gra02.main.everos.dev',
-		'lim01.main.everos.dev',
-		'rbx01.main.everos.dev',
-	];
+	private readonly mainnetEndpoints = ['https://mainnet.evercloud.dev/695e40eeac6b4e3fa4a11666f6e0d6af/graphql'];
 
 	constructor(
 		options: {
@@ -91,9 +85,20 @@ export class EverscaleBlockchainController extends AbstractBlockchainController 
 		}
 
 		this.ever = new ProviderRpcClient({
+			forceUseFallback: true,
 			fallback: () =>
 				EverscaleStandaloneClient.create({
-					connection: options.dev ? 'local' : 'mainnet',
+					connection: options.dev
+						? 'local'
+						: {
+								id: 1,
+								group: 'mainnet',
+								type: 'graphql',
+								data: {
+									local: false,
+									endpoints: this.mainnetEndpoints,
+								},
+						  },
 				}),
 		});
 

@@ -4,7 +4,7 @@
 	"publishConfig": {
 		"access": "public"
 	},
-	"version": "0.5.5",
+	"version": "0.5.7",
 	"description": "Ylide Protocol SDK implementation for EverScale blockchain",
 	"main": "lib/index.js",
 	"types": "lib/index.d.ts",
@@ -36,11 +36,11 @@
 	"dependencies": {
 		"@ylide/sdk": "0.5.2",
 		"@ylide/smart-buffer": "0.0.9",
-		"chacha": "^2.1.0",
-		"everscale-inpage-provider": "^0.3.20",
-		"everscale-standalone-client": "^2.0.10",
-		"moment": "^2.29.4",
-		"tweetnacl": "^1.0.3"
+		"chacha": "2.1.0",
+		"everscale-inpage-provider": "0.3.41",
+		"everscale-standalone-client": "2.0.27",
+		"moment": "2.29.4",
+		"tweetnacl": "1.0.3"
 	},
 	"devDependencies": {
 		"prettier": "^2.7.1",
