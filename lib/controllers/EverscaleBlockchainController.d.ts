@@ -18,6 +18,7 @@ export declare class EverscaleBlockchainController extends AbstractBlockchainCon
         registryContractAddress?: string;
         endpoints?: string[];
     });
+    isReadingBySenderAvailable(): boolean;
     defaultNameService(): AbstractNameService | null;
     init(): Promise<void>;
     getBalance(address: string): Promise<string>;

@@ -111,6 +111,10 @@ export class EverscaleBlockchainController extends AbstractBlockchainController 
 			options.registryContractAddress || (options.dev ? DEV_REGISTRY_ADDRESS : REGISTRY_ADDRESS);
 	}
 
+	isReadingBySenderAvailable(): boolean {
+		return false;
+	}
+
 	defaultNameService(): AbstractNameService | null {
 		return null;
 	}
@@ -407,7 +411,7 @@ export class EverscaleBlockchainController extends AbstractBlockchainController 
 		};
 	}
 
-	private formatBroadcastMessage(sender: Uint256, message: IEverscaleMessage): IMessage {
+	private formatBroadcastMessage(sender: string, message: IEverscaleMessage): IMessage {
 		const body = decodeBroadcastMessageBody(message.body);
 
 		return {
@@ -464,7 +468,7 @@ export class EverscaleBlockchainController extends AbstractBlockchainController 
 					? uint256ToAddress(subject.recipient, true, true)
 					: null
 				: subject.sender
-				? uint256ToAddress(subject.sender, true, true)
+				? subject.sender
 				: null;
 
 		const createdAt: {
