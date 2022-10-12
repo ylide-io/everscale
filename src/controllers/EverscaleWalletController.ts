@@ -103,6 +103,7 @@ export class EverscaleWalletController extends AbstractWalletController {
 
 		const networkSubscription = await this.ever.subscribe('networkChanged');
 		networkSubscription.on('data', data => {
+			// tslint:disable-next-line
 			console.log('networkSubscription data: ', data);
 		});
 

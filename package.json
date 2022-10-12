@@ -34,7 +34,7 @@
 	"author": "Danila Simonov",
 	"license": "ISC",
 	"dependencies": {
-		"@ylide/sdk": "file:../sdk",
+		"@ylide/sdk": "0.6.0",
 		"@ylide/smart-buffer": "0.0.9",
 		"chacha": "2.1.0",
 		"everscale-inpage-provider": "0.3.41",
