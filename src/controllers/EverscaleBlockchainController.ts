@@ -203,7 +203,7 @@ export class EverscaleBlockchainController extends AbstractBlockchainController 
 	}
 
 	async retrieveMessageHistoryByTime(
-		sender: Uint256 | null,
+		sender: string | null,
 		recipient: Uint256 | null,
 		fromTimestamp?: number,
 		toTimestamp?: number,
@@ -220,7 +220,7 @@ export class EverscaleBlockchainController extends AbstractBlockchainController 
 	}
 
 	async retrieveMessageHistoryByBounds(
-		sender: Uint256 | null,
+		sender: string | null,
 		recipient: Uint256 | null,
 		fromMessage?: IMessage,
 		toMessage?: IMessage,
@@ -237,7 +237,7 @@ export class EverscaleBlockchainController extends AbstractBlockchainController 
 	}
 
 	async retrieveBroadcastHistoryByTime(
-		sender: Uint256 | null,
+		sender: string | null,
 		fromTimestamp?: number,
 		toTimestamp?: number,
 		limit?: number,
@@ -253,7 +253,7 @@ export class EverscaleBlockchainController extends AbstractBlockchainController 
 	}
 
 	async retrieveBroadcastHistoryByBounds(
-		sender: Uint256 | null,
+		sender: string | null,
 		fromMessage?: IMessage,
 		toMessage?: IMessage,
 		limit?: number,

@@ -28,10 +28,10 @@ export declare class EverscaleBlockchainController extends AbstractBlockchainCon
     extractPublicKeyFromAddress(address: string): Promise<PublicKey | null>;
     private _retrieveMessageHistoryByTime;
     private _retrieveMessageHistoryByBounds;
-    retrieveMessageHistoryByTime(sender: Uint256 | null, recipient: Uint256 | null, fromTimestamp?: number, toTimestamp?: number, limit?: number): Promise<IMessage[]>;
-    retrieveMessageHistoryByBounds(sender: Uint256 | null, recipient: Uint256 | null, fromMessage?: IMessage, toMessage?: IMessage, limit?: number): Promise<IMessage[]>;
-    retrieveBroadcastHistoryByTime(sender: Uint256 | null, fromTimestamp?: number, toTimestamp?: number, limit?: number): Promise<IMessage[]>;
-    retrieveBroadcastHistoryByBounds(sender: Uint256 | null, fromMessage?: IMessage, toMessage?: IMessage, limit?: number): Promise<IMessage[]>;
+    retrieveMessageHistoryByTime(sender: string | null, recipient: Uint256 | null, fromTimestamp?: number, toTimestamp?: number, limit?: number): Promise<IMessage[]>;
+    retrieveMessageHistoryByBounds(sender: string | null, recipient: Uint256 | null, fromMessage?: IMessage, toMessage?: IMessage, limit?: number): Promise<IMessage[]>;
+    retrieveBroadcastHistoryByTime(sender: string | null, fromTimestamp?: number, toTimestamp?: number, limit?: number): Promise<IMessage[]>;
+    retrieveBroadcastHistoryByBounds(sender: string | null, fromMessage?: IMessage, toMessage?: IMessage, limit?: number): Promise<IMessage[]>;
     gqlQueryMessages(query: string, variables?: Record<string, any>): Promise<IEverscaleMessage[]>;
     private gqlQuery;
     private convertMsgIdToAddress;
