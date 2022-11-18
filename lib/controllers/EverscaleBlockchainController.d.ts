@@ -1,5 +1,5 @@
 import { ProviderRpcClient } from 'everscale-inpage-provider';
-import { AbstractBlockchainController, IMessage, IMessageContent, IMessageCorruptedContent, IExtraEncryptionStrateryBulk, IExtraEncryptionStrateryEntry, MessageKey, PublicKey, BlockchainControllerFactory, Uint256, AbstractNameService } from '@ylide/sdk';
+import { AbstractBlockchainController, IMessage, IMessageContent, IMessageCorruptedContent, IExtraEncryptionStrateryBulk, IExtraEncryptionStrateryEntry, MessageKey, PublicKey, BlockchainControllerFactory, Uint256, ISourceSubject, AbstractNameService } from '@ylide/sdk';
 import { IEverscaleMessage } from '../misc';
 import { GqlSender } from '../misc/GqlSender';
 export declare class EverscaleBlockchainController extends AbstractBlockchainController {
@@ -10,7 +10,7 @@ export declare class EverscaleBlockchainController extends AbstractBlockchainCon
     readonly mailerContractAddress: string;
     readonly broadcasterContractAddress: string;
     readonly registryContractAddress: string;
-    private readonly mainnetEndpoints;
+    readonly mainnetEndpoints: string[];
     constructor(options?: {
         dev?: boolean;
         mailerContractAddress?: string;
@@ -18,29 +18,41 @@ export declare class EverscaleBlockchainController extends AbstractBlockchainCon
         registryContractAddress?: string;
         endpoints?: string[];
     });
+    blockchainGroup(): string;
+    blockchain(): string;
     isReadingBySenderAvailable(): boolean;
     defaultNameService(): AbstractNameService | null;
     init(): Promise<void>;
-    getBalance(address: string): Promise<string>;
+    getBalance(address: string): Promise<{
+        original: string;
+        number: number;
+        string: string;
+        e18: string;
+    }>;
     getDefaultMailerAddress(): string;
     getRecipientReadingRules(address: Uint256): Promise<any>;
-    private getPublicKeyByAddress;
+    getPublicKeyByAddress(address: string): Promise<Uint8Array | null>;
     extractPublicKeyFromAddress(address: string): Promise<PublicKey | null>;
-    private _retrieveMessageHistoryByTime;
-    private _retrieveMessageHistoryByBounds;
+    _retrieveMessageHistoryByTime(contractAddress: string, subject: ISourceSubject, fromTimestamp?: number, toTimestamp?: number, limit?: number): Promise<IMessage[]>;
+    _retrieveMessageHistoryByBounds(contractAddress: string, subject: ISourceSubject, fromMessage?: IMessage, toMessage?: IMessage, limit?: number): Promise<IMessage[]>;
     retrieveMessageHistoryByTime(sender: string | null, recipient: Uint256 | null, fromTimestamp?: number, toTimestamp?: number, limit?: number): Promise<IMessage[]>;
     retrieveMessageHistoryByBounds(sender: string | null, recipient: Uint256 | null, fromMessage?: IMessage, toMessage?: IMessage, limit?: number): Promise<IMessage[]>;
     retrieveBroadcastHistoryByTime(sender: string | null, fromTimestamp?: number, toTimestamp?: number, limit?: number): Promise<IMessage[]>;
     retrieveBroadcastHistoryByBounds(sender: string | null, fromMessage?: IMessage, toMessage?: IMessage, limit?: number): Promise<IMessage[]>;
     gqlQueryMessages(query: string, variables?: Record<string, any>): Promise<IEverscaleMessage[]>;
-    private gqlQuery;
-    private convertMsgIdToAddress;
+    gqlQuery(query: string, variables?: Record<string, any>): Promise<any>;
+    convertMsgIdToAddress(msgId: string): string;
     retrieveAndVerifyMessageContent(msg: IMessage): Promise<IMessageContent | IMessageCorruptedContent | null>;
     retrieveMessageContentByMsgId(msgId: string): Promise<IMessageContent | IMessageCorruptedContent | null>;
-    private formatPushMessage;
-    private formatBroadcastMessage;
+    formatPushMessage(message: IEverscaleMessage): IMessage;
+    formatBroadcastMessage(sender: string, message: IEverscaleMessage): IMessage;
     isAddressValid(address: string): boolean;
-    private queryMessagesList;
+    queryMessagesList(contractAddress: string, subject: ISourceSubject, limit?: number, filter?: {
+        fromDate?: number;
+        toDate?: number;
+        fromMessage?: IEverscaleMessage;
+        toMessage?: IEverscaleMessage;
+    }, nextPageAfterMessage?: IEverscaleMessage): Promise<IEverscaleMessage[]>;
     extractNativePublicKeyFromAddress(addressStr: string): Promise<Uint8Array | null>;
     decodeNativeKey(senderPublicKey: Uint8Array, recipientPublicKey: Uint8Array, key: Uint8Array): Promise<Uint8Array>;
     getExtraEncryptionStrategiesFromAddress(address: string): Promise<IExtraEncryptionStrateryEntry[]>;

@@ -55,7 +55,7 @@ export class EverscaleBlockchainController extends AbstractBlockchainController 
 	readonly broadcasterContractAddress: string;
 	readonly registryContractAddress: string;
 
-	private readonly mainnetEndpoints = ['https://mainnet.evercloud.dev/695e40eeac6b4e3fa4a11666f6e0d6af/graphql'];
+	readonly mainnetEndpoints = ['https://mainnet.evercloud.dev/695e40eeac6b4e3fa4a11666f6e0d6af/graphql'];
 
 	constructor(
 		options: {
@@ -111,6 +111,14 @@ export class EverscaleBlockchainController extends AbstractBlockchainController 
 			options.registryContractAddress || (options.dev ? DEV_REGISTRY_ADDRESS : REGISTRY_ADDRESS);
 	}
 
+	blockchainGroup(): string {
+		return 'everscale';
+	}
+
+	blockchain(): string {
+		return 'everscale';
+	}
+
 	isReadingBySenderAvailable(): boolean {
 		return false;
 	}
@@ -123,8 +131,14 @@ export class EverscaleBlockchainController extends AbstractBlockchainController 
 		// np
 	}
 
-	async getBalance(address: string): Promise<string> {
-		return this.ever.getBalance(new Address(address));
+	async getBalance(address: string) {
+		const stringValue = await this.ever.getBalance(new Address(address));
+		return {
+			original: stringValue,
+			number: Number(stringValue),
+			string: stringValue,
+			e18: stringValue,
+		};
 	}
 
 	getDefaultMailerAddress() {
@@ -135,7 +149,7 @@ export class EverscaleBlockchainController extends AbstractBlockchainController 
 		return [];
 	}
 
-	private async getPublicKeyByAddress(address: string): Promise<Uint8Array | null> {
+	async getPublicKeyByAddress(address: string): Promise<Uint8Array | null> {
 		await core.ensureNekotonLoaded();
 		const messages = await this.gqlQueryMessages(getContractMessagesQuery(address, this.registryContractAddress));
 		if (messages.length) {
@@ -153,7 +167,7 @@ export class EverscaleBlockchainController extends AbstractBlockchainController 
 		return PublicKey.fromBytes(PublicKeyType.YLIDE, rawKey);
 	}
 
-	private async _retrieveMessageHistoryByTime(
+	async _retrieveMessageHistoryByTime(
 		contractAddress: string,
 		subject: ISourceSubject,
 		fromTimestamp?: number,
@@ -180,7 +194,7 @@ export class EverscaleBlockchainController extends AbstractBlockchainController 
 		);
 	}
 
-	private async _retrieveMessageHistoryByBounds(
+	async _retrieveMessageHistoryByBounds(
 		contractAddress: string,
 		subject: ISourceSubject,
 		fromMessage?: IMessage,
@@ -282,7 +296,7 @@ export class EverscaleBlockchainController extends AbstractBlockchainController 
 		return data.data.messages as IEverscaleMessage[];
 	}
 
-	private async gqlQuery(query: string, variables: Record<string, any> = {}) {
+	async gqlQuery(query: string, variables: Record<string, any> = {}) {
 		return this.gql.send(
 			JSON.stringify({
 				query,
@@ -291,7 +305,7 @@ export class EverscaleBlockchainController extends AbstractBlockchainController 
 		);
 	}
 
-	private convertMsgIdToAddress(msgId: string) {
+	convertMsgIdToAddress(msgId: string) {
 		return `:${msgId}`;
 	}
 
@@ -394,7 +408,7 @@ export class EverscaleBlockchainController extends AbstractBlockchainController 
 		};
 	}
 
-	private formatPushMessage(message: IEverscaleMessage): IMessage {
+	formatPushMessage(message: IEverscaleMessage): IMessage {
 		const body = decodePushMessageBody(message.body);
 
 		return {
@@ -411,7 +425,7 @@ export class EverscaleBlockchainController extends AbstractBlockchainController 
 		};
 	}
 
-	private formatBroadcastMessage(sender: string, message: IEverscaleMessage): IMessage {
+	formatBroadcastMessage(sender: string, message: IEverscaleMessage): IMessage {
 		const body = decodeBroadcastMessageBody(message.body);
 
 		return {
@@ -450,7 +464,7 @@ export class EverscaleBlockchainController extends AbstractBlockchainController 
 	}
 
 	// Query messages by interval sinceDate(excluded) - untilDate (excluded)
-	private async queryMessagesList(
+	async queryMessagesList(
 		contractAddress: string,
 		subject: ISourceSubject,
 		limit?: number,

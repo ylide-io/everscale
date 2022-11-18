@@ -15,6 +15,8 @@ export declare class EverscaleWalletController extends AbstractWalletController 
         endpoint?: string;
         onSwitchAccountRequest?: SwitchAccountCallback;
     });
+    blockchainGroup(): string;
+    wallet(): string;
     isMultipleAccountsSupported(): boolean;
     init(): Promise<void>;
     private ensureAccount;

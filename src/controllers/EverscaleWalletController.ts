@@ -91,6 +91,14 @@ export class EverscaleWalletController extends AbstractWalletController {
 		);
 	}
 
+	blockchainGroup(): string {
+		return 'everscale';
+	}
+
+	wallet(): string {
+		return 'everwallet';
+	}
+
 	isMultipleAccountsSupported() {
 		return false;
 	}
