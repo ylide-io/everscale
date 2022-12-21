@@ -1,7 +1,8 @@
 import { ProviderRpcClient } from 'everscale-inpage-provider';
-import { AbstractBlockchainController, IMessage, IMessageContent, IMessageCorruptedContent, IExtraEncryptionStrateryBulk, IExtraEncryptionStrateryEntry, MessageKey, PublicKey, BlockchainControllerFactory, Uint256, ISourceSubject, AbstractNameService } from '@ylide/sdk';
+import { AbstractBlockchainController, IMessage, IMessageContent, IMessageCorruptedContent, IExtraEncryptionStrateryBulk, IExtraEncryptionStrateryEntry, MessageKey, BlockchainControllerFactory, Uint256, ISourceSubject, AbstractNameService } from '@ylide/sdk';
 import { IEverscaleMessage } from '../misc';
 import { GqlSender } from '../misc/GqlSender';
+import { ExternalYlidePublicKey } from '@ylide/sdk';
 export declare class EverscaleBlockchainController extends AbstractBlockchainController {
     ever: ProviderRpcClient;
     gql: GqlSender;
@@ -32,7 +33,7 @@ export declare class EverscaleBlockchainController extends AbstractBlockchainCon
     getDefaultMailerAddress(): string;
     getRecipientReadingRules(address: Uint256): Promise<any>;
     getPublicKeyByAddress(address: string): Promise<Uint8Array | null>;
-    extractPublicKeyFromAddress(address: string): Promise<PublicKey | null>;
+    extractPublicKeyFromAddress(address: string): Promise<ExternalYlidePublicKey | null>;
     _retrieveMessageHistoryByTime(contractAddress: string, subject: ISourceSubject, fromTimestamp?: number, toTimestamp?: number, limit?: number): Promise<IMessage[]>;
     _retrieveMessageHistoryByBounds(contractAddress: string, subject: ISourceSubject, fromMessage?: IMessage, toMessage?: IMessage, limit?: number): Promise<IMessage[]>;
     retrieveMessageHistoryByTime(sender: string | null, recipient: Uint256 | null, fromTimestamp?: number, toTimestamp?: number, limit?: number): Promise<IMessage[]>;

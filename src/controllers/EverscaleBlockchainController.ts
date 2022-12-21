@@ -42,6 +42,7 @@ import {
 	decodeContentMessageBody,
 	decodePushMessageBody,
 } from '../contracts/contractUtils';
+import { ExternalYlidePublicKey, YlidePublicKeyVersion } from '@ylide/sdk';
 
 export class EverscaleBlockchainController extends AbstractBlockchainController {
 	ever: ProviderRpcClient;
@@ -159,12 +160,16 @@ export class EverscaleBlockchainController extends AbstractBlockchainController 
 		}
 	}
 
-	async extractPublicKeyFromAddress(address: string): Promise<PublicKey | null> {
+	async extractPublicKeyFromAddress(address: string): Promise<ExternalYlidePublicKey | null> {
 		const rawKey = await this.getPublicKeyByAddress(':' + address.split(':')[1]);
 		if (!rawKey) {
 			return null;
 		}
-		return PublicKey.fromBytes(PublicKeyType.YLIDE, rawKey);
+		return {
+			keyVersion: YlidePublicKeyVersion.INSECURE_KEY_V1,
+			publicKey: PublicKey.fromBytes(PublicKeyType.YLIDE, rawKey),
+			timestamp: 0,
+		};
 	}
 
 	async _retrieveMessageHistoryByTime(
