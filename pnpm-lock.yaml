@@ -1,6 +1,7 @@
 lockfileVersion: 5.4
 
 specifiers:
+  '@types/node': ^18.11.17
   '@ylide/sdk': 0.7.6
   '@ylide/smart-buffer': 0.0.9
   chacha: 2.1.0
@@ -27,9 +28,10 @@ dependencies:
   tweetnacl: 1.0.3
 
 devDependencies:
+  '@types/node': 18.11.17
   prettier: 2.7.1
   rimraf: 3.0.2
-  ts-node: 10.8.2_typescript@4.7.4
+  ts-node: 10.8.2_clhxslpxadjlvuwplq2f47hwvy
   tslint: 6.1.3_typescript@4.7.4
   tslint-config-prettier: 1.18.0
   typescript: 4.7.4
@@ -106,6 +108,10 @@ packages:
 
   /@tsconfig/node16/1.0.3:
     resolution: {integrity: sha512-yOlFc+7UtL/89t2ZhjPvvB/DeAr3r+Dq58IgzsFkOAvVC6NMJXmCGjbptdXdR9qsX7pKcTL+s87FtYREi2dEEQ==}
+    dev: true
+
+  /@types/node/18.11.17:
+    resolution: {integrity: sha512-HJSUJmni4BeDHhfzn6nF0sVmd1SMezP7/4F0Lq+aXzmp2xm9O7WXrUtHW/CHlYVtZUbByEvWidHqRtcJXGF2Ng==}
     dev: true
 
   /@ylide/sdk/0.7.6:
@@ -481,7 +487,7 @@ packages:
     resolution: {integrity: sha512-N3WMsuqV66lT30CrXNbEjx4GEwlow3v6rr4mCcv6prnfwhS01rkgyFdjPNBYd9br7LpXV1+Emh01fHnq2Gdgrw==}
     dev: false
 
-  /ts-node/10.8.2_typescript@4.7.4:
+  /ts-node/10.8.2_clhxslpxadjlvuwplq2f47hwvy:
     resolution: {integrity: sha512-LYdGnoGddf1D6v8REPtIH+5iq/gTDuZqv2/UJUU7tKjuEU8xVZorBM+buCGNjj+pGEud+sOoM4CX3/YzINpENA==}
     hasBin: true
     peerDependencies:
@@ -500,6 +506,7 @@ packages:
       '@tsconfig/node12': 1.0.11
       '@tsconfig/node14': 1.0.3
       '@tsconfig/node16': 1.0.3
+      '@types/node': 18.11.17
       acorn: 8.8.1
       acorn-walk: 8.2.0
       arg: 4.1.3
