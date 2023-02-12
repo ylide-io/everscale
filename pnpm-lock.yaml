@@ -2,13 +2,13 @@ lockfileVersion: 5.4
 
 specifiers:
   '@types/node': 18.11.18
-  '@ylide/sdk': 0.7.7
+  '@ylide/sdk': link:../sdk
   '@ylide/smart-buffer': 0.0.9
   chacha: 2.1.0
   everscale-inpage-provider: 0.3.41
   everscale-standalone-client: 2.0.27
   moment: 2.29.4
-  nekoton-wasm: ^1.0.9
+  nekoton-wasm: 1.0.9
   prettier: 2.7.1
   rimraf: 3.0.2
   ts-node: 10.8.2
@@ -18,7 +18,7 @@ specifiers:
   typescript: 4.8.4
 
 dependencies:
-  '@ylide/sdk': 0.7.7
+  '@ylide/sdk': link:../sdk
   '@ylide/smart-buffer': 0.0.9
   chacha: 2.1.0
   everscale-inpage-provider: 0.3.41
@@ -70,14 +70,6 @@ packages:
       '@jridgewell/trace-mapping': 0.3.9
     dev: true
 
-  /@datastructures-js/binary-search-tree/5.0.2:
-    resolution: {integrity: sha512-zWbUxSU96gxiR9W5Hr3nRvvtx40sWy+T0OHRbgSV96XvoyRddiFnLd8459KO03/hJVS2ZzxylhNRhvRmoYf4YA==}
-    dev: false
-
-  /@datastructures-js/linked-list/5.2.4:
-    resolution: {integrity: sha512-bCrDMBblU53Z2ayFKMCDgCd82wEE0ncItDwhfv25KNHWHPLAm2exeJkXUt99tnZ/o6kpHWBRom0XnppsJ/ZjTg==}
-    dev: false
-
   /@jridgewell/resolve-uri/3.1.0:
     resolution: {integrity: sha512-F2msla3tad+Mfht5cJq7LSXcdudKTWCVYUgw6pLFOOHSTtZlj6SWNYAp+AhuqLmWdBO2X5hPrLcu8cVP8fy28w==}
     engines: {node: '>=6.0.0'}
@@ -113,19 +105,6 @@ packages:
   /@types/node/18.11.18:
     resolution: {integrity: sha512-DHQpWGjyQKSHj3ebjFI/wRKcqQcdR+MoFBygntYOZytCqNfkd2ZC4ARDJ2DQqhjH5p85Nnd3jhUJIXrszFX/JA==}
     dev: true
-
-  /@ylide/sdk/0.7.7:
-    resolution: {integrity: sha512-Vr4/qmcZryHlp5jIi1tlnMtS2Lre+xzzdLYH8cii6LVRAt7+uEgXIvz7nuuN4yP1Ykio/u6EBWSyYDmRKInp9w==}
-    dependencies:
-      '@datastructures-js/binary-search-tree': 5.0.2
-      '@datastructures-js/linked-list': 5.2.4
-      '@ylide/smart-buffer': 0.0.9
-      eventemitter3: 4.0.7
-      idb: 7.1.0
-      js-sha256: 0.9.0
-      pako: 2.0.4
-      tweetnacl: 1.0.3
-    dev: false
 
   /@ylide/smart-buffer/0.0.9:
     resolution: {integrity: sha512-xnwffpZNwStbVmZF6AKsSpvpvj+ZR7C1645yv91WeFzSCANVvAyTsAuL9l4YTKGObNGXgQn0tjOaD11M8tWpYA==}
@@ -252,10 +231,6 @@ packages:
     hasBin: true
     dev: true
 
-  /eventemitter3/4.0.7:
-    resolution: {integrity: sha512-8guHBZCwKnFhYdHr2ysuRWErTwhoN2X8XELRlrRwpmfeY2jjuUN4taQMsULKUVo1K4DvZl+0pgfyoysHxvmvEw==}
-    dev: false
-
   /events/3.3.0:
     resolution: {integrity: sha512-mQw+2fkQbALzQ7V0MY0IqdnXNOeTtP4r0lN9z7AAawCXgqea7bDii20AYrIBrFd/Hx0M2Ocz6S111CaFkUcb0Q==}
     engines: {node: '>=0.8.x'}
@@ -273,7 +248,7 @@ packages:
       everscale-inpage-provider: 0.3.41
       fast-safe-stringify: 2.1.1
       nekoton-wasm: 0.5.13
-      node-fetch: 2.6.7
+      node-fetch: 2.6.8
     transitivePeerDependencies:
       - encoding
     dev: false
@@ -318,10 +293,6 @@ packages:
       function-bind: 1.1.1
     dev: true
 
-  /idb/7.1.0:
-    resolution: {integrity: sha512-Wsk07aAxDsntgYJY4h0knZJuTxM73eQ4reRAO+Z1liOh8eMCJ/MoDS8fCui1vGT9mnjtl1sOu3I2i/W1swPYZg==}
-    dev: false
-
   /inflight/1.0.6:
     resolution: {integrity: sha512-k92I/b08q4wvFscXCLvqfsHCrjrF7yiXsQuIVvVE7N82W3+aqpzuUdBbfhWcy/FZR3/4IgflMgKLOsvPDrGCJA==}
     dependencies:
@@ -340,10 +311,6 @@ packages:
 
   /isarray/0.0.1:
     resolution: {integrity: sha512-D2S+3GLxWH+uhrNEcoh/fnmYeP8E8/zHl644d/jdA0g2uyXvy3sb0qxotE+ne0LtccHknQzWwZEzhak7oJ0COQ==}
-    dev: false
-
-  /js-sha256/0.9.0:
-    resolution: {integrity: sha512-sga3MHh9sgQN2+pJ9VYZ+1LPwXOxuBJBA5nrR5/ofPfuiJBE2hnjsaN8se8JznOmGLN2p49Pe5U/ttafcs/apA==}
     dev: false
 
   /js-tokens/4.0.0:
@@ -396,8 +363,8 @@ packages:
     resolution: {integrity: sha512-OIr6p080TjYYfnW6YOca8dHuX96DoC/oyftE+3IpW8GMN0aEEAQ5xLm5t8Vz4ntJpthU6JcboR7dqFUroPT4Kw==}
     dev: false
 
-  /node-fetch/2.6.7:
-    resolution: {integrity: sha512-ZjMPFEfVx5j+y2yF35Kzx5sF7kDzxuDj6ziH4FFbOp87zKDZNx8yExJIb05OGF4Nlt9IHFIMBkRl41VdvcNdbQ==}
+  /node-fetch/2.6.8:
+    resolution: {integrity: sha512-RZ6dBYuj8dRSfxpUSu+NsdF1dpPpluJxwOp+6IoDp/sH2QNDSvurYsAa+F1WxY2RjA1iP93xhcsUoYbF2XBqVg==}
     engines: {node: 4.x || >=6.0.0}
     peerDependencies:
       encoding: ^0.1.0
@@ -413,10 +380,6 @@ packages:
     dependencies:
       wrappy: 1.0.2
     dev: true
-
-  /pako/2.0.4:
-    resolution: {integrity: sha512-v8tweI900AUkZN6heMU/4Uy4cXRc2AYNRggVmTR+dEncawDJgCdLMximOVA2p4qO57WMynangsfGRb5WD6L1Bg==}
-    dev: false
 
   /path-is-absolute/1.0.1:
     resolution: {integrity: sha512-AVbw3UJ2e9bq64vSaS9Am0fje1Pa8pbGqTTsmXfaIiMpnr5DlDhfJOuLj9Sf95ZPVDAUerDfEk88MPmPe7UCQg==}

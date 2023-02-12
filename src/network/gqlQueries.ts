@@ -1,4 +1,4 @@
-export const getContractMessagesQuery = (dst: string, contractAddress: string) => `
+export const getContractMessagesQuery = (dst: string, contractAddress: string, limit?: number) => `
 query {
 	messages(
 	  filter: {
@@ -7,6 +7,7 @@ query {
 		src: { eq: "${contractAddress}" },
 	  }
 	  orderBy: [{path: "created_at", direction: DESC}]
+	  ${limit ? `limit: ${limit}` : ''}
 	) {
 	  body
 	  id

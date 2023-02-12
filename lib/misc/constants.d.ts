@@ -1,6 +1,3 @@
-export declare const DEV_MAILER_ADDRESS = "0:fbdcae5d0ebb3ce98d31f4b554e6493c9d1d5e1f6acbea1f58488e3e1b2c42da";
-export declare const DEV_BROADCASTER_ADDRESS = "0:0263d12284a98e4ebcc95e7ed3a5f6c6611da2e101320e5a0f554d2de7a5cba8";
-export declare const DEV_REGISTRY_ADDRESS = "0:3273912b3960d7b8b866dfe22ce7bdd3f599ae973f97cc8b1b5e94e47274ee2e";
-export declare const MAILER_ADDRESS = "0:a06a244f2632aaff3573e2fa45283fc67e3ad8a11bcba62b060fe9b60c36a0c9";
-export declare const BROADCASTER_ADDRESS = "0:38eaf0a6482ebdc4e1d8f7d7addabbecf14b134d23144971595552630e653f5b";
-export declare const REGISTRY_ADDRESS = "0:c68ec196b86fe001c3762e454991b460e115862f64a9f929591557e00fb0cb3a";
+import { ITVMNetworkContracts } from '.';
+export declare const EVERSCALE_LOCAL: ITVMNetworkContracts;
+export declare const EVERSCALE_MAINNET: ITVMNetworkContracts;

@@ -1,6 +1,8 @@
 import type * as nt from 'nekoton-wasm';
 import { GqlSocketParams } from 'everscale-standalone-client';
 import { GqlSocket } from 'everscale-standalone-client/client/ConnectionController/gql';
+import { ITVMInternalMessage, ITVMMessage } from '../misc';
+import { getContractMessagesQuery } from './gqlQueries';
 
 export class GqlSender implements nt.IGqlSender {
 	private readonly params: GqlSocketParams;
@@ -114,5 +116,33 @@ export class GqlSender implements nt.IGqlSender {
 		}
 
 		throw new Error('Not available endpoint found');
+	}
+
+	async queryContractMessages(dst: string, contractAddress: string, limit?: number): Promise<ITVMInternalMessage[]> {
+		const query = getContractMessagesQuery(dst, contractAddress, limit);
+		return await this.queryMessages(query);
+	}
+
+	async queryMessages(query: string, variables: Record<string, any> = {}) {
+		const data = await this.query(query, variables);
+		if (
+			!data ||
+			!data.data ||
+			!data.data.messages ||
+			!Array.isArray(data.data.messages) ||
+			!data.data.messages.length
+		) {
+			return [];
+		}
+		return data.data.messages as ITVMInternalMessage[];
+	}
+
+	async query(query: string, variables: Record<string, any> = {}) {
+		return this.send(
+			JSON.stringify({
+				query,
+				variables,
+			}),
+		);
 	}
 }

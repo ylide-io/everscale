@@ -16,25 +16,32 @@ import {
 	YlideError,
 	YlideErrorType,
 	SwitchAccountCallback,
+	YlidePublicKeyVersion,
+	ServiceCode,
+	SendMailResult,
 } from '@ylide/sdk';
 import SmartBuffer from '@ylide/smart-buffer';
 import { EverscaleStandaloneClient } from 'everscale-standalone-client';
-import { MailerContract, RegistryContract } from '../contracts';
-import {
-	DEV_MAILER_ADDRESS,
-	MAILER_ADDRESS,
-	DEV_REGISTRY_ADDRESS,
-	REGISTRY_ADDRESS,
-	BROADCASTER_ADDRESS,
-	DEV_BROADCASTER_ADDRESS,
-} from '../misc';
-import { decodeContentMessageBody } from '../contracts/contractUtils';
+import { EverscaleMailerV6Wrapper } from '../contract-wrappers/EverscaleMailerV6Wrapper';
+import { EverscaleRegistryV2Wrapper } from '../contract-wrappers/EverscaleRegistryV2Wrapper';
+import { ITVMMailerContractLink, ITVMRegistryContractLink, EVERSCALE_LOCAL, EVERSCALE_MAINNET } from '../misc';
+import { EverscaleBlockchainController } from './EverscaleBlockchainController';
+import { EverscaleBlockchainReader } from './helpers/EverscaleBlockchainReader';
 
 export class EverscaleWalletController extends AbstractWalletController {
-	ever: ProviderRpcClient;
-	readonly mailerContract: MailerContract;
-	readonly broadcasterContract: MailerContract;
-	readonly registryContract: RegistryContract;
+	public readonly blockchainReader: EverscaleBlockchainReader;
+
+	readonly currentMailer: {
+		link: ITVMMailerContractLink;
+		wrapper: EverscaleMailerV6Wrapper;
+	};
+	readonly currentBroadcaster: {
+		link: ITVMMailerContractLink;
+		wrapper: EverscaleMailerV6Wrapper;
+	};
+	readonly currentRegistry: { link: ITVMRegistryContractLink; wrapper: EverscaleRegistryV2Wrapper };
+
+	readonly mainnetEndpoints = ['https://mainnet.evercloud.dev/695e40eeac6b4e3fa4a11666f6e0d6af/graphql'];
 
 	private lastCurrentAccount: IGenericAccount | null = null;
 
@@ -46,10 +53,7 @@ export class EverscaleWalletController extends AbstractWalletController {
 	constructor(
 		options: {
 			dev?: boolean;
-			mailerContractAddress?: string;
-			broadcasterContractAddress?: string;
-			registryContractAddress?: string;
-			endpoint?: string;
+			endpoints?: string[];
 			onSwitchAccountRequest?: SwitchAccountCallback;
 		} = {},
 	) {
@@ -57,38 +61,37 @@ export class EverscaleWalletController extends AbstractWalletController {
 
 		this.onSwitchAccountRequest = options?.onSwitchAccountRequest || null;
 
-		this.ever = new ProviderRpcClient({
-			fallback: () =>
-				EverscaleStandaloneClient.create({
-					connection: options.dev
-						? 'local'
-						: {
-								id: 1,
-								group: 'Ylide',
-								type: 'graphql',
-								data: {
-									endpoints: [
-										options.endpoint ||
-											'https://mainnet.evercloud.dev/695e40eeac6b4e3fa4a11666f6e0d6af/graphql',
-									],
-									local: false,
-								},
-						  },
-				}),
-		});
+		this.blockchainReader = new EverscaleBlockchainReader(
+			options?.endpoints || this.mainnetEndpoints,
+			options.dev || false,
+		);
 
-		this.broadcasterContract = new MailerContract(
-			this.ever,
-			options.broadcasterContractAddress || (options.dev ? DEV_BROADCASTER_ADDRESS : BROADCASTER_ADDRESS),
-		);
-		this.mailerContract = new MailerContract(
-			this.ever,
-			options.mailerContractAddress || (options.dev ? DEV_MAILER_ADDRESS : MAILER_ADDRESS),
-		);
-		this.registryContract = new RegistryContract(
-			this.ever,
-			options.registryContractAddress || (options.dev ? DEV_REGISTRY_ADDRESS : REGISTRY_ADDRESS),
-		);
+		const contracts = options?.dev ? EVERSCALE_LOCAL : EVERSCALE_MAINNET;
+
+		const currentMailerLink = contracts.mailerContracts.find(c => c.id === contracts.currentMailerId)!;
+		const currentBroadcasterLink = contracts.mailerContracts.find(c => c.id === contracts.currentBroadcasterId)!;
+		const currentRegistryLink = contracts.registryContracts.find(c => c.id === contracts.currentRegistryId)!;
+
+		this.currentMailer = {
+			link: currentMailerLink,
+			wrapper: new EverscaleBlockchainController.mailerWrappers[currentMailerLink.type](
+				this.blockchainReader,
+			) as EverscaleMailerV6Wrapper,
+		};
+
+		this.currentBroadcaster = {
+			link: currentBroadcasterLink,
+			wrapper: new EverscaleBlockchainController.mailerWrappers[currentBroadcasterLink.type](
+				this.blockchainReader,
+			) as EverscaleMailerV6Wrapper,
+		};
+
+		this.currentRegistry = {
+			link: currentRegistryLink,
+			wrapper: new EverscaleBlockchainController.registryWrappers[currentRegistryLink.type](
+				this.blockchainReader,
+			) as EverscaleRegistryV2Wrapper,
+		};
 	}
 
 	blockchainGroup(): string {
@@ -106,16 +109,16 @@ export class EverscaleWalletController extends AbstractWalletController {
 	async init(): Promise<void> {
 		await this.getAuthenticatedAccount();
 
-		const logoutSubscription = await this.ever.subscribe('loggedOut');
+		const logoutSubscription = await this.blockchainReader.ever.subscribe('loggedOut');
 		logoutSubscription.on('data', () => this.emit(WalletEvent.LOGOUT));
 
-		const networkSubscription = await this.ever.subscribe('networkChanged');
+		const networkSubscription = await this.blockchainReader.ever.subscribe('networkChanged');
 		networkSubscription.on('data', data => {
 			// tslint:disable-next-line
 			console.log('networkSubscription data: ', data);
 		});
 
-		const permissionsSubscription = await this.ever.subscribe('permissionsChanged');
+		const permissionsSubscription = await this.blockchainReader.ever.subscribe('permissionsChanged');
 		permissionsSubscription.on('data', data => {
 			const oldAccount = this.lastCurrentAccount;
 			if (data.permissions.accountInteraction) {
@@ -165,7 +168,7 @@ export class EverscaleWalletController extends AbstractWalletController {
 		if (!me) {
 			throw new Error(`Can't derive without auth`);
 		}
-		const result = await this.ever.signData({
+		const result = await this.blockchainReader.ever.signData({
 			publicKey: me.publicKey!.toHex(),
 			data: SmartBuffer.ofUTF8String(magicString).toBase64String(),
 		});
@@ -175,8 +178,8 @@ export class EverscaleWalletController extends AbstractWalletController {
 
 	// account block
 	async getAuthenticatedAccount(): Promise<IGenericAccount | null> {
-		await this.ever.ensureInitialized();
-		const providerState = await this.ever.getProviderState();
+		await this.blockchainReader.ever.ensureInitialized();
+		const providerState = await this.blockchainReader.ever.getProviderState();
 		if (providerState.permissions.accountInteraction) {
 			this.lastCurrentAccount = {
 				blockchain: 'everscale',
@@ -197,9 +200,20 @@ export class EverscaleWalletController extends AbstractWalletController {
 		return 'everscale';
 	}
 
-	async attachPublicKey(account: IGenericAccount, publicKey: Uint8Array) {
-		await this.ensureAccount(account);
-		await this.registryContract.attachPublicKey(account.address, publicKey);
+	async attachPublicKey(
+		me: IGenericAccount,
+		publicKey: Uint8Array,
+		keyVersion: YlidePublicKeyVersion = YlidePublicKeyVersion.KEY_V2,
+		registrar: number = ServiceCode.SDK,
+		options?: any,
+	) {
+		await this.ensureAccount(me);
+		await this.currentRegistry.wrapper.attachPublicKey(this.currentRegistry.link, me.address, {
+			keyVersion,
+			publicKey: PublicKey.fromBytes(PublicKeyType.YLIDE, publicKey),
+			timestamp: Math.floor(Date.now() / 1000),
+			registrar,
+		});
 	}
 
 	async requestAuthentication(): Promise<null | IGenericAccount> {
@@ -207,7 +221,7 @@ export class EverscaleWalletController extends AbstractWalletController {
 		if (acc) {
 			await this.disconnectAccount(acc);
 		}
-		const { accountInteraction } = await this.ever.requestPermissions({
+		const { accountInteraction } = await this.blockchainReader.ever.requestPermissions({
 			permissions: ['basic', 'accountInteraction'],
 		});
 		if (accountInteraction) {
@@ -223,19 +237,20 @@ export class EverscaleWalletController extends AbstractWalletController {
 
 	async disconnectAccount(account: IGenericAccount): Promise<void> {
 		await this.ensureAccount(account);
-		await this.ever.disconnect();
+		await this.blockchainReader.ever.disconnect();
 	}
 
-	async publishMessage(
+	async sendMail(
 		me: IGenericAccount,
 		contentData: Uint8Array,
 		recipients: { address: Uint256; messageKey: MessageKey }[],
-	): Promise<Uint256 | null> {
+	): Promise<SendMailResult> {
 		await this.ensureAccount(me);
 		const uniqueId = Math.floor(Math.random() * 4 * 10 ** 9);
 		const chunks = MessageChunks.splitMessageChunks(contentData);
 		if (chunks.length === 1 && recipients.length === 1) {
-			const transaction = await this.mailerContract.sendSmallMail(
+			const transaction = await this.currentMailer.wrapper.sendSmallMail(
+				this.currentMailer.link,
 				me.address,
 				uniqueId,
 				recipients[0].address,
@@ -248,10 +263,11 @@ export class EverscaleWalletController extends AbstractWalletController {
 			if (!contentMsg || !contentMsg.body) {
 				throw new Error('Content event was not found');
 			}
-			const decodedEvent = decodeContentMessageBody(contentMsg.body!);
+			const decodedEvent = 'yappy' as any;
 			return decodedEvent.msgId;
 		} else if (chunks.length === 1 && recipients.length < Math.ceil((15.5 * 1024 - chunks[0].byteLength) / 70)) {
-			const transaction = await this.mailerContract.sendBulkMail(
+			const transaction = await this.currentMailer.wrapper.sendBulkMail(
+				this.currentMailer.link,
 				me.address,
 				uniqueId,
 				recipients.map(r => r.address),
@@ -264,13 +280,19 @@ export class EverscaleWalletController extends AbstractWalletController {
 			if (!contentMsg || !contentMsg.body) {
 				throw new Error('Content event was not found');
 			}
-			const decodedEvent = decodeContentMessageBody(contentMsg.body!);
+			const decodedEvent = 'yappy' as any;
 			return decodedEvent.msgId;
 		} else {
 			const initTime = Math.floor(Date.now() / 1000);
-			const msgId = await this.mailerContract.buildHash(me.publicKey!.bytes, uniqueId, initTime);
+			const msgId = await this.currentMailer.wrapper.buildHash(
+				this.currentMailer.link,
+				me.publicKey!.bytes,
+				uniqueId,
+				initTime,
+			);
 			for (let i = 0; i < chunks.length; i++) {
-				await this.mailerContract.sendMultipartMailPart(
+				await this.currentMailer.wrapper.sendMessageContentPart(
+					this.currentMailer.link,
 					me.address,
 					uniqueId,
 					initTime,
@@ -281,7 +303,8 @@ export class EverscaleWalletController extends AbstractWalletController {
 			}
 			for (let i = 0; i < recipients.length; i += 210) {
 				const recs = recipients.slice(i, i + 210);
-				await this.mailerContract.addRecipients(
+				await this.currentMailer.wrapper.addRecipients(
+					this.currentMailer.link,
 					me.address,
 					uniqueId,
 					initTime,
@@ -289,29 +312,40 @@ export class EverscaleWalletController extends AbstractWalletController {
 					recs.map(r => r.messageKey.toBytes()),
 				);
 			}
-			return msgId;
+			return msgId as any;
 		}
 	}
 
-	async broadcastMessage(me: IGenericAccount, contentData: Uint8Array): Promise<Uint256 | null> {
+	async sendBroadcast(me: IGenericAccount, contentData: Uint8Array): Promise<SendMailResult> {
 		await this.ensureAccount(me);
 		const uniqueId = Math.floor(Math.random() * 4 * 10 ** 9);
 		const chunks = MessageChunks.splitMessageChunks(contentData);
 		if (chunks.length === 1) {
-			const transaction = await this.broadcasterContract.broadcastMail(me.address, uniqueId, chunks[0]);
+			const transaction = await this.currentBroadcaster.wrapper.sendBroadcast(
+				this.currentBroadcaster.link,
+				me.address,
+				uniqueId,
+				chunks[0],
+			);
 
 			const om = transaction.childTransaction.outMessages;
 			const contentMsg = om.length ? om[0] : null;
 			if (!contentMsg || !contentMsg.body) {
 				throw new Error('Content event was not found');
 			}
-			const decodedEvent = decodeContentMessageBody(contentMsg.body!);
+			const decodedEvent = 'yappy' as any; // decodeContentMessageBody(contentMsg.body!);
 			return decodedEvent.msgId;
 		} else {
 			const initTime = Math.floor(Date.now() / 1000);
-			const msgId = await this.broadcasterContract.buildHash(me.publicKey!.bytes, uniqueId, initTime);
+			const msgId = await this.currentBroadcaster.wrapper.buildHash(
+				this.currentBroadcaster.link,
+				me.publicKey!.bytes,
+				uniqueId,
+				initTime,
+			);
 			for (let i = 0; i < chunks.length; i++) {
-				await this.broadcasterContract.sendMultipartMailPart(
+				await this.currentBroadcaster.wrapper.sendMessageContentPart(
+					this.currentBroadcaster.link,
 					me.address,
 					uniqueId,
 					initTime,
@@ -321,8 +355,13 @@ export class EverscaleWalletController extends AbstractWalletController {
 				);
 			}
 
-			await this.broadcasterContract.broadcastMailHeader(me.address, uniqueId, initTime);
-			return msgId;
+			await this.currentBroadcaster.wrapper.sendBroadcastHeader(
+				this.currentBroadcaster.link,
+				me.address,
+				uniqueId,
+				initTime,
+			);
+			return msgId as any;
 		}
 	}
 
@@ -335,7 +374,7 @@ export class EverscaleWalletController extends AbstractWalletController {
 			throw new Error('EverWallet can only decrypt native encryption of EverWallet');
 		}
 		const { encData, nonce } = unpackSymmetricalyEncryptedData(encryptedKey);
-		const decryptionResultBase64 = await this.ever.decryptData({
+		const decryptionResultBase64 = await this.blockchainReader.ever.decryptData({
 			algorithm: 'ChaCha20Poly1305',
 			sourcePublicKey: senderPublicKey.toHex(),
 			recipientPublicKey: recipientAccount.publicKey!.toHex(),

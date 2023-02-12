@@ -1,18 +1,27 @@
-import { ProviderRpcClient } from 'everscale-inpage-provider';
-import { IGenericAccount, AbstractWalletController, PublicKey, MessageKey, WalletControllerFactory, Uint256, SwitchAccountCallback } from '@ylide/sdk';
-import { MailerContract, RegistryContract } from '../contracts';
+import { IGenericAccount, AbstractWalletController, PublicKey, MessageKey, WalletControllerFactory, Uint256, SwitchAccountCallback, YlidePublicKeyVersion, SendMailResult } from '@ylide/sdk';
+import { EverscaleMailerV6Wrapper } from '../contract-wrappers/EverscaleMailerV6Wrapper';
+import { EverscaleRegistryV2Wrapper } from '../contract-wrappers/EverscaleRegistryV2Wrapper';
+import { ITVMMailerContractLink, ITVMRegistryContractLink } from '../misc';
+import { EverscaleBlockchainReader } from './helpers/EverscaleBlockchainReader';
 export declare class EverscaleWalletController extends AbstractWalletController {
-    ever: ProviderRpcClient;
-    readonly mailerContract: MailerContract;
-    readonly broadcasterContract: MailerContract;
-    readonly registryContract: RegistryContract;
+    readonly blockchainReader: EverscaleBlockchainReader;
+    readonly currentMailer: {
+        link: ITVMMailerContractLink;
+        wrapper: EverscaleMailerV6Wrapper;
+    };
+    readonly currentBroadcaster: {
+        link: ITVMMailerContractLink;
+        wrapper: EverscaleMailerV6Wrapper;
+    };
+    readonly currentRegistry: {
+        link: ITVMRegistryContractLink;
+        wrapper: EverscaleRegistryV2Wrapper;
+    };
+    readonly mainnetEndpoints: string[];
     private lastCurrentAccount;
     constructor(options?: {
         dev?: boolean;
-        mailerContractAddress?: string;
-        broadcasterContractAddress?: string;
-        registryContractAddress?: string;
-        endpoint?: string;
+        endpoints?: string[];
         onSwitchAccountRequest?: SwitchAccountCallback;
     });
     blockchainGroup(): string;
@@ -25,14 +34,14 @@ export declare class EverscaleWalletController extends AbstractWalletController 
     signMagicString(account: IGenericAccount, magicString: string): Promise<Uint8Array>;
     getAuthenticatedAccount(): Promise<IGenericAccount | null>;
     getCurrentBlockchain(): Promise<string>;
-    attachPublicKey(account: IGenericAccount, publicKey: Uint8Array): Promise<void>;
+    attachPublicKey(me: IGenericAccount, publicKey: Uint8Array, keyVersion?: YlidePublicKeyVersion, registrar?: number, options?: any): Promise<void>;
     requestAuthentication(): Promise<null | IGenericAccount>;
     disconnectAccount(account: IGenericAccount): Promise<void>;
-    publishMessage(me: IGenericAccount, contentData: Uint8Array, recipients: {
+    sendMail(me: IGenericAccount, contentData: Uint8Array, recipients: {
         address: Uint256;
         messageKey: MessageKey;
-    }[]): Promise<Uint256 | null>;
-    broadcastMessage(me: IGenericAccount, contentData: Uint8Array): Promise<Uint256 | null>;
+    }[]): Promise<SendMailResult>;
+    sendBroadcast(me: IGenericAccount, contentData: Uint8Array): Promise<SendMailResult>;
     decryptMessageKey(recipientAccount: IGenericAccount, senderPublicKey: PublicKey, encryptedKey: Uint8Array): Promise<Uint8Array>;
 }
 export declare const everscaleWalletFactory: WalletControllerFactory;
