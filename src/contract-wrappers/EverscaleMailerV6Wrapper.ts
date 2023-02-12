@@ -201,19 +201,22 @@ export class EverscaleMailerV6Wrapper {
 		});
 	}
 
-	async getFees(mailer: ITVMMailerContractLink): Promise<{ contentPartFee: string; recipientFee: string }> {
+	async getFees(
+		mailer: ITVMMailerContractLink,
+	): Promise<{ contentPartFee: string; recipientFee: string; broadcastFee: string }> {
 		//  broadcastFee: BigNumber
 		return await this.cache.contractOperation(mailer, async contract => {
 			// @ts-ignore
 			const contentPartFee = await contract.methods.contentPartFee().call();
 			// @ts-ignore
 			const recipientFee = await contract.methods.recipientFee().call();
-			// const [broadcastFee] = await contract.functions.broadcastFee();
+			// @ts-ignore
+			const broadcastFee = await contract.functions.broadcastFee().call();
 
 			return {
 				contentPartFee: contentPartFee,
 				recipientFee: recipientFee,
-				// broadcastFee: broadcastFee.div(BigNumber.from('1000000000000000000')),
+				broadcastFee: broadcastFee,
 			};
 		});
 	}
@@ -221,8 +224,7 @@ export class EverscaleMailerV6Wrapper {
 	async setFees(
 		mailer: ITVMMailerContractLink,
 		from: string,
-		fees: { contentPartFee: number; recipientFee: number },
-		//  broadcastFee: BigNumber
+		fees: { contentPartFee: number; recipientFee: number; broadcastFee: number },
 	) {
 		return await this.cache.contractOperation(mailer, async contract => {
 			return await contract.methods
@@ -232,6 +234,8 @@ export class EverscaleMailerV6Wrapper {
 					_contentPartFee: BigInt(fees.contentPartFee).toString(10),
 					// @ts-ignore
 					_recipientFee: BigInt(fees.recipientFee).toString(10),
+					// @ts-ignore
+					_broadcastFee: BigInt(fees.broadcastFee).toString(10),
 				})
 				.sendWithResult({
 					from: new Address(from),
