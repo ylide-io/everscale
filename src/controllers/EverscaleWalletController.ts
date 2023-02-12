@@ -21,12 +21,12 @@ import {
 	SendMailResult,
 } from '@ylide/sdk';
 import SmartBuffer from '@ylide/smart-buffer';
-import { EverscaleStandaloneClient } from 'everscale-standalone-client';
 import { EverscaleMailerV6Wrapper } from '../contract-wrappers/EverscaleMailerV6Wrapper';
 import { EverscaleRegistryV2Wrapper } from '../contract-wrappers/EverscaleRegistryV2Wrapper';
 import { ITVMMailerContractLink, ITVMRegistryContractLink, EVERSCALE_LOCAL, EVERSCALE_MAINNET } from '../misc';
 import { EverscaleBlockchainController } from './EverscaleBlockchainController';
 import { EverscaleBlockchainReader } from './helpers/EverscaleBlockchainReader';
+import { EverscaleMailerV5Wrapper } from '../contract-wrappers';
 
 export class EverscaleWalletController extends AbstractWalletController {
 	public readonly blockchainReader: EverscaleBlockchainReader;
@@ -62,6 +62,7 @@ export class EverscaleWalletController extends AbstractWalletController {
 		this.onSwitchAccountRequest = options?.onSwitchAccountRequest || null;
 
 		this.blockchainReader = new EverscaleBlockchainReader(
+			true,
 			options?.endpoints || this.mainnetEndpoints,
 			options.dev || false,
 		);
@@ -69,7 +70,9 @@ export class EverscaleWalletController extends AbstractWalletController {
 		const contracts = options?.dev ? EVERSCALE_LOCAL : EVERSCALE_MAINNET;
 
 		const currentMailerLink = contracts.mailerContracts.find(c => c.id === contracts.currentMailerId)!;
-		const currentBroadcasterLink = contracts.mailerContracts.find(c => c.id === contracts.currentBroadcasterId)!;
+		const currentBroadcasterLink = contracts.broadcasterContracts.find(
+			c => c.id === contracts.currentBroadcasterId,
+		)!;
 		const currentRegistryLink = contracts.registryContracts.find(c => c.id === contracts.currentRegistryId)!;
 
 		this.currentMailer = {
@@ -259,6 +262,7 @@ export class EverscaleWalletController extends AbstractWalletController {
 			);
 
 			const om = transaction.childTransaction.outMessages;
+			console.log('om: ', om);
 			const contentMsg = om.length ? om[0] : null;
 			if (!contentMsg || !contentMsg.body) {
 				throw new Error('Content event was not found');
@@ -382,6 +386,13 @@ export class EverscaleWalletController extends AbstractWalletController {
 			nonce: new SmartBuffer(nonce).toBase64String(),
 		});
 		return SmartBuffer.ofBase64String(decryptionResultBase64).bytes;
+	}
+
+	// Deployments:
+
+	async deployMailerV5(me: IGenericAccount): Promise<string> {
+		await this.ensureAccount(me);
+		return await EverscaleMailerV5Wrapper.deploy(this.blockchainReader.ever, me);
 	}
 }
 

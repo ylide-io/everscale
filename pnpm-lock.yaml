@@ -5,36 +5,36 @@ specifiers:
   '@ylide/sdk': link:../sdk
   '@ylide/smart-buffer': 0.0.10
   chacha: 2.1.0
-  everscale-inpage-provider: 0.3.41
-  everscale-standalone-client: 2.0.27
+  everscale-inpage-provider: 0.3.51
+  everscale-standalone-client: 2.1.14
   moment: 2.29.4
-  nekoton-wasm: 1.0.9
+  nekoton-wasm: 1.0.14
   prettier: 2.7.1
   rimraf: 3.0.2
   ts-node: 10.8.2
   tslint: 6.1.3
   tslint-config-prettier: 1.18.0
   tweetnacl: 1.0.3
-  typescript: 4.8.4
+  typescript: 4.9.4
 
 dependencies:
   '@ylide/sdk': link:../sdk
   '@ylide/smart-buffer': 0.0.10
   chacha: 2.1.0
-  everscale-inpage-provider: 0.3.41
-  everscale-standalone-client: 2.0.27
+  everscale-inpage-provider: 0.3.51
+  everscale-standalone-client: 2.1.14
   moment: 2.29.4
-  nekoton-wasm: 1.0.9
+  nekoton-wasm: 1.0.14
   tweetnacl: 1.0.3
 
 devDependencies:
   '@types/node': 18.11.18
   prettier: 2.7.1
   rimraf: 3.0.2
-  ts-node: 10.8.2_vqcafhj4xvr2nzknlrdklk55zm
-  tslint: 6.1.3_typescript@4.8.4
+  ts-node: 10.8.2_awa2wsr5thmg3i7jqycphctjfq
+  tslint: 6.1.3_typescript@4.9.4
   tslint-config-prettier: 1.18.0
-  typescript: 4.8.4
+  typescript: 4.9.4
 
 packages:
 
@@ -115,8 +115,8 @@ packages:
     engines: {node: '>=0.4.0'}
     dev: true
 
-  /acorn/8.8.1:
-    resolution: {integrity: sha512-7zFpHzhnqYKrkYdUjF1HI1bzd0VygEGX8lFk4k5zVMqHEoES+P+7TKI+EvLO9WVMJ8eekdO0aDEK044xTXwPPA==}
+  /acorn/8.8.2:
+    resolution: {integrity: sha512-xjIYgE8HBrkpd/sJqOGNspf8uHG+NOHGOw6a/Urj8taM2EXfdNAH2oFcPeIFfsv3+kz/mJrS5VuMqbNLjCa2vw==}
     engines: {node: '>=0.4.0'}
     hasBin: true
     dev: true
@@ -141,6 +141,10 @@ packages:
   /balanced-match/1.0.2:
     resolution: {integrity: sha512-3oSeUO0TMV67hN1AmbXsK4yaqU7tjiHlbxRDZOpH0KW9+CeX4bRAaX0Anxt0tx2MrpRpWwQaPwIlISEJhYU5Pw==}
     dev: true
+
+  /bignumber.js/9.1.1:
+    resolution: {integrity: sha512-pHm4LsMJ6lzgNGVfZHjMoO8sdoRhOzOH4MLmY65Jg70bpxCKu5iOHNJyfF6OyvYw7t8Fpf35RuzUyqnQsj8Vig==}
+    dev: false
 
   /bindings/1.5.0:
     resolution: {integrity: sha512-p2q/t/mhvuOj/UeLlV6566GD/guowlr0hHxClI0W9m7MWYkL1F0hLo+0Aexs9HSPCtR1SXQ0TD3MMKrXZajbiQ==}
@@ -236,19 +240,20 @@ packages:
     engines: {node: '>=0.8.x'}
     dev: false
 
-  /everscale-inpage-provider/0.3.41:
-    resolution: {integrity: sha512-dXIFEGQjqH5PuJHW5UQNnhfrnCmtFLuPNCnrkBud7l+Rlv7J5T+rHv7Ajd2gxuB9r0dABfnoU0G0OYpvbTjV9w==}
+  /everscale-inpage-provider/0.3.51:
+    resolution: {integrity: sha512-JYZjp9E/xVz69xSA5blPuI/uoNCHZ3Qj3z4um9eqcMvJy7aEEsQIsOXRQapq6BVoZlvBMxyZO2KguIJOLa0i3w==}
     dev: false
 
-  /everscale-standalone-client/2.0.27:
-    resolution: {integrity: sha512-25Uig2DQLGFfIOXYidKG6fWAE0Bee7k4Y79G3rC9dBFiySsHk/fdMoetwmSZlYsxfenqWlG92s1bFpDRK8WC5A==}
+  /everscale-standalone-client/2.1.14:
+    resolution: {integrity: sha512-J4u3PRsD+EftRp9pnLD8fT3LmsBoFUPd2cJan8J5oTgA+fhzymzfsZTBX0TmLlJ7mXCDr8GWv7iv2b80W5FI8A==}
     dependencies:
       '@broxus/await-semaphore': 0.1.5
+      bignumber.js: 9.1.1
       events: 3.3.0
-      everscale-inpage-provider: 0.3.41
+      everscale-inpage-provider: 0.3.51
       fast-safe-stringify: 2.1.1
-      nekoton-wasm: 0.5.13
-      node-fetch: 2.6.8
+      nekoton-wasm: 1.0.14
+      node-fetch: 2.6.9
     transitivePeerDependencies:
       - encoding
     dev: false
@@ -335,15 +340,15 @@ packages:
       brace-expansion: 1.1.11
     dev: true
 
-  /minimist/1.2.7:
-    resolution: {integrity: sha512-bzfL1YUZsP41gmu/qjrEk0Q6i2ix/cVeAhbCbqH9u3zYutS1cLg00qhrD0M2MVdCcx4Sc0UpP2eBWo9rotpq6g==}
+  /minimist/1.2.8:
+    resolution: {integrity: sha512-2yyAR8qBkN3YuheJanUpWC5U3bb5osDywNB8RzDVlDwDHbocAJveqqj1u8+SVD7jkWT4yvsHCpWqqWqAxb0zCA==}
     dev: true
 
   /mkdirp/0.5.6:
     resolution: {integrity: sha512-FP+p8RB8OWpF3YZBCrP5gtADmtXApB5AMLn+vdyA+PyxCjrCs00mjyUozssO33cwDeT3wNGdLxJ5M//YqtHAJw==}
     hasBin: true
     dependencies:
-      minimist: 1.2.7
+      minimist: 1.2.8
     dev: true
 
   /moment/2.29.4:
@@ -355,16 +360,12 @@ packages:
     dev: false
     optional: true
 
-  /nekoton-wasm/0.5.13:
-    resolution: {integrity: sha512-U1cCVP7urqolC28jAY4uYhhJZiMDvnmpQgWqa/JjR5DG+ZcxnhQjLM8U2VSw+qbFLrsB6lH49lt08X0GBKfLBg==}
+  /nekoton-wasm/1.0.14:
+    resolution: {integrity: sha512-LvQFtfZwfbrgRYCLtegf137CofQnEcA+FGT1TdOKK63cf6YyUy+LiCbjrWCdR4GLsemhT7qfqIdNFATVlgDl5A==}
     dev: false
 
-  /nekoton-wasm/1.0.9:
-    resolution: {integrity: sha512-OIr6p080TjYYfnW6YOca8dHuX96DoC/oyftE+3IpW8GMN0aEEAQ5xLm5t8Vz4ntJpthU6JcboR7dqFUroPT4Kw==}
-    dev: false
-
-  /node-fetch/2.6.8:
-    resolution: {integrity: sha512-RZ6dBYuj8dRSfxpUSu+NsdF1dpPpluJxwOp+6IoDp/sH2QNDSvurYsAa+F1WxY2RjA1iP93xhcsUoYbF2XBqVg==}
+  /node-fetch/2.6.9:
+    resolution: {integrity: sha512-DJm/CJkZkRjKKj4Zi4BsKVZh3ValV5IR5s7LVZnW+6YMh0W1BfNA8XSs6DLMGYlId5F3KnA70uu2qepcR08Qqg==}
     engines: {node: 4.x || >=6.0.0}
     peerDependencies:
       encoding: ^0.1.0
@@ -450,7 +451,7 @@ packages:
     resolution: {integrity: sha512-N3WMsuqV66lT30CrXNbEjx4GEwlow3v6rr4mCcv6prnfwhS01rkgyFdjPNBYd9br7LpXV1+Emh01fHnq2Gdgrw==}
     dev: false
 
-  /ts-node/10.8.2_vqcafhj4xvr2nzknlrdklk55zm:
+  /ts-node/10.8.2_awa2wsr5thmg3i7jqycphctjfq:
     resolution: {integrity: sha512-LYdGnoGddf1D6v8REPtIH+5iq/gTDuZqv2/UJUU7tKjuEU8xVZorBM+buCGNjj+pGEud+sOoM4CX3/YzINpENA==}
     hasBin: true
     peerDependencies:
@@ -470,13 +471,13 @@ packages:
       '@tsconfig/node14': 1.0.3
       '@tsconfig/node16': 1.0.3
       '@types/node': 18.11.18
-      acorn: 8.8.1
+      acorn: 8.8.2
       acorn-walk: 8.2.0
       arg: 4.1.3
       create-require: 1.1.1
       diff: 4.0.2
       make-error: 1.3.6
-      typescript: 4.8.4
+      typescript: 4.9.4
       v8-compile-cache-lib: 3.0.1
       yn: 3.1.1
     dev: true
@@ -491,7 +492,7 @@ packages:
     hasBin: true
     dev: true
 
-  /tslint/6.1.3_typescript@4.8.4:
+  /tslint/6.1.3_typescript@4.9.4:
     resolution: {integrity: sha512-IbR4nkT96EQOvKE2PW/djGz8iGNeJ4rF2mBfiYaR/nvUWYKJhLwimoJKgjIFEIDibBtOevj7BqCRL4oHeWWUCg==}
     engines: {node: '>=4.8.0'}
     deprecated: TSLint has been deprecated in favor of ESLint. Please see https://github.com/palantir/tslint/issues/4534 for more information.
@@ -511,25 +512,25 @@ packages:
       resolve: 1.22.1
       semver: 5.7.1
       tslib: 1.14.1
-      tsutils: 2.29.0_typescript@4.8.4
-      typescript: 4.8.4
+      tsutils: 2.29.0_typescript@4.9.4
+      typescript: 4.9.4
     dev: true
 
-  /tsutils/2.29.0_typescript@4.8.4:
+  /tsutils/2.29.0_typescript@4.9.4:
     resolution: {integrity: sha512-g5JVHCIJwzfISaXpXE1qvNalca5Jwob6FjI4AoPlqMusJ6ftFE7IkkFoMhVLRgK+4Kx3gkzb8UZK5t5yTTvEmA==}
     peerDependencies:
       typescript: '>=2.1.0 || >=2.1.0-dev || >=2.2.0-dev || >=2.3.0-dev || >=2.4.0-dev || >=2.5.0-dev || >=2.6.0-dev || >=2.7.0-dev || >=2.8.0-dev || >=2.9.0-dev || >= 3.0.0-dev || >= 3.1.0-dev'
     dependencies:
       tslib: 1.14.1
-      typescript: 4.8.4
+      typescript: 4.9.4
     dev: true
 
   /tweetnacl/1.0.3:
     resolution: {integrity: sha512-6rt+RN7aOi1nGMyC4Xa5DdYiukl2UWCbcJft7YhxReBGQD7OAM8Pbxw6YMo4r2diNEA8FEmu32YOn9rhaiE5yw==}
     dev: false
 
-  /typescript/4.8.4:
-    resolution: {integrity: sha512-QCh+85mCy+h0IGff8r5XWzOVSbBO+KfeYrMQh7NJ58QujwcE22u+NUSmUxqF+un70P9GXKxa2HCNiTTMJknyjQ==}
+  /typescript/4.9.4:
+    resolution: {integrity: sha512-Uz+dTXYzxXXbsFpM86Wh3dKCxrQqUcVMxwU54orwlJjOpO3ao8L7j5lH+dWfTwgCwIuM9GQ2kvVotzYJMXTBZg==}
     engines: {node: '>=4.2.0'}
     hasBin: true
     dev: true

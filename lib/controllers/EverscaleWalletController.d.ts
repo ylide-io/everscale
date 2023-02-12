@@ -43,5 +43,6 @@ export declare class EverscaleWalletController extends AbstractWalletController 
     }[]): Promise<SendMailResult>;
     sendBroadcast(me: IGenericAccount, contentData: Uint8Array): Promise<SendMailResult>;
     decryptMessageKey(recipientAccount: IGenericAccount, senderPublicKey: PublicKey, encryptedKey: Uint8Array): Promise<Uint8Array>;
+    deployMailerV5(me: IGenericAccount): Promise<string>;
 }
 export declare const everscaleWalletFactory: WalletControllerFactory;

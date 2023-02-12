@@ -1,21 +1,23 @@
 import type * as nt from 'nekoton-wasm';
 import { GqlSocketParams } from 'everscale-standalone-client';
 import { GqlSocket } from 'everscale-standalone-client/client/ConnectionController/gql';
-import { ITVMInternalMessage, ITVMMessage } from '../misc';
+import { ITVMInternalMessage } from '../misc';
 import { getContractMessagesQuery } from './gqlQueries';
+
+type Endpoint = ReturnType<typeof GqlSocket['expandAddress']>;
 
 export class GqlSender implements nt.IGqlSender {
 	private readonly params: GqlSocketParams;
 	private readonly latencyDetectionInterval: number;
-	private readonly endpoints: string[];
+	private readonly endpoints: Endpoint[];
 	private nextLatencyDetectionTime: number = 0;
-	private currentEndpoint?: string;
-	private resolutionPromise?: Promise<string>;
+	private currentEndpoint?: Endpoint;
+	private resolutionPromise?: Promise<Endpoint>;
 
 	constructor(params: GqlSocketParams) {
 		this.params = params;
 		this.latencyDetectionInterval = params.latencyDetectionInterval || 60000;
-		this.endpoints = params.endpoints.map(GqlSocket.expandAddress);
+		this.endpoints = params.endpoints.map(e => GqlSocket.expandAddress(e));
 		if (this.endpoints.length === 1) {
 			this.currentEndpoint = this.endpoints[0];
 			this.nextLatencyDetectionTime = Number.MAX_VALUE;
@@ -23,13 +25,13 @@ export class GqlSender implements nt.IGqlSender {
 	}
 
 	isLocal(): boolean {
-		return this.params.local;
+		return !!this.params.local;
 	}
 
 	async send(data: string) {
 		const now = Date.now();
 		try {
-			let endpoint: string;
+			let endpoint: Endpoint;
 			if (this.currentEndpoint != null && now < this.nextLatencyDetectionTime) {
 				// Default route
 				endpoint = this.currentEndpoint;
@@ -49,7 +51,7 @@ export class GqlSender implements nt.IGqlSender {
 				delete this.resolutionPromise;
 			}
 
-			return fetch(endpoint, {
+			return fetch(endpoint.url, {
 				method: 'post',
 				headers: {
 					'Content-Type': 'application/json',
@@ -61,21 +63,21 @@ export class GqlSender implements nt.IGqlSender {
 		}
 	}
 
-	private async _selectQueryingEndpoint(): Promise<string> {
+	private async _selectQueryingEndpoint(): Promise<Endpoint> {
 		const maxLatency = this.params.maxLatency || 60000;
 		const endpointCount = this.endpoints.length;
 
 		for (let retryCount = 0; retryCount < 5; ++retryCount) {
-			let handlers: { resolve: (endpoint: string) => void; reject: () => void };
-			const promise = new Promise<string>((resolve, reject) => {
+			let handlers: { resolve: (endpoint: Endpoint) => void; reject: () => void };
+			const promise = new Promise<Endpoint>((resolve, reject) => {
 				handlers = {
-					resolve: (endpoint: string) => resolve(endpoint),
+					resolve: (endpoint: Endpoint) => resolve(endpoint),
 					reject: () => reject(undefined),
 				};
 			});
 
 			let checkedEndpoints = 0;
-			let lastLatency: { endpoint: string; latency: number | undefined } | undefined;
+			let lastLatency: { endpoint: Endpoint; latency: number | undefined } | undefined;
 
 			for (const endpoint of this.endpoints) {
 				GqlSocket.checkLatency(endpoint).then(latency => {

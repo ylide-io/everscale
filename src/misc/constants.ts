@@ -1,4 +1,4 @@
-import { ITVMNetworkContracts, TVMMailerContractType, TVMRegistryContractType } from '.';
+import { ITVMNetworkContracts, TVMMailerContractType, TVMRegistryContractType } from './types';
 
 export const EVERSCALE_LOCAL: ITVMNetworkContracts = {
 	registryContracts: [

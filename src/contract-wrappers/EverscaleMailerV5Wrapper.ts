@@ -1,15 +1,14 @@
 import {
 	bigIntToUint256,
 	BlockchainSourceType,
-	IMessage,
+	IGenericAccount,
 	IMessageContent,
 	IMessageCorruptedContent,
 	ISourceSubject,
-	MessageContentFailure,
 	Uint256,
 } from '@ylide/sdk';
 import SmartBuffer from '@ylide/smart-buffer';
-import { Address, Transaction } from 'everscale-inpage-provider';
+import { Address, ProviderRpcClient, Transaction } from 'everscale-inpage-provider';
 import { EverscaleBlockchainReader, NekotonCore } from '../controllers/helpers/EverscaleBlockchainReader';
 import {
 	everscaleAddressToUint256,
@@ -22,12 +21,31 @@ import {
 	publicKeyToBigIntString,
 } from '../misc';
 import { ContractCache } from './ContractCache';
+import { EverscaleDeployer } from './EverscaleDeployer';
 
 export class EverscaleMailerV5Wrapper {
 	private readonly cache: ContractCache<typeof MAILER_V5_ABI>;
 
 	constructor(public readonly blockchainReader: EverscaleBlockchainReader) {
 		this.cache = new ContractCache(MAILER_V5_ABI, blockchainReader);
+	}
+
+	static async deploy(ever: ProviderRpcClient, from: IGenericAccount): Promise<string> {
+		const contractAddress = await EverscaleDeployer.deployContract(
+			ever,
+			from,
+			MAILER_V5_ABI,
+			{
+				tvc: MAILER_V5_TVC_BASE64,
+				workchain: 0,
+				publicKey: from.publicKey!.toHex(),
+				initParams: {} as never,
+			},
+			{} as never,
+			'1000000000000000000',
+		);
+
+		return contractAddress.contract.address.toString();
 	}
 
 	decodeBroadcastMessageBody(core: NekotonCore, body: string) {
@@ -649,3 +667,6 @@ export const MAILER_V5_ABI = {
 		{ name: 'beneficiary', type: 'address' },
 	],
 };
+
+export const MAILER_V5_TVC_BASE64 =
+	'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';

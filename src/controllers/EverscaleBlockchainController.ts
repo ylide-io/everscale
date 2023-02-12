@@ -1,14 +1,11 @@
 import SmartBuffer from '@ylide/smart-buffer';
-import { EverscaleStandaloneClient } from 'everscale-standalone-client';
-import core from 'everscale-standalone-client/core';
-import { Address, ProviderRpcClient } from 'everscale-inpage-provider';
+import { Address } from 'everscale-inpage-provider';
 import nacl from 'tweetnacl';
 import {
 	AbstractBlockchainController,
 	IMessage,
 	IMessageContent,
 	IMessageCorruptedContent,
-	MessageContentFailure,
 	unpackSymmetricalyEncryptedData,
 	IExtraEncryptionStrateryBulk,
 	IExtraEncryptionStrateryEntry,
@@ -18,7 +15,6 @@ import {
 	packSymmetricalyEncryptedData,
 	BlockchainControllerFactory,
 	Uint256,
-	hexToUint256,
 	ISourceSubject,
 	BlockchainSourceType,
 	AbstractNameService,
@@ -31,15 +27,13 @@ import {
 	EVERSCALE_LOCAL,
 	EVERSCALE_MAINNET,
 	isTVMAddressValid,
-	ITVMContentMessageBody,
 	ITVMMailerContractLink,
 	ITVMMessage,
 	ITVMRegistryContractLink,
 	TVMMailerContractType,
 	TVMRegistryContractType,
-	uint256ToAddress,
 } from '../misc';
-import { initAsync, encrypt, generate_ephemeral, get_public_key } from '../encrypt';
+import { encrypt, generate_ephemeral, get_public_key } from '../encrypt';
 import { ExternalYlidePublicKey } from '@ylide/sdk';
 import { EverscaleBlockchainReader } from './helpers/EverscaleBlockchainReader';
 import { EverscaleMailerV6Wrapper } from '../contract-wrappers/EverscaleMailerV6Wrapper';
@@ -103,6 +97,7 @@ export class EverscaleBlockchainController extends AbstractBlockchainController 
 		super();
 
 		this.blockchainReader = new EverscaleBlockchainReader(
+			false,
 			options?.endpoints || this.mainnetEndpoints,
 			options.dev || false,
 		);
@@ -125,7 +120,9 @@ export class EverscaleBlockchainController extends AbstractBlockchainController 
 		}));
 
 		const currentMailerLink = contracts.mailerContracts.find(c => c.id === contracts.currentMailerId)!;
-		const currentBroadcasterLink = contracts.mailerContracts.find(c => c.id === contracts.currentBroadcasterId)!;
+		const currentBroadcasterLink = contracts.broadcasterContracts.find(
+			c => c.id === contracts.currentBroadcasterId,
+		)!;
 		const currentRegistryLink = contracts.registryContracts.find(c => c.id === contracts.currentRegistryId)!;
 
 		this.currentMailer = {
@@ -352,19 +349,20 @@ export class EverscaleBlockchainController extends AbstractBlockchainController 
 	async prepareExtraEncryptionStrategyBulk(
 		entries: IExtraEncryptionStrateryEntry[],
 	): Promise<IExtraEncryptionStrateryBulk> {
-		await core.ensureNekotonLoaded();
-		const ephemeralSecret = generate_ephemeral();
-		const ephemeralPublic = get_public_key(ephemeralSecret);
-		return {
-			addedPublicKey: {
-				key: PublicKey.fromHexString(PublicKeyType.EVERSCALE_NATIVE, ephemeralPublic),
-			},
-			blockchain: 'everscale',
-			type: 'everscale-native',
-			data: {
-				nativeEphemeralKeySecret: ephemeralSecret,
-			},
-		};
+		return await this.blockchainReader.operation(async (ever, gql, core) => {
+			const ephemeralSecret = generate_ephemeral();
+			const ephemeralPublic = get_public_key(ephemeralSecret);
+			return {
+				addedPublicKey: {
+					key: PublicKey.fromHexString(PublicKeyType.EVERSCALE_NATIVE, ephemeralPublic),
+				},
+				blockchain: 'everscale',
+				type: 'everscale-native',
+				data: {
+					nativeEphemeralKeySecret: ephemeralSecret,
+				},
+			};
+		});
 	}
 
 	async executeExtraEncryptionStrategy(

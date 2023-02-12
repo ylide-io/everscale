@@ -14,7 +14,7 @@ export interface ITVMMeta {
     dst: string;
     internalMsgId: Uint256;
 }
-export declare type ITVMMessage = IMessage<ITVMMeta>;
+export type ITVMMessage = IMessage<ITVMMeta>;
 export interface ITVMContentMessageBody {
     sender: string;
     msgId: Uint256;

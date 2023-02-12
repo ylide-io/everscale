@@ -23,9 +23,13 @@ export class EverscaleBlockchainReader {
 	ever: ProviderRpcClient;
 	gql: GqlSender;
 
-	constructor(public readonly endpoints: string[], public readonly dev = false) {
+	constructor(
+		public readonly defaultWriter: boolean,
+		public readonly endpoints: string[],
+		public readonly dev = false,
+	) {
 		this.ever = new ProviderRpcClient({
-			forceUseFallback: true,
+			forceUseFallback: defaultWriter ? false : true,
 			fallback: () =>
 				EverscaleStandaloneClient.create({
 					connection: dev

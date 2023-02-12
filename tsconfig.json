@@ -6,8 +6,9 @@
 		"outDir": "./lib",
 		"sourceMap": true,
 		"esModuleInterop": true,
+		"skipLibCheck": true,
 		"strict": true
 	},
 	"include": ["src"],
-	"exclude": ["node_modules", "**/__tests__/*"]
+	"exclude": ["node_modules/**", "**/__tests__/*"]
 }
