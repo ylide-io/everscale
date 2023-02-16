@@ -4,24 +4,24 @@ export const EVERSCALE_LOCAL: ITVMNetworkContracts = {
 	registryContracts: [
 		{
 			id: 1,
-			type: TVMRegistryContractType.TVMRegistryV1,
-			address: '0:3273912b3960d7b8b866dfe22ce7bdd3f599ae973f97cc8b1b5e94e47274ee2e',
+			type: TVMRegistryContractType.TVMRegistryV2,
+			address: '0:6c85e7f93eb3d47dc365919e647eb5dd91b68527aa5bb318e9feaaf3dedf72f1',
 			verified: true,
 		},
 	],
 	mailerContracts: [
 		{
 			id: 2,
-			type: TVMMailerContractType.TVMMailerV5,
-			address: '0:fbdcae5d0ebb3ce98d31f4b554e6493c9d1d5e1f6acbea1f58488e3e1b2c42da',
+			type: TVMMailerContractType.TVMMailerV6,
+			address: '0:c8349fd9e5f8e5047d2ad62ac5a453f6c88e4b1f45fdc160984f3c54500897e7',
 			verified: true,
 		},
 	],
 	broadcasterContracts: [
 		{
 			id: 3,
-			type: TVMMailerContractType.TVMMailerV5,
-			address: '0:0263d12284a98e4ebcc95e7ed3a5f6c6611da2e101320e5a0f554d2de7a5cba8',
+			type: TVMMailerContractType.TVMMailerV6,
+			address: '0:17a1f159bbffd26a5de14f4b32bb6215f0c5c746ed04be8d353e7a41a56d7b0a',
 			verified: true,
 		},
 	],
@@ -36,7 +36,7 @@ export const EVERSCALE_MAINNET: ITVMNetworkContracts = {
 			id: 4,
 			type: TVMRegistryContractType.TVMRegistryV1,
 			address: '0:c68ec196b86fe001c3762e454991b460e115862f64a9f929591557e00fb0cb3a',
-			verified: true,
+			verified: false,
 		},
 	],
 	mailerContracts: [
@@ -44,7 +44,7 @@ export const EVERSCALE_MAINNET: ITVMNetworkContracts = {
 			id: 5,
 			type: TVMMailerContractType.TVMMailerV5,
 			address: '0:a06a244f2632aaff3573e2fa45283fc67e3ad8a11bcba62b060fe9b60c36a0c9',
-			verified: true,
+			verified: false,
 		},
 	],
 	broadcasterContracts: [
@@ -52,7 +52,7 @@ export const EVERSCALE_MAINNET: ITVMNetworkContracts = {
 			id: 6,
 			type: TVMMailerContractType.TVMMailerV5,
 			address: '0:38eaf0a6482ebdc4e1d8f7d7addabbecf14b134d23144971595552630e653f5b',
-			verified: true,
+			verified: false,
 		},
 	],
 	currentRegistryId: 4,

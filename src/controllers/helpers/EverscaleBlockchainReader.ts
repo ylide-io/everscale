@@ -30,20 +30,25 @@ export class EverscaleBlockchainReader {
 	) {
 		this.ever = new ProviderRpcClient({
 			forceUseFallback: defaultWriter ? false : true,
-			fallback: () =>
-				EverscaleStandaloneClient.create({
-					connection: dev
-						? 'local'
-						: {
-								id: 1,
-								group: 'mainnet',
-								type: 'graphql',
-								data: {
-									local: false,
-									endpoints,
-								},
-						  },
-				}),
+			fallback: async () => {
+				try {
+					return await EverscaleStandaloneClient.create({
+						connection: dev
+							? 'local'
+							: {
+									id: 1,
+									group: 'mainnet',
+									type: 'graphql',
+									data: {
+										local: false,
+										endpoints,
+									},
+							  },
+					});
+				} catch (err) {
+					throw err;
+				}
+			},
 		});
 
 		this.gql = new GqlSender({

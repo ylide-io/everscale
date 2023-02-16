@@ -26,7 +26,7 @@ import { EverscaleRegistryV2Wrapper } from '../contract-wrappers/EverscaleRegist
 import { ITVMMailerContractLink, ITVMRegistryContractLink, EVERSCALE_LOCAL, EVERSCALE_MAINNET } from '../misc';
 import { EverscaleBlockchainController } from './EverscaleBlockchainController';
 import { EverscaleBlockchainReader } from './helpers/EverscaleBlockchainReader';
-import { EverscaleMailerV5Wrapper } from '../contract-wrappers';
+import { EverscaleMailerV5Wrapper, EverscaleRegistryV1Wrapper } from '../contract-wrappers';
 
 export class EverscaleWalletController extends AbstractWalletController {
 	public readonly blockchainReader: EverscaleBlockchainReader;
@@ -155,6 +155,8 @@ export class EverscaleWalletController extends AbstractWalletController {
 		if (!me || me.address !== needAccount.address) {
 			throw new YlideError(YlideErrorType.ACCOUNT_UNREACHABLE, { currentAccount: me, needAccount });
 		}
+
+		return me;
 	}
 
 	addressToUint256(address: string): Uint256 {
@@ -390,9 +392,24 @@ export class EverscaleWalletController extends AbstractWalletController {
 
 	// Deployments:
 
-	async deployMailerV5(me: IGenericAccount): Promise<string> {
-		await this.ensureAccount(me);
-		return await EverscaleMailerV5Wrapper.deploy(this.blockchainReader.ever, me);
+	async deployMailerV5(me: IGenericAccount, beneficiaryAddress: string): Promise<string> {
+		const fullMe = await this.ensureAccount(me);
+		return await EverscaleMailerV5Wrapper.deploy(this.blockchainReader.ever, fullMe, beneficiaryAddress);
+	}
+
+	async deployMailerV6(me: IGenericAccount, beneficiaryAddress: string): Promise<string> {
+		const fullMe = await this.ensureAccount(me);
+		return await EverscaleMailerV6Wrapper.deploy(this.blockchainReader.ever, fullMe, beneficiaryAddress);
+	}
+
+	async deployRegistryV1(me: IGenericAccount): Promise<string> {
+		const fullMe = await this.ensureAccount(me);
+		return await EverscaleRegistryV1Wrapper.deploy(this.blockchainReader.ever, fullMe);
+	}
+
+	async deployRegistryV2(me: IGenericAccount): Promise<string> {
+		const fullMe = await this.ensureAccount(me);
+		return await EverscaleRegistryV2Wrapper.deploy(this.blockchainReader.ever, fullMe);
 	}
 }
 

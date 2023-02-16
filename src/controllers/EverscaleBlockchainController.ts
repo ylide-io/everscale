@@ -98,7 +98,7 @@ export class EverscaleBlockchainController extends AbstractBlockchainController 
 
 		this.blockchainReader = new EverscaleBlockchainReader(
 			false,
-			options?.endpoints || this.mainnetEndpoints,
+			options?.endpoints || (options?.dev ? ['http://localhost/graphql'] : this.mainnetEndpoints),
 			options.dev || false,
 		);
 

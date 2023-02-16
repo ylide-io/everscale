@@ -30,7 +30,7 @@ export class EverscaleMailerV5Wrapper {
 		this.cache = new ContractCache(MAILER_V5_ABI, blockchainReader);
 	}
 
-	static async deploy(ever: ProviderRpcClient, from: IGenericAccount): Promise<string> {
+	static async deploy(ever: ProviderRpcClient, from: IGenericAccount, beneficiaryAddress: string): Promise<string> {
 		const contractAddress = await EverscaleDeployer.deployContract(
 			ever,
 			from,
@@ -39,10 +39,12 @@ export class EverscaleMailerV5Wrapper {
 				tvc: MAILER_V5_TVC_BASE64,
 				workchain: 0,
 				publicKey: from.publicKey!.toHex(),
-				initParams: {} as never,
+				initParams: {
+					beneficiary: beneficiaryAddress,
+				} as never,
 			},
 			{} as never,
-			'1000000000000000000',
+			'1000000000',
 		);
 
 		return contractAddress.contract.address.toString();

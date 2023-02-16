@@ -39,3 +39,7 @@ export function isTVMAddressValid(address: string) {
 
 	return regExp.test(splitAddress[1]);
 }
+
+export function randomHex(length = 64) {
+	return [...Array(length)].map(() => Math.floor(Math.random() * 16).toString(16)).join('');
+}

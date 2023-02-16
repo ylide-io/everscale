@@ -1,15 +1,14 @@
 import {
 	bigIntToUint256,
 	BlockchainSourceType,
-	IMessage,
+	IGenericAccount,
 	IMessageContent,
 	IMessageCorruptedContent,
 	ISourceSubject,
-	MessageContentFailure,
 	Uint256,
 } from '@ylide/sdk';
 import SmartBuffer from '@ylide/smart-buffer';
-import { Address, Transaction } from 'everscale-inpage-provider';
+import { Address, ProviderRpcClient, Transaction } from 'everscale-inpage-provider';
 import { EverscaleBlockchainReader, NekotonCore } from '../controllers/helpers/EverscaleBlockchainReader';
 import {
 	everscaleAddressToUint256,
@@ -19,14 +18,37 @@ import {
 	ITVMInternalMessage,
 	encodeTvmMsgId,
 	publicKeyToBigIntString,
+	randomHex,
 } from '../misc';
 import { ContractCache } from './ContractCache';
+import { EverscaleDeployer } from './EverscaleDeployer';
 
 export class EverscaleMailerV6Wrapper {
 	private readonly cache: ContractCache<typeof MAILER_V6_ABI>;
 
 	constructor(public readonly blockchainReader: EverscaleBlockchainReader) {
 		this.cache = new ContractCache(MAILER_V6_ABI, blockchainReader);
+	}
+
+	static async deploy(ever: ProviderRpcClient, from: IGenericAccount, beneficiaryAddress: string): Promise<string> {
+		const contractAddress = await EverscaleDeployer.deployContract(
+			ever,
+			from,
+			MAILER_V6_ABI,
+			{
+				tvc: MAILER_V6_TVC_BASE64,
+				workchain: 0,
+				publicKey: from.publicKey!.toHex(),
+				initParams: {
+					beneficiary: beneficiaryAddress,
+					nonce: BigInt(`0x${randomHex(64)}`).toString(10),
+				} as never,
+			},
+			{} as never,
+			'1000000000',
+		);
+
+		return contractAddress.contract.address.toString();
 	}
 
 	decodeBroadcastMessageBody(core: NekotonCore, body: string) {
@@ -610,6 +632,11 @@ export const MAILER_V6_ABI = {
 			outputs: [{ name: 'terminated', type: 'bool' }],
 		},
 		{
+			name: 'nonce',
+			inputs: [],
+			outputs: [{ name: 'nonce', type: 'uint256' }],
+		},
+		{
 			name: 'contentPartFee',
 			inputs: [],
 			outputs: [{ name: 'contentPartFee', type: 'uint128' }],
@@ -630,7 +657,10 @@ export const MAILER_V6_ABI = {
 			outputs: [{ name: 'beneficiary', type: 'address' }],
 		},
 	],
-	'data': [{ key: 1, name: 'beneficiary', type: 'address' }],
+	'data': [
+		{ key: 1, name: 'nonce', type: 'uint256' },
+		{ key: 2, name: 'beneficiary', type: 'address' },
+	],
 	'events': [
 		{
 			name: 'MailPush',
@@ -664,9 +694,13 @@ export const MAILER_V6_ABI = {
 		{ name: '_constructorFlag', type: 'bool' },
 		{ name: 'owner', type: 'address' },
 		{ name: 'terminated', type: 'bool' },
+		{ name: 'nonce', type: 'uint256' },
 		{ name: 'contentPartFee', type: 'uint128' },
 		{ name: 'recipientFee', type: 'uint128' },
 		{ name: 'broadcastFee', type: 'uint128' },
 		{ name: 'beneficiary', type: 'address' },
 	],
 };
+
+const MAILER_V6_TVC_BASE64 =
+	'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';

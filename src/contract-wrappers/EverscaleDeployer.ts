@@ -45,6 +45,8 @@ export class EverscaleDeployer {
 		);
 		const contract = new ever.Contract(abi, expectedAddress);
 		const stateInit = await ever.getStateInit(abi, deployParams);
+		console.log('stateInit: ', stateInit);
+		console.log('expectedAddress: ', expectedAddress);
 		const tx = await errorExtractor(
 			contract.methods.constructor(constructorParams).sendExternal({
 				stateInit: stateInit.stateInit,
