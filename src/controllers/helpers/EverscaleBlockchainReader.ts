@@ -230,6 +230,10 @@ export class EverscaleBlockchainReader {
 					createdLt.lt = fromMessageLt;
 				}
 			}
+		} else {
+			if (nextPageAfterMessage && nextPageAfterMessage.created_lt) {
+				createdLt.lt = BigInt(nextPageAfterMessage.created_lt);
+			}
 		}
 
 		if (toMessageLt) {

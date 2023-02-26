@@ -5,10 +5,10 @@ specifiers:
   '@ylide/sdk': link:../sdk
   '@ylide/smart-buffer': 0.0.10
   chacha: 2.1.0
-  everscale-inpage-provider: 0.3.51
-  everscale-standalone-client: 2.1.14
+  everscale-inpage-provider: 0.3.52
+  everscale-standalone-client: 2.1.16
   moment: 2.29.4
-  nekoton-wasm: 1.0.14
+  nekoton-wasm: 1.0.16
   prettier: 2.7.1
   rimraf: 3.0.2
   ts-node: 10.8.2
@@ -21,10 +21,10 @@ dependencies:
   '@ylide/sdk': link:../sdk
   '@ylide/smart-buffer': 0.0.10
   chacha: 2.1.0
-  everscale-inpage-provider: 0.3.51
-  everscale-standalone-client: 2.1.14
+  everscale-inpage-provider: 0.3.52
+  everscale-standalone-client: 2.1.16
   moment: 2.29.4
-  nekoton-wasm: 1.0.14
+  nekoton-wasm: 1.0.16
   tweetnacl: 1.0.3
 
 devDependencies:
@@ -240,19 +240,19 @@ packages:
     engines: {node: '>=0.8.x'}
     dev: false
 
-  /everscale-inpage-provider/0.3.51:
-    resolution: {integrity: sha512-JYZjp9E/xVz69xSA5blPuI/uoNCHZ3Qj3z4um9eqcMvJy7aEEsQIsOXRQapq6BVoZlvBMxyZO2KguIJOLa0i3w==}
+  /everscale-inpage-provider/0.3.52:
+    resolution: {integrity: sha512-IDl2dhRyDkFqi7Mbn4GukWiUUv+22ZdlYh2UI8YOP7+BxoBxwkEMQfyGcUyoPLoca4PFcb/+nufT/KFw5gOEFA==}
     dev: false
 
-  /everscale-standalone-client/2.1.14:
-    resolution: {integrity: sha512-J4u3PRsD+EftRp9pnLD8fT3LmsBoFUPd2cJan8J5oTgA+fhzymzfsZTBX0TmLlJ7mXCDr8GWv7iv2b80W5FI8A==}
+  /everscale-standalone-client/2.1.16:
+    resolution: {integrity: sha512-PQ6ooSfagxbU9Nc5VBCIYY7QUSfyc/35lT1m+uDn8vsEwbXvX2LRX5O/2Z5QMIcn3pml5AfQN7412Ufh2bDcoA==}
     dependencies:
       '@broxus/await-semaphore': 0.1.5
       bignumber.js: 9.1.1
       events: 3.3.0
-      everscale-inpage-provider: 0.3.51
+      everscale-inpage-provider: 0.3.52
       fast-safe-stringify: 2.1.1
-      nekoton-wasm: 1.0.14
+      nekoton-wasm: 1.0.16
       node-fetch: 2.6.9
     transitivePeerDependencies:
       - encoding
@@ -360,8 +360,8 @@ packages:
     dev: false
     optional: true
 
-  /nekoton-wasm/1.0.14:
-    resolution: {integrity: sha512-LvQFtfZwfbrgRYCLtegf137CofQnEcA+FGT1TdOKK63cf6YyUy+LiCbjrWCdR4GLsemhT7qfqIdNFATVlgDl5A==}
+  /nekoton-wasm/1.0.16:
+    resolution: {integrity: sha512-my/SlviS/G9EewH0zVkj6x+8euj9XzzGglbHTlLtV1zgPVb3l25yzowC1wrOrNLjltMf4eg6nnJ0gOfpP/11tA==}
     dev: false
 
   /node-fetch/2.6.9:

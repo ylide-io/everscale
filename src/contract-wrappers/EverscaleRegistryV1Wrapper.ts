@@ -48,7 +48,7 @@ export class EverscaleRegistryV1Wrapper {
 		address: string,
 	): Promise<ExternalYlidePublicKey | null> {
 		return await this.cache.contractOperation(registry, async (contract, ever, gql, core) => {
-			const [lastKeyMessage] = await gql.queryContractMessages(address, registry.address, 1);
+			const [lastKeyMessage] = await gql.queryContractMessages(':' + address.split(':')[1], registry.address, 1);
 			if (lastKeyMessage) {
 				const lastKeyBytes = this.decodeAddressToPublicKeyMessageBody(core, lastKeyMessage.body);
 				return {
@@ -68,7 +68,7 @@ export class EverscaleRegistryV1Wrapper {
 		address: string,
 	): Promise<ExternalYlidePublicKey[]> {
 		return await this.cache.contractOperation(registry, async (contract, ever, gql, core) => {
-			const messages = await gql.queryContractMessages(address, registry.address, 100);
+			const messages = await gql.queryContractMessages(':' + address.split(':')[1], registry.address, 100);
 			return messages.map(m => ({
 				keyVersion: YlidePublicKeyVersion.INSECURE_KEY_V1,
 				publicKey: PublicKey.fromBytes(

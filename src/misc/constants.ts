@@ -59,3 +59,33 @@ export const EVERSCALE_MAINNET: ITVMNetworkContracts = {
 	currentMailerId: 5,
 	currentBroadcasterId: 6,
 };
+
+export const VENOM_TESTNET: ITVMNetworkContracts = {
+	registryContracts: [
+		{
+			id: 7,
+			type: TVMRegistryContractType.TVMRegistryV1,
+			address: '0:bbcaa42d2a25aea6da05ac1d86d318d56651155933216cd4c3bfaa1b5d3ccc28',
+			verified: true,
+		},
+	],
+	mailerContracts: [
+		{
+			id: 8,
+			type: TVMMailerContractType.TVMMailerV5,
+			address: '0:4a7fce450636c6608e1ce7852752c69439f9778dbfc5c3f7b4b9a36682ae0c83',
+			verified: true,
+		},
+	],
+	broadcasterContracts: [
+		{
+			id: 9,
+			type: TVMMailerContractType.TVMMailerV5,
+			address: '0:4a7fce450636c6608e1ce7852752c69439f9778dbfc5c3f7b4b9a36682ae0c83',
+			verified: true,
+		},
+	],
+	currentRegistryId: 7,
+	currentMailerId: 8,
+	currentBroadcasterId: 9,
+};

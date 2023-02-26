@@ -23,7 +23,13 @@ import {
 import SmartBuffer from '@ylide/smart-buffer';
 import { EverscaleMailerV6Wrapper } from '../contract-wrappers/EverscaleMailerV6Wrapper';
 import { EverscaleRegistryV2Wrapper } from '../contract-wrappers/EverscaleRegistryV2Wrapper';
-import { ITVMMailerContractLink, ITVMRegistryContractLink, EVERSCALE_LOCAL, EVERSCALE_MAINNET } from '../misc';
+import {
+	ITVMMailerContractLink,
+	ITVMRegistryContractLink,
+	EVERSCALE_LOCAL,
+	EVERSCALE_MAINNET,
+	VENOM_TESTNET,
+} from '../misc';
 import { EverscaleBlockchainController } from './EverscaleBlockchainController';
 import { EverscaleBlockchainReader } from './helpers/EverscaleBlockchainReader';
 import { EverscaleMailerV5Wrapper, EverscaleRegistryV1Wrapper } from '../contract-wrappers';
@@ -41,7 +47,8 @@ export class EverscaleWalletController extends AbstractWalletController {
 	};
 	readonly currentRegistry: { link: ITVMRegistryContractLink; wrapper: EverscaleRegistryV2Wrapper };
 
-	readonly mainnetEndpoints = ['https://mainnet.evercloud.dev/695e40eeac6b4e3fa4a11666f6e0d6af/graphql'];
+	readonly everscaleMainnetEndpoints = ['https://mainnet.evercloud.dev/695e40eeac6b4e3fa4a11666f6e0d6af/graphql'];
+	readonly venomTestnetEndpoints = ['https://gql-testnet.venom.foundation/graphql'];
 
 	private lastCurrentAccount: IGenericAccount | null = null;
 
@@ -51,7 +58,8 @@ export class EverscaleWalletController extends AbstractWalletController {
 	// on(event: WalletEvent.LOGOUT, fn: () => void, context?: any): this;
 
 	constructor(
-		options: {
+		private readonly options: {
+			type?: 'everwallet' | 'venomwallet';
 			dev?: boolean;
 			endpoints?: string[];
 			onSwitchAccountRequest?: SwitchAccountCallback;
@@ -59,15 +67,27 @@ export class EverscaleWalletController extends AbstractWalletController {
 	) {
 		super(options);
 
+		if (typeof options.type === 'undefined') {
+			throw new Error('You must provide network type for Everscale controller');
+		}
+
 		this.onSwitchAccountRequest = options?.onSwitchAccountRequest || null;
 
-		this.blockchainReader = new EverscaleBlockchainReader(
-			true,
-			options?.endpoints || this.mainnetEndpoints,
-			options.dev || false,
-		);
+		const endpoints =
+			options?.endpoints ||
+			(options?.dev
+				? ['http://localhost/graphql']
+				: options.type === 'everwallet'
+				? this.everscaleMainnetEndpoints
+				: this.venomTestnetEndpoints);
 
-		const contracts = options?.dev ? EVERSCALE_LOCAL : EVERSCALE_MAINNET;
+		const contracts = options?.dev
+			? EVERSCALE_LOCAL
+			: options.type === 'everwallet'
+			? EVERSCALE_MAINNET
+			: VENOM_TESTNET;
+
+		this.blockchainReader = new EverscaleBlockchainReader(true, endpoints, options.dev || false);
 
 		const currentMailerLink = contracts.mailerContracts.find(c => c.id === contracts.currentMailerId)!;
 		const currentBroadcasterLink = contracts.broadcasterContracts.find(
@@ -102,7 +122,7 @@ export class EverscaleWalletController extends AbstractWalletController {
 	}
 
 	wallet(): string {
-		return 'everwallet';
+		return this.options.type === 'everwallet' ? 'everwallet' : 'venomwallet';
 	}
 
 	isMultipleAccountsSupported() {
@@ -322,7 +342,7 @@ export class EverscaleWalletController extends AbstractWalletController {
 		}
 	}
 
-	async sendBroadcast(me: IGenericAccount, contentData: Uint8Array): Promise<SendMailResult> {
+	async sendBroadcast(me: IGenericAccount, feedId: Uint256, contentData: Uint8Array): Promise<SendMailResult> {
 		await this.ensureAccount(me);
 		const uniqueId = Math.floor(Math.random() * 4 * 10 ** 9);
 		const chunks = MessageChunks.splitMessageChunks(contentData);
@@ -414,8 +434,19 @@ export class EverscaleWalletController extends AbstractWalletController {
 }
 
 export const everscaleWalletFactory: WalletControllerFactory = {
-	create: async (options?: any) => new EverscaleWalletController(options),
-	isWalletAvailable: () => new ProviderRpcClient().hasProvider(),
+	create: async (options?: any) =>
+		new EverscaleWalletController(Object.assign({ type: 'everwallet' }, options || {})),
+	isWalletAvailable: () =>
+		new ProviderRpcClient({ fallback: async () => window.__ever!, forceUseFallback: true }).hasProvider(),
 	blockchainGroup: 'everscale',
 	wallet: 'everwallet',
+};
+
+export const venomWalletFactory: WalletControllerFactory = {
+	create: async (options?: any) =>
+		new EverscaleWalletController(Object.assign({ type: 'venomwallet' }, options || {})),
+	isWalletAvailable: () =>
+		new ProviderRpcClient({ fallback: async () => (window as any).__venom, forceUseFallback: true }).hasProvider(),
+	blockchainGroup: 'everscale',
+	wallet: 'venomwallet',
 };

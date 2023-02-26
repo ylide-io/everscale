@@ -93,6 +93,7 @@ export class EverscaleMailerV5Wrapper {
 
 		return {
 			isBroadcast: false,
+			feedId: '0000000000000000000000000000000000000000000000000000000000000000' as Uint256,
 			msgId: encodeTvmMsgId(false, mailer.id, BigInt(message.created_lt)),
 			createdAt: message.created_at,
 			senderAddress: body.sender,
@@ -121,6 +122,8 @@ export class EverscaleMailerV5Wrapper {
 
 		return {
 			isBroadcast: true,
+			// TODO!!!
+			feedId: '0000000000000000000000000000000000000000000000000000000000000000' as Uint256,
 			msgId: encodeTvmMsgId(true, mailer.id, BigInt(message.created_lt)),
 			createdAt: message.created_at,
 			senderAddress: message.dst,
