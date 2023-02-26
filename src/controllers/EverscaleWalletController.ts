@@ -267,10 +267,14 @@ export class EverscaleWalletController extends AbstractWalletController {
 
 	async sendMail(
 		me: IGenericAccount,
+		feedId: Uint256,
 		contentData: Uint8Array,
 		recipients: { address: Uint256; messageKey: MessageKey }[],
 	): Promise<SendMailResult> {
 		await this.ensureAccount(me);
+		if (feedId !== '0000000000000000000000000000000000000000000000000000000000000000') {
+			throw new Error('Non-main feeds are not supported for everscale for now.');
+		}
 		const uniqueId = Math.floor(Math.random() * 4 * 10 ** 9);
 		const chunks = MessageChunks.splitMessageChunks(contentData);
 		if (chunks.length === 1 && recipients.length === 1) {
