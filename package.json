@@ -35,7 +35,7 @@
 	"license": "ISC",
 	"dependencies": {
 		"@ylide/sdk": "link:../sdk",
-		"@ylide/smart-buffer": "0.0.10",
+		"@ylide/smart-buffer": "0.0.11",
 		"chacha": "2.1.0",
 		"everscale-inpage-provider": "0.3.52",
 		"everscale-standalone-client": "2.1.16",
