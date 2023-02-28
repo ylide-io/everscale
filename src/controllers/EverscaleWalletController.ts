@@ -290,14 +290,16 @@ export class EverscaleWalletController extends AbstractWalletController {
 				chunks[0],
 			);
 
-			const om = transaction.childTransaction.outMessages;
-			console.log('om: ', om);
-			const contentMsg = om.length ? om[0] : null;
-			if (!contentMsg || !contentMsg.body) {
-				throw new Error('Content event was not found');
-			}
-			const decodedEvent = 'yappy' as any;
-			return decodedEvent.msgId;
+			// const om = transaction.childTransaction.outMessages;
+			// const contentMsg = om.length ? om[0] : null;
+			// if (!contentMsg || !contentMsg.body) {
+			// 	throw new Error('Content event was not found');
+			// }
+			// const decodedEvent = await this.blockchainReader.operation(async (ever, gql, core) => this.currentMailer.wrapper.decodeContentMessageBody(core, contentMsg.body!));
+
+			// tslint:disable-next-line
+			console.log('Push events decoding is not implemented yet.');
+			return { pushes: [] };
 		} else if (chunks.length === 1 && recipients.length < Math.ceil((15.5 * 1024 - chunks[0].byteLength) / 70)) {
 			const transaction = await this.currentMailer.wrapper.sendBulkMail(
 				this.currentMailer.link,
@@ -308,13 +310,9 @@ export class EverscaleWalletController extends AbstractWalletController {
 				chunks[0],
 			);
 
-			const om = transaction.childTransaction.outMessages;
-			const contentMsg = om.length ? om[0] : null;
-			if (!contentMsg || !contentMsg.body) {
-				throw new Error('Content event was not found');
-			}
-			const decodedEvent = 'yappy' as any;
-			return decodedEvent.msgId;
+			// tslint:disable-next-line
+			console.log('Push events decoding is not implemented yet.');
+			return { pushes: [] };
 		} else {
 			const initTime = Math.floor(Date.now() / 1000);
 			const msgId = await this.currentMailer.wrapper.buildHash(
@@ -345,7 +343,10 @@ export class EverscaleWalletController extends AbstractWalletController {
 					recs.map(r => r.messageKey.toBytes()),
 				);
 			}
-			return msgId as any;
+
+			// tslint:disable-next-line
+			console.log('Push events decoding is not implemented yet.');
+			return { pushes: [] };
 		}
 	}
 

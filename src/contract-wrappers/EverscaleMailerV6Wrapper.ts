@@ -239,9 +239,9 @@ export class EverscaleMailerV6Wrapper {
 			const broadcastFee = await contract.functions.broadcastFee().call();
 
 			return {
-				contentPartFee: contentPartFee,
-				recipientFee: recipientFee,
-				broadcastFee: broadcastFee,
+				contentPartFee,
+				recipientFee,
+				broadcastFee,
 			};
 		});
 	}

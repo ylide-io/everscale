@@ -235,8 +235,8 @@ export class EverscaleMailerV5Wrapper {
 			// const [broadcastFee] = await contract.functions.broadcastFee();
 
 			return {
-				contentPartFee: contentPartFee,
-				recipientFee: recipientFee,
+				contentPartFee,
+				recipientFee,
 				// broadcastFee: broadcastFee.div(BigNumber.from('1000000000000000000')),
 			};
 		});

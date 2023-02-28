@@ -4,20 +4,13 @@ import { ProviderRpcClient } from 'everscale-inpage-provider';
 
 import { initAsync } from '../../encrypt';
 import { GqlSender } from '../../network';
-import {
-	convertMsgIdToAddress,
-	ITVMContentMessageBody,
-	ITVMInternalMessage,
-	ITVMMailerContractLink,
-	ITVMMessage,
-} from '../../misc';
-import moment from 'moment';
+import { convertMsgIdToAddress, ITVMContentMessageBody, ITVMInternalMessage, ITVMMessage } from '../../misc';
 import { IMessageContent, IMessageCorruptedContent, MessageContentFailure } from '@ylide/sdk';
 import SmartBuffer from '@ylide/smart-buffer';
 
 initAsync();
 
-export type NekotonCore = typeof nekotonCore['nekoton'];
+export type NekotonCore = (typeof nekotonCore)['nekoton'];
 
 export class EverscaleBlockchainReader {
 	ever: ProviderRpcClient;
@@ -79,119 +72,11 @@ export class EverscaleBlockchainReader {
 			}
 		}
 		for (const err of errors) {
+			// tslint:disable-next-line
 			console.error(`${err.rpc || '[provider] error: '}`, err);
 		}
 		throw new Error('Was not able to execute in all of RPC providers');
 	}
-
-	// static async queryMessagesList(
-	// 	gql: GqlSender,
-	// 	contractAddress: string,
-	// 	dst?: string | null,
-	// 	limit?: number,
-	// 	filter?: {
-	// 		// fromDate?: number;
-	// 		// toDate?: number;
-	// 		fromMessage?: ITVMMessage;
-	// 		toMessage?: ITVMMessage;
-	// 	},
-	// 	nextPageAfterMessage?: ITVMMessage,
-	// ): Promise<ITVMMessage[]> {
-	// 	// const createdAt: {
-	// 	// 	gt?: number;
-	// 	// 	lt?: number;
-	// 	// } = {};
-
-	// 	const createdLt: {
-	// 		gt?: BigInt;
-	// 		lt?: BigInt;
-	// 	} = {};
-
-	// 	if (nextPageAfterMessage && nextPageAfterMessage.created_lt) {
-	// 		createdLt.lt = BigInt(nextPageAfterMessage.created_lt);
-	// 	}
-	// 	if (filter?.fromMessage) {
-	// 		createdLt.gt = BigInt(filter.fromMessage.created_lt);
-	// 	}
-	// 	if (filter?.toMessage) {
-	// 		const v = BigInt(filter.toMessage.created_lt);
-	// 		if (createdLt.lt === undefined || v < createdLt.lt) {
-	// 			createdLt.lt = v;
-	// 		}
-	// 	}
-	// 	// if (filter?.fromDate !== undefined) {
-	// 	// 	createdAt.gt = filter?.fromDate;
-	// 	// }
-	// 	// if (filter?.toDate !== undefined) {
-	// 	// 	createdAt.lt = filter?.toDate;
-	// 	// }
-	// 	// ${filter?.fromMessage ? `, created_lt: { gt: "${filter.fromMessage.created_lt}" }` : ``}
-	// 	// ${filter?.toMessage ? `, created_lt: { lt: "${filter.toMessage.created_lt}" }` : ``}
-	// 	// created_lt: { ${nextPageAfterMessage?.created_lt ? `lt: "${nextPageAfterMessage.created_lt}"` : ''} }
-	// 	// ${filter?.fromDate ? `, created_at: { gt: ${filter.fromDate} }` : ``}
-	// 	// ${filter?.toDate ? `, created_at: { lt: ${filter.toDate} }` : ``}
-
-	// 	// const _at = createdAt.gt !== undefined || createdAt.lt !== undefined;
-	// 	const _lt = createdLt.gt !== undefined || createdLt.lt !== undefined;
-	// 	const result: ITVMMessage[] = await gql.queryMessages(`
-	// 		query {
-	// 			messages(
-	// 			filter: {
-	// 				msg_type: { eq: 2 },
-	// 				${dst ? `dst: { eq: "${dst}" },` : ''}
-	// 				src: { eq: "${contractAddress}" },
-	// 				${
-	// 					// _at
-	// 					// 	? `created_at: { ${
-	// 					// 			createdAt.lt !== undefined
-	// 					// 				? `lt: "${moment.unix(createdAt.lt).utc().toISOString()}", `
-	// 					// 				: ''
-	// 					// 	  } ${
-	// 					// 			createdAt.gt !== undefined
-	// 					// 				? `gt: "${moment.unix(createdAt.gt).utc().toISOString()}", `
-	// 					// 				: ''
-	// 					// 	  } }, `
-	// 					// 	: ''
-	// 					''
-	// 				}
-	// 				${
-	// 					_lt
-	// 						? `created_lt: { ${
-	// 								createdLt.lt !== undefined ? `lt: "${'0x' + createdLt.lt.toString(16)}", ` : ''
-	// 						  } ${createdLt.gt !== undefined ? `gt: "${'0x' + createdLt.gt.toString(16)}", ` : ''} }, `
-	// 						: ''
-	// 				}
-	// 			}
-	// 			orderBy: [{path: "created_at", direction: DESC}]
-	// 			limit: ${Math.min(limit || 50, 50)}
-	// 			) {
-	// 			body
-	// 			id
-	// 			src
-	// 			created_at
-	// 			created_lt
-	// 			dst
-	// 			}
-	// 		}`);
-
-	// 	if (limit && result.length === limit) {
-	// 		return result;
-	// 	} else {
-	// 		if (result.length === 0) {
-	// 			return [];
-	// 		} else {
-	// 			const after = await this.queryMessagesList(
-	// 				gql,
-	// 				contractAddress,
-	// 				dst,
-	// 				limit ? limit - result.length : undefined,
-	// 				filter,
-	// 				result[result.length - 1],
-	// 			);
-	// 			return result.concat(after);
-	// 		}
-	// 	}
-	// }
 
 	static async queryMessagesListDescRaw(
 		gql: GqlSender,

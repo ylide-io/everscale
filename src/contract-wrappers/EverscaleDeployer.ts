@@ -2,8 +2,8 @@ import { IGenericAccount } from '@ylide/sdk';
 import { Address, Contract, GetExpectedAddressParams, ProviderRpcClient, Transaction } from 'everscale-inpage-provider';
 
 export type DeployParams<Abi> = GetExpectedAddressParams<Abi> & { publicKey: string };
-export type ConstructorParams<Abi> = Parameters<constructorParams<Abi, Contract<Abi>['methods']>>[0];
-type constructorParams<Abi, T extends Contract<Abi>['methods']> = {
+export type ConstructorParams<Abi> = Parameters<constructorParamsType<Abi, Contract<Abi>['methods']>>[0];
+type constructorParamsType<Abi, T extends Contract<Abi>['methods']> = {
 	[key in keyof T]: key extends 'constructor' ? T[key] : never;
 }[keyof T];
 export type TransactionWithOutput = { transaction: Transaction; output?: Record<string, unknown> | undefined };
@@ -45,7 +45,9 @@ export class EverscaleDeployer {
 		);
 		const contract = new ever.Contract(abi, expectedAddress);
 		const stateInit = await ever.getStateInit(abi, deployParams);
+		// tslint:disable-next-line
 		console.log('stateInit: ', stateInit);
+		// tslint:disable-next-line
 		console.log('expectedAddress: ', expectedAddress);
 		const tx = await errorExtractor(
 			contract.methods.constructor(constructorParams).sendExternal({
