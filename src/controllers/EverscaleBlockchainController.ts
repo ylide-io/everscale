@@ -165,7 +165,7 @@ export class EverscaleBlockchainController extends AbstractBlockchainController 
 	}
 
 	blockchainGroup(): string {
-		return 'everscale';
+		return this.options.type === 'everscale-mainnet' ? 'everscale' : 'venom';
 	}
 
 	blockchain(): string {
@@ -349,9 +349,9 @@ export class EverscaleBlockchainController extends AbstractBlockchainController 
 			return [
 				{
 					ylide: false,
-					blockchain: 'everscale',
+					blockchain: this.options.type === 'everscale-mainnet' ? 'everscale' : 'venom',
 					address,
-					type: 'everscale-native',
+					type: this.options.type === 'everscale-mainnet' ? 'everscale-native' : 'venom-native',
 					data: {
 						nativePublicKey: native,
 					},
@@ -363,7 +363,7 @@ export class EverscaleBlockchainController extends AbstractBlockchainController 
 	}
 
 	getSupportedExtraEncryptionStrategies(): string[] {
-		return ['everscale-native'];
+		return [this.options.type === 'everscale-mainnet' ? 'everscale-native' : 'venom-native'];
 	}
 
 	async prepareExtraEncryptionStrategyBulk(
@@ -376,8 +376,8 @@ export class EverscaleBlockchainController extends AbstractBlockchainController 
 				addedPublicKey: {
 					key: PublicKey.fromHexString(PublicKeyType.EVERSCALE_NATIVE, ephemeralPublic),
 				},
-				blockchain: 'everscale',
-				type: 'everscale-native',
+				blockchain: this.options.type === 'everscale-mainnet' ? 'everscale' : 'venom',
+				type: this.options.type === 'everscale-mainnet' ? 'everscale-native' : 'venom-native',
 				data: {
 					nativeEphemeralKeySecret: ephemeralSecret,
 				},
@@ -432,5 +432,5 @@ export const venomBlockchainFactory: BlockchainControllerFactory = {
 	create: async (options?: any) =>
 		new EverscaleBlockchainController(Object.assign({ type: 'venom-testnet' }, options || {})),
 	blockchain: 'venom',
-	blockchainGroup: 'everscale',
+	blockchainGroup: 'venom',
 };
