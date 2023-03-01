@@ -1,26 +1,27 @@
 import SmartBuffer from '@ylide/smart-buffer';
-import nacl from 'tweetnacl';
 import { Address } from 'everscale-inpage-provider';
-
 import {
-	AbstractBlockchainController,
 	IMessage,
 	IMessageContent,
 	IMessageCorruptedContent,
-	unpackSymmetricalyEncryptedData,
 	IExtraEncryptionStrateryBulk,
 	IExtraEncryptionStrateryEntry,
+	Uint256,
+	ISourceSubject,
+	IBlockchainSourceSubject,
+	LowLevelMessagesSource,
+	randomBytes,
+} from '@ylide/sdk';
+import {
+	AbstractBlockchainController,
+	unpackSymmetricalyEncryptedData,
 	MessageKey,
 	PublicKey,
 	PublicKeyType,
 	packSymmetricalyEncryptedData,
 	BlockchainControllerFactory,
-	Uint256,
-	ISourceSubject,
 	BlockchainSourceType,
 	AbstractNameService,
-	IBlockchainSourceSubject,
-	LowLevelMessagesSource,
 	DynamicEncryptionRouter,
 } from '@ylide/sdk';
 import {
@@ -394,7 +395,7 @@ export class EverscaleBlockchainController extends AbstractBlockchainController 
 		const nativeSenderPrivateKey = SmartBuffer.ofHexString(bulk.data.nativeEphemeralKeySecret);
 		return entries.map(entry => {
 			const recipientNativePublicKey = new SmartBuffer(entry.data.nativePublicKey);
-			const nonce = new SmartBuffer(nacl.randomBytes(12));
+			const nonce = new SmartBuffer(randomBytes(12));
 			const encryptedKey = SmartBuffer.ofHexString(
 				encrypt(
 					nativeSenderPrivateKey.toHexString(),

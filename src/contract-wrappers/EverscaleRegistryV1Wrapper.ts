@@ -1,4 +1,5 @@
-import { ExternalYlidePublicKey, IGenericAccount, PublicKey, PublicKeyType, YlidePublicKeyVersion } from '@ylide/sdk';
+import type { ExternalYlidePublicKey, IGenericAccount } from '@ylide/sdk';
+import { PublicKey, PublicKeyType, YlidePublicKeyVersion } from '@ylide/sdk';
 import SmartBuffer from '@ylide/smart-buffer';
 import { Address, ProviderRpcClient, Transaction } from 'everscale-inpage-provider';
 import { EverscaleBlockchainReader, NekotonCore } from '../controllers/helpers/EverscaleBlockchainReader';

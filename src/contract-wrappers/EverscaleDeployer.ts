@@ -1,4 +1,4 @@
-import { IGenericAccount } from '@ylide/sdk';
+import type { IGenericAccount } from '@ylide/sdk';
 import { Address, Contract, GetExpectedAddressParams, ProviderRpcClient, Transaction } from 'everscale-inpage-provider';
 
 export type DeployParams<Abi> = GetExpectedAddressParams<Abi> & { publicKey: string };
