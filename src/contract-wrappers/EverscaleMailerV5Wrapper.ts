@@ -91,7 +91,7 @@ export class EverscaleMailerV5Wrapper {
 			createdAt: message.created_at,
 			senderAddress: body.sender,
 			recipientAddress: everscaleAddressToUint256(message.dst),
-			blockchain: 'everscale',
+			blockchain: this.blockchainReader.type === 'everscale-mainnet' ? 'everscale' : 'venom-testnet',
 
 			key: body.key,
 
@@ -121,7 +121,7 @@ export class EverscaleMailerV5Wrapper {
 			createdAt: message.created_at,
 			senderAddress: message.dst,
 			recipientAddress: everscaleAddressToUint256(message.dst),
-			blockchain: 'everscale',
+			blockchain: this.blockchainReader.type === 'everscale-mainnet' ? 'everscale' : 'venom-testnet',
 
 			key: new Uint8Array(0),
 

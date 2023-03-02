@@ -10,38 +10,41 @@ import SmartBuffer from '@ylide/smart-buffer';
 
 initAsync();
 
-export type NekotonCore = (typeof nekotonCore)['nekoton'];
+export type NekotonCore = typeof nekotonCore['nekoton'];
 
 export class EverscaleBlockchainReader {
 	ever: ProviderRpcClient;
 	gql: GqlSender;
 
 	constructor(
-		public readonly defaultWriter: boolean,
+		public readonly type: 'everscale-mainnet' | 'venom-testnet',
 		public readonly endpoints: string[],
+		public readonly provider: any,
 		public readonly dev = false,
 	) {
 		this.ever = new ProviderRpcClient({
-			forceUseFallback: defaultWriter ? false : true,
-			fallback: async () => {
-				try {
-					return await EverscaleStandaloneClient.create({
-						connection: dev
-							? 'local'
-							: {
-									id: 1,
-									group: 'mainnet',
-									type: 'graphql',
-									data: {
-										local: false,
-										endpoints,
-									},
-							  },
-					});
-				} catch (err) {
-					throw err;
-				}
-			},
+			forceUseFallback: true,
+			fallback: provider
+				? async () => provider
+				: async () => {
+						try {
+							return await EverscaleStandaloneClient.create({
+								connection: dev
+									? 'local'
+									: {
+											id: 1,
+											group: 'mainnet',
+											type: 'graphql',
+											data: {
+												local: false,
+												endpoints,
+											},
+									  },
+							});
+						} catch (err) {
+							throw err;
+						}
+				  },
 		});
 
 		this.gql = new GqlSender({
@@ -304,7 +307,7 @@ export class EverscaleBlockchainReader {
 			return {
 				msgId,
 				corrupted: false,
-				storage: 'everscale',
+				storage: this.type === 'everscale-mainnet' ? 'everscale' : 'venom-testnet',
 				createdAt: Math.min(...decodedChunks.map(d => d.msg.created_at)),
 				senderAddress: sender,
 				parts,

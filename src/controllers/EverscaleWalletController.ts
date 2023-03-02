@@ -81,8 +81,8 @@ export class EverscaleWalletController extends AbstractWalletController {
 			(options?.dev
 				? ['http://localhost/graphql']
 				: options.type === 'everwallet'
-				? this.everscaleMainnetEndpoints
-				: this.venomTestnetEndpoints);
+				? [...this.everscaleMainnetEndpoints]
+				: [...this.venomTestnetEndpoints]);
 
 		const contracts = options?.dev
 			? EVERSCALE_LOCAL
@@ -90,7 +90,12 @@ export class EverscaleWalletController extends AbstractWalletController {
 			? EVERSCALE_MAINNET
 			: VENOM_TESTNET;
 
-		this.blockchainReader = new EverscaleBlockchainReader(true, endpoints, options.dev || false);
+		this.blockchainReader = new EverscaleBlockchainReader(
+			options.type === 'everwallet' ? 'everscale-mainnet' : 'venom-testnet',
+			endpoints,
+			options.type === 'everwallet' ? window.__ever : (window as any).__venom,
+			options.dev || false,
+		);
 
 		const currentMailerLink = contracts.mailerContracts.find(c => c.id === contracts.currentMailerId)!;
 		const currentBroadcasterLink = contracts.broadcasterContracts.find(
@@ -121,7 +126,7 @@ export class EverscaleWalletController extends AbstractWalletController {
 	}
 
 	blockchainGroup(): string {
-		return this.options.type === 'everwallet' ? 'everscale' : 'venom';
+		return this.options.type === 'everwallet' ? 'everscale' : 'venom-testnet';
 	}
 
 	wallet(): string {
@@ -149,7 +154,7 @@ export class EverscaleWalletController extends AbstractWalletController {
 			const oldAccount = this.lastCurrentAccount;
 			if (data.permissions.accountInteraction) {
 				this.lastCurrentAccount = {
-					blockchain: this.options.type === 'everwallet' ? 'everscale' : 'venom',
+					blockchain: this.options.type === 'everwallet' ? 'everscale' : 'venom-testnet',
 					address: data.permissions.accountInteraction.address.toString(),
 					publicKey: PublicKey.fromHexString(
 						PublicKeyType.EVERSCALE_NATIVE,
@@ -210,7 +215,7 @@ export class EverscaleWalletController extends AbstractWalletController {
 		const providerState = await this.blockchainReader.ever.getProviderState();
 		if (providerState.permissions.accountInteraction) {
 			this.lastCurrentAccount = {
-				blockchain: this.options.type === 'everwallet' ? 'everscale' : 'venom',
+				blockchain: this.options.type === 'everwallet' ? 'everscale' : 'venom-testnet',
 				address: providerState.permissions.accountInteraction.address.toString(),
 				publicKey: PublicKey.fromHexString(
 					PublicKeyType.EVERSCALE_NATIVE,
@@ -225,7 +230,7 @@ export class EverscaleWalletController extends AbstractWalletController {
 	}
 
 	async getCurrentBlockchain(): Promise<string> {
-		return this.options.type === 'everwallet' ? 'everscale' : 'venom';
+		return this.options.type === 'everwallet' ? 'everscale' : 'venom-testnet';
 	}
 
 	async attachPublicKey(
@@ -254,7 +259,7 @@ export class EverscaleWalletController extends AbstractWalletController {
 		});
 		if (accountInteraction) {
 			return {
-				blockchain: this.options.type === 'everwallet' ? 'everscale' : 'venom',
+				blockchain: this.options.type === 'everwallet' ? 'everscale' : 'venom-testnet',
 				address: accountInteraction.address.toString(),
 				publicKey: PublicKey.fromHexString(PublicKeyType.EVERSCALE_NATIVE, accountInteraction.publicKey),
 			};
@@ -455,6 +460,6 @@ export const venomWalletFactory: WalletControllerFactory = {
 		new EverscaleWalletController(Object.assign({ type: 'venomwallet' }, options || {})),
 	isWalletAvailable: () =>
 		new ProviderRpcClient({ fallback: async () => (window as any).__venom, forceUseFallback: true }).hasProvider(),
-	blockchainGroup: 'venom',
+	blockchainGroup: 'venom-testnet',
 	wallet: 'venomwallet',
 };

@@ -111,8 +111,8 @@ export class EverscaleBlockchainController extends AbstractBlockchainController 
 			(options?.dev
 				? ['http://localhost/graphql']
 				: options.type === 'everscale-mainnet'
-				? this.everscaleMainnetEndpoints
-				: this.venomTestnetEndpoints);
+				? [...this.everscaleMainnetEndpoints]
+				: [...this.venomTestnetEndpoints]);
 
 		const contracts = options?.dev
 			? EVERSCALE_LOCAL
@@ -120,7 +120,7 @@ export class EverscaleBlockchainController extends AbstractBlockchainController 
 			? EVERSCALE_MAINNET
 			: VENOM_TESTNET;
 
-		this.blockchainReader = new EverscaleBlockchainReader(false, endpoints, options.dev || false);
+		this.blockchainReader = new EverscaleBlockchainReader(options.type, endpoints, null, options.dev || false);
 
 		this.mailers = contracts.mailerContracts.map(link => ({
 			link,
@@ -166,11 +166,11 @@ export class EverscaleBlockchainController extends AbstractBlockchainController 
 	}
 
 	blockchainGroup(): string {
-		return this.options.type === 'everscale-mainnet' ? 'everscale' : 'venom';
+		return this.options.type === 'everscale-mainnet' ? 'everscale' : 'venom-testnet';
 	}
 
 	blockchain(): string {
-		return this.options.type === 'everscale-mainnet' ? 'everscale' : 'venom';
+		return this.options.type === 'everscale-mainnet' ? 'everscale' : 'venom-testnet';
 	}
 
 	isReadingBySenderAvailable(): boolean {
@@ -350,7 +350,7 @@ export class EverscaleBlockchainController extends AbstractBlockchainController 
 			return [
 				{
 					ylide: false,
-					blockchain: this.options.type === 'everscale-mainnet' ? 'everscale' : 'venom',
+					blockchain: this.options.type === 'everscale-mainnet' ? 'everscale' : 'venom-testnet',
 					address,
 					type: this.options.type === 'everscale-mainnet' ? 'everscale-native' : 'venom-native',
 					data: {
@@ -377,7 +377,7 @@ export class EverscaleBlockchainController extends AbstractBlockchainController 
 				addedPublicKey: {
 					key: PublicKey.fromHexString(PublicKeyType.EVERSCALE_NATIVE, ephemeralPublic),
 				},
-				blockchain: this.options.type === 'everscale-mainnet' ? 'everscale' : 'venom',
+				blockchain: this.options.type === 'everscale-mainnet' ? 'everscale' : 'venom-testnet',
 				type: this.options.type === 'everscale-mainnet' ? 'everscale-native' : 'venom-native',
 				data: {
 					nativeEphemeralKeySecret: ephemeralSecret,
@@ -432,6 +432,6 @@ export const everscaleBlockchainFactory: BlockchainControllerFactory = {
 export const venomBlockchainFactory: BlockchainControllerFactory = {
 	create: async (options?: any) =>
 		new EverscaleBlockchainController(Object.assign({ type: 'venom-testnet' }, options || {})),
-	blockchain: 'venom',
-	blockchainGroup: 'venom',
+	blockchain: 'venom-testnet',
+	blockchainGroup: 'venom-testnet',
 };

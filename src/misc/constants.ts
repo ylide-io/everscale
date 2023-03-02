@@ -68,12 +68,24 @@ export const VENOM_TESTNET: ITVMNetworkContracts = {
 			address: '0:bbcaa42d2a25aea6da05ac1d86d318d56651155933216cd4c3bfaa1b5d3ccc28',
 			verified: true,
 		},
+		{
+			id: 12,
+			type: TVMRegistryContractType.TVMRegistryV2,
+			address: '0:75db8c44199c91e82dddacdd7c26e1ff9ad7229f3c0b3c0c2ac01293f7d89b02',
+			verified: true,
+		},
 	],
 	mailerContracts: [
 		{
 			id: 8,
 			type: TVMMailerContractType.TVMMailerV5,
 			address: '0:4a7fce450636c6608e1ce7852752c69439f9778dbfc5c3f7b4b9a36682ae0c83',
+			verified: true,
+		},
+		{
+			id: 10,
+			type: TVMMailerContractType.TVMMailerV6,
+			address: '0:5fc46e8ed7dd5f5b10e9cd1ebf5fc49449ece07183da9bb7370772649aaa413b',
 			verified: true,
 		},
 	],
@@ -84,8 +96,14 @@ export const VENOM_TESTNET: ITVMNetworkContracts = {
 			address: '0:4a7fce450636c6608e1ce7852752c69439f9778dbfc5c3f7b4b9a36682ae0c83',
 			verified: true,
 		},
+		{
+			id: 11,
+			type: TVMMailerContractType.TVMMailerV6,
+			address: '0:12981245427f512cb1ebed1d14e4bb61c572ae6b8c4fcbbd044f752a3f764aba',
+			verified: true,
+		},
 	],
-	currentRegistryId: 7,
-	currentMailerId: 8,
-	currentBroadcasterId: 9,
+	currentRegistryId: 12,
+	currentMailerId: 10,
+	currentBroadcasterId: 11,
 };
