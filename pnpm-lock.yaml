@@ -2,7 +2,7 @@ lockfileVersion: 5.4
 
 specifiers:
   '@types/node': 18.11.18
-  '@ylide/sdk': 0.8.0-beta.3
+  '@ylide/sdk': 0.8.0-beta.4
   '@ylide/smart-buffer': 0.0.11
   everscale-inpage-provider: 0.3.52
   everscale-standalone-client: 2.1.16
@@ -15,7 +15,7 @@ specifiers:
   typescript: 4.9.4
 
 dependencies:
-  '@ylide/sdk': 0.8.0-beta.3
+  '@ylide/sdk': 0.8.0-beta.4
   '@ylide/smart-buffer': 0.0.11
   everscale-inpage-provider: 0.3.52
   everscale-standalone-client: 2.1.16
@@ -108,8 +108,8 @@ packages:
     resolution: {integrity: sha512-DHQpWGjyQKSHj3ebjFI/wRKcqQcdR+MoFBygntYOZytCqNfkd2ZC4ARDJ2DQqhjH5p85Nnd3jhUJIXrszFX/JA==}
     dev: true
 
-  /@ylide/sdk/0.8.0-beta.3:
-    resolution: {integrity: sha512-6BgjfbLWZrLcb/Q1V69mL/DTsX4sS7Gp7C3h0xjnuwNF2koR4maCTSRBbiONcHr6AeHjPwtAy34WXDhyk01Y0w==}
+  /@ylide/sdk/0.8.0-beta.4:
+    resolution: {integrity: sha512-8TqVKNJfrpixJxr8qwE0u/mAOG/g0YBi4CxMPRqcGpRa7jMcJwHZH2sTuTCIoQjzsCjpIrngcKE1o6KH9H/zaw==}
     dependencies:
       '@datastructures-js/binary-search-tree': 5.2.0
       '@datastructures-js/linked-list': 5.2.5
