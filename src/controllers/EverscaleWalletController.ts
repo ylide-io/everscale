@@ -449,8 +449,7 @@ export class EverscaleWalletController extends AbstractWalletController {
 export const everscaleWalletFactory: WalletControllerFactory = {
 	create: async (options?: any) =>
 		new EverscaleWalletController(Object.assign({ type: 'everwallet' }, options || {})),
-	isWalletAvailable: () =>
-		new ProviderRpcClient({ fallback: async () => window.__ever!, forceUseFallback: true }).hasProvider(),
+	isWalletAvailable: async () => !!window.__ever,
 	blockchainGroup: 'everscale',
 	wallet: 'everwallet',
 };
@@ -458,8 +457,7 @@ export const everscaleWalletFactory: WalletControllerFactory = {
 export const venomWalletFactory: WalletControllerFactory = {
 	create: async (options?: any) =>
 		new EverscaleWalletController(Object.assign({ type: 'venomwallet' }, options || {})),
-	isWalletAvailable: () =>
-		new ProviderRpcClient({ fallback: async () => (window as any).__venom, forceUseFallback: true }).hasProvider(),
+	isWalletAvailable: async () => !!(window as any).__venom,
 	blockchainGroup: 'venom-testnet',
 	wallet: 'venomwallet',
 };
