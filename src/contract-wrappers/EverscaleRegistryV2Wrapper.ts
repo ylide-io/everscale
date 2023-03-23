@@ -22,6 +22,7 @@ export class EverscaleRegistryV2Wrapper {
 			{
 				tvc: REGISTRY_V2_TVC_BASE64,
 				workchain: 0,
+				// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 				publicKey: from.publicKey!.toHex(),
 				initParams: {
 					nonce: BigInt(`0x${randomHex(64)}`).toString(10),

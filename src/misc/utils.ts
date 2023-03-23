@@ -1,26 +1,26 @@
 import { hexToUint256, Uint256 } from '@ylide/sdk';
 import SmartBuffer from '@ylide/smart-buffer';
 
-export function publicKeyToBigIntString(publicKey: Uint8Array) {
+export const publicKeyToBigIntString = (publicKey: Uint8Array) => {
 	return BigInt('0x' + new SmartBuffer(publicKey).toHexString()).toString();
 }
 
-export function uint256ToAddress(value: Uint256, withPrefix: boolean = true, nullPrefix: boolean = false): string {
+export const uint256ToAddress = (value: Uint256, withPrefix = true, nullPrefix = false): string => {
 	if (value.length !== 64) {
 		throw new Error('Value must have 32-bytes');
 	}
 	return `${withPrefix ? (nullPrefix ? ':' : '0:') : ''}${value}`;
 }
 
-export function everscaleAddressToUint256(address: string): Uint256 {
+export const everscaleAddressToUint256 = (address: string): Uint256 => {
 	return hexToUint256(address.substring(address.length - 64, address.length).toLowerCase());
 }
 
-export function convertMsgIdToAddress(msgId: string) {
+export const convertMsgIdToAddress = (msgId: string) => {
 	return `:${msgId}`;
 }
 
-export function isTVMAddressValid(address: string) {
+export const isTVMAddressValid = (address: string) => {
 	if (address.length !== 66) {
 		return false;
 	} else if (!address.includes(':')) {
@@ -40,6 +40,6 @@ export function isTVMAddressValid(address: string) {
 	return regExp.test(splitAddress[1]);
 }
 
-export function randomHex(length = 64) {
+export const randomHex = (length = 64) => {
 	return [...Array(length)].map(() => Math.floor(Math.random() * 16).toString(16)).join('');
 }

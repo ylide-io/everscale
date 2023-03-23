@@ -10,7 +10,7 @@ export class GqlSender implements nt.IGqlSender {
 	private readonly params: GqlSocketParams;
 	private readonly latencyDetectionInterval: number;
 	private readonly endpoints: Endpoint[];
-	private nextLatencyDetectionTime: number = 0;
+	private nextLatencyDetectionTime = 0;
 	private currentEndpoint?: Endpoint;
 	private resolutionPromise?: Promise<Endpoint>;
 
@@ -102,6 +102,8 @@ export class GqlSender implements nt.IGqlSender {
 							handlers.reject();
 						}
 					}
+				}).catch(err => {
+					// do nothing
 				});
 			}
 

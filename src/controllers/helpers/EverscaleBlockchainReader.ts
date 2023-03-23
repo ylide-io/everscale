@@ -8,7 +8,10 @@ import { convertMsgIdToAddress, ITVMContentMessageBody, ITVMInternalMessage, ITV
 import { IMessageContent, IMessageCorruptedContent, MessageContentFailure } from '@ylide/sdk';
 import SmartBuffer from '@ylide/smart-buffer';
 
-initAsync();
+initAsync().catch(err => {
+	console.error('Failed to init Everscale encryption library');
+	throw err;
+});
 
 export type NekotonCore = typeof nekotonCore['nekoton'];
 
@@ -75,7 +78,7 @@ export class EverscaleBlockchainReader {
 			}
 		}
 		for (const err of errors) {
-			// tslint:disable-next-line
+			// eslint-disable-next-line @typescript-eslint/restrict-template-expressions
 			console.error(`${err.rpc || '[provider] error: '}`, err);
 		}
 		throw new Error('Was not able to execute in all of RPC providers');
@@ -93,10 +96,10 @@ export class EverscaleBlockchainReader {
 		nextPageAfterMessage?: ITVMInternalMessage,
 	): Promise<ITVMInternalMessage[]> {
 		const createdLt: {
-			gt?: BigInt;
-			gte?: BigInt;
-			lt?: BigInt;
-			lte?: BigInt;
+			gt?: bigint;
+			gte?: bigint;
+			lt?: bigint;
+			lte?: bigint;
 		} = {};
 
 		if (fromMessageLt) {

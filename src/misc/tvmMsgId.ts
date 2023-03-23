@@ -1,7 +1,7 @@
 import { BitPackReader, BitPackWriter } from '@ylide/sdk';
 import SmartBuffer from '@ylide/smart-buffer';
 
-export function encodeTvmMsgId(isBroacast: boolean, contractId2bytes: number, lt: bigint) {
+export const encodeTvmMsgId = (isBroacast: boolean, contractId2bytes: number, lt: bigint) => {
 	const writer = new BitPackWriter();
 	writer.writeBit(1);
 	writer.writeBit(isBroacast ? 1 : 0);
@@ -13,7 +13,7 @@ export function encodeTvmMsgId(isBroacast: boolean, contractId2bytes: number, lt
 	return new SmartBuffer(writer.toBuffer()).toBase64String();
 }
 
-export function decodeTvmMsgId(msgId: string) {
+export const decodeTvmMsgId = (msgId: string) => {
 	const buffer = SmartBuffer.ofBase64String(msgId);
 	const reader = BitPackReader.fromBuffer(buffer.bytes, true);
 	if (reader.readBit() !== 1) {

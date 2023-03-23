@@ -23,6 +23,7 @@ export class ContractCache<ABI = any> {
 
 			return contract;
 		} else {
+			// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 			return this.contractCache[address].get(provider)!;
 		}
 	}

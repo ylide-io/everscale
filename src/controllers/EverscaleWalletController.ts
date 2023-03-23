@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { ProviderRpcClient } from 'everscale-inpage-provider';
 
 import {

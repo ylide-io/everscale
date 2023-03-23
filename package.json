@@ -21,7 +21,7 @@
 		"build": "rimraf ./lib && tsc",
 		"start": "ts-node ./src/index.ts",
 		"format": "prettier --write \"src/**/*.ts\"",
-		"lint": "tslint -p tsconfig.json",
+		"lint": "eslint \"src/**/*.ts\" --fix",
 		"prepublishOnly": "npm test && npm run lint",
 		"preversion": "npm run lint"
 	},

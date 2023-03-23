@@ -31,6 +31,7 @@ export class EverscaleMailerV6Wrapper {
 			{
 				tvc: MAILER_V6_TVC_BASE64,
 				workchain: 0,
+				// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 				publicKey: from.publicKey!.toHex(),
 				initParams: {
 					beneficiary: beneficiaryAddress,
@@ -61,6 +62,7 @@ export class EverscaleMailerV6Wrapper {
 		}
 		return {
 			sender: (data.data.sender as string).startsWith(':')
+				// eslint-disable-next-line @typescript-eslint/restrict-template-expressions
 				? `0${data.data.sender}`
 				: (data.data.sender as string),
 			msgId: bigIntToUint256(data.data.msgId as string),

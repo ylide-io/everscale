@@ -14,7 +14,9 @@ export const errorExtractor = async <T extends { transaction: Transaction; outpu
 ): Promise<T> => {
 	return transactionResult.then(res => {
 		if (res.transaction.aborted) {
+			// eslint-disable-next-line no-throw-literal
 			throw {
+				// eslint-disable-next-line @typescript-eslint/restrict-template-expressions
 				message: `Transaction aborted with code ${res.transaction.exitCode}`,
 				name: 'TransactionAborted',
 				transaction: res,

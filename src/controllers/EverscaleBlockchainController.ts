@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import SmartBuffer from '@ylide/smart-buffer';
 import { Address } from 'everscale-inpage-provider';
 import {
@@ -190,6 +191,7 @@ export class EverscaleBlockchainController extends AbstractBlockchainController 
 		return {
 			original: stringValue,
 			numeric: Number(stringValue),
+			// eslint-disable-next-line id-denylist
 			string: stringValue,
 			e18: stringValue,
 		};
