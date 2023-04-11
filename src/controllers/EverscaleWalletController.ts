@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
-import { ProviderRpcClient } from 'everscale-inpage-provider';
 
 import {
 	IGenericAccount,
@@ -66,6 +65,7 @@ export class EverscaleWalletController extends AbstractWalletController {
 			type?: 'everwallet' | 'venomwallet';
 			dev?: boolean;
 			endpoints?: string[];
+			provider?: any;
 			onSwitchAccountRequest?: SwitchAccountCallback;
 		} = {},
 	) {
@@ -94,7 +94,11 @@ export class EverscaleWalletController extends AbstractWalletController {
 		this.blockchainReader = new EverscaleBlockchainReader(
 			options.type === 'everwallet' ? 'everscale-mainnet' : 'venom-testnet',
 			endpoints,
-			options.type === 'everwallet' ? window.__ever : (window as any).__venom,
+			this.options.provider
+				? this.options.provider
+				: options.type === 'everwallet'
+				? window.__ever
+				: (window as any).__venom,
 			options.dev || false,
 		);
 
@@ -451,6 +455,21 @@ export const everscaleWalletFactory: WalletControllerFactory = {
 	create: async (options?: any) =>
 		new EverscaleWalletController(Object.assign({ type: 'everwallet' }, options || {})),
 	isWalletAvailable: async () => !!window.__ever,
+	blockchainGroup: 'everscale',
+	wallet: 'everwallet',
+};
+
+export const everscaleProxyWalletFactory: WalletControllerFactory = {
+	create: async (options?: any) =>
+		new EverscaleWalletController(
+			Object.assign(
+				{ type: 'everwallet' },
+				options || {
+					provider: options.provider ? options.provider : (window as any).__everProxy,
+				},
+			),
+		),
+	isWalletAvailable: async () => !!(window as any).__everProxy,
 	blockchainGroup: 'everscale',
 	wallet: 'everwallet',
 };

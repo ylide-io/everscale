@@ -13,7 +13,7 @@ initAsync().catch(err => {
 	throw err;
 });
 
-export type NekotonCore = typeof nekotonCore['nekoton'];
+export type NekotonCore = (typeof nekotonCore)['nekoton'];
 
 export class EverscaleBlockchainReader {
 	ever: ProviderRpcClient;
