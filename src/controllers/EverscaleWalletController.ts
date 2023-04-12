@@ -471,7 +471,7 @@ export const everscaleProxyWalletFactory: WalletControllerFactory = {
 		),
 	isWalletAvailable: async () => !!(window as any).__everProxy,
 	blockchainGroup: 'everscale',
-	wallet: 'everwallet',
+	wallet: 'everwallet-proxy',
 };
 
 export const venomWalletFactory: WalletControllerFactory = {
