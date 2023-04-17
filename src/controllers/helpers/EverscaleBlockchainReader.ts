@@ -328,10 +328,10 @@ export class EverscaleBlockchainReader {
 	async retrieveMessageRecipients(
 		mailerAddress: string,
 		decoder: (core: NekotonCore, body: string) => ITVMRecipientsMessageBody,
-		msgId: string,
+		internalMsgId: string,
 	): Promise<ITVMRecipientsMessageBody | null> {
 		return await this.operation(async (ever, gql, core) => {
-			const fakeAddress = convertMsgIdToAddress((BigInt(msgId) + 1n).toString());
+			const fakeAddress = convertMsgIdToAddress((BigInt(internalMsgId) + 1n).toString());
 			const messages = await gql.queryContractMessages(fakeAddress, mailerAddress);
 			if (!messages.length) {
 				return null;

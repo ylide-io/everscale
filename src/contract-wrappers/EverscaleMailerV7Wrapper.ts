@@ -524,7 +524,7 @@ export class EverscaleMailerV7Wrapper {
 		return this.blockchainReader.retrieveMessageRecipients(
 			mailer.address,
 			this.decodeRecipientsMessageBody.bind(this),
-			message.msgId,
+			message.$$meta.internalMsgId,
 		);
 	}
 }
