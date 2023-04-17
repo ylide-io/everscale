@@ -4,7 +4,13 @@ import { ProviderRpcClient } from 'everscale-inpage-provider';
 
 import { initAsync } from '../../encrypt';
 import { GqlSender } from '../../network';
-import { convertMsgIdToAddress, ITVMContentMessageBody, ITVMInternalMessage, ITVMMessage } from '../../misc';
+import {
+	convertMsgIdToAddress,
+	ITVMContentMessageBody,
+	ITVMInternalMessage,
+	ITVMMessage,
+	ITVMRecipientsMessageBody,
+} from '../../misc';
 import { IMessageContent, IMessageCorruptedContent, MessageContentFailure } from '@ylide/sdk';
 import SmartBuffer from '@ylide/smart-buffer';
 
@@ -13,7 +19,7 @@ initAsync().catch(err => {
 	throw err;
 });
 
-export type NekotonCore = (typeof nekotonCore)['nekoton'];
+export type NekotonCore = typeof nekotonCore['nekoton'];
 
 export class EverscaleBlockchainReader {
 	ever: ProviderRpcClient;
@@ -316,6 +322,21 @@ export class EverscaleBlockchainReader {
 				parts,
 				content: buf.bytes,
 			};
+		});
+	}
+
+	async retrieveMessageRecipients(
+		mailerAddress: string,
+		decoder: (core: NekotonCore, body: string) => ITVMRecipientsMessageBody,
+		msgId: string,
+	): Promise<ITVMRecipientsMessageBody | null> {
+		return await this.operation(async (ever, gql, core) => {
+			const fakeAddress = convertMsgIdToAddress((BigInt(msgId) + 1n).toString());
+			const messages = await gql.queryContractMessages(fakeAddress, mailerAddress);
+			if (!messages.length) {
+				return null;
+			}
+			return decoder(core, messages[0].body);
 		});
 	}
 }

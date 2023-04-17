@@ -12,6 +12,7 @@ import {
 	IBlockchainSourceSubject,
 	LowLevelMessagesSource,
 	randomBytes,
+	YlideCore,
 } from '@ylide/sdk';
 import {
 	AbstractBlockchainController,
@@ -37,6 +38,7 @@ import {
 	TVMMailerContractType,
 	TVMRegistryContractType,
 	VENOM_TESTNET,
+	ITVMRecipientsMessageBody,
 } from '../misc';
 import { encrypt, generate_ephemeral, get_public_key } from '../encrypt';
 import { ExternalYlidePublicKey } from '@ylide/sdk';
@@ -46,16 +48,19 @@ import { EverscaleRegistryV2Wrapper } from '../contract-wrappers/EverscaleRegist
 import { EverscaleMailerV5Wrapper } from '../contract-wrappers/EverscaleMailerV5Wrapper';
 import { EverscaleRegistryV1Wrapper } from '../contract-wrappers/EverscaleRegistryV1Wrapper';
 import { EverscaleMailerV5Source, EverscaleMailerV6Source } from '../messages-sources';
+import { EverscaleMailerV7Wrapper } from '../contract-wrappers/EverscaleMailerV7Wrapper';
+import { EverscaleMailerV7Source } from '../messages-sources/EverscaleMailerV7Source';
 
 export class EverscaleBlockchainController extends AbstractBlockchainController {
 	readonly blockchainReader: EverscaleBlockchainReader;
 
 	static readonly mailerWrappers: Record<
 		TVMMailerContractType,
-		typeof EverscaleMailerV5Wrapper | typeof EverscaleMailerV6Wrapper
+		typeof EverscaleMailerV5Wrapper | typeof EverscaleMailerV6Wrapper | typeof EverscaleMailerV7Wrapper
 	> = {
 		[TVMMailerContractType.TVMMailerV5]: EverscaleMailerV5Wrapper,
 		[TVMMailerContractType.TVMMailerV6]: EverscaleMailerV6Wrapper,
+		[TVMMailerContractType.TVMMailerV7]: EverscaleMailerV7Wrapper,
 	};
 
 	static readonly registryWrappers: Record<
@@ -68,11 +73,11 @@ export class EverscaleBlockchainController extends AbstractBlockchainController 
 
 	readonly mailers: {
 		link: ITVMMailerContractLink;
-		wrapper: EverscaleMailerV5Wrapper | EverscaleMailerV6Wrapper;
+		wrapper: EverscaleMailerV5Wrapper | EverscaleMailerV6Wrapper | EverscaleMailerV7Wrapper;
 	}[] = [];
 	readonly broadcasters: {
 		link: ITVMMailerContractLink;
-		wrapper: EverscaleMailerV5Wrapper | EverscaleMailerV6Wrapper;
+		wrapper: EverscaleMailerV5Wrapper | EverscaleMailerV6Wrapper | EverscaleMailerV7Wrapper;
 	}[] = [];
 	readonly registries: {
 		link: ITVMRegistryContractLink;
@@ -279,7 +284,9 @@ export class EverscaleBlockchainController extends AbstractBlockchainController 
 			throw new Error('Sender is not supported for direct messages request in TVM');
 		}
 
-		if (mailer.wrapper instanceof EverscaleMailerV6Wrapper) {
+		if (mailer.wrapper instanceof EverscaleMailerV7Wrapper) {
+			return new EverscaleMailerV7Source(this, mailer.link, mailer.wrapper, subject);
+		} else if (mailer.wrapper instanceof EverscaleMailerV6Wrapper) {
 			return new EverscaleMailerV6Source(this, mailer.link, mailer.wrapper, subject);
 		} else {
 			return new EverscaleMailerV5Source(this, mailer.link, mailer.wrapper, subject);
@@ -295,6 +302,28 @@ export class EverscaleBlockchainController extends AbstractBlockchainController 
 			throw new Error('This message does not belongs to this blockchain controller');
 		}
 		return mailer.wrapper.retrieveMessageContent(mailer.link, msg);
+	}
+
+	async retrieveMessageRecipients(msg: IMessage, filterOutSent = true): Promise<ITVMRecipientsMessageBody | null> {
+		const decodedMsgId = decodeTvmMsgId(msg.msgId);
+		const mailer = (decodedMsgId.isBroadcast ? this.broadcasters : this.mailers).find(
+			m => m.link.id === decodedMsgId.contractId,
+		);
+		if (!mailer) {
+			throw new Error('This message does not belongs to this blockchain controller');
+		}
+		if (mailer.wrapper instanceof EverscaleMailerV7Wrapper) {
+			const result = await mailer.wrapper.retrieveMessageRecipients(mailer.link, msg);
+			if (result && filterOutSent) {
+				const sender = YlideCore.getSentAddress(this.addressToUint256(result.sender));
+				return {
+					...result,
+					recipients: result.recipients.filter(r => this.addressToUint256(r) !== sender),
+				};
+			}
+			return result;
+		}
+		return null;
 	}
 
 	isAddressValid(address: string): boolean {
