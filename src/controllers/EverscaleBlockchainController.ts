@@ -41,21 +41,23 @@ import {
 import { encrypt, generate_ephemeral, get_public_key } from '../encrypt';
 import { ExternalYlidePublicKey } from '@ylide/sdk';
 import { EverscaleBlockchainReader } from './helpers/EverscaleBlockchainReader';
+import { EverscaleMailerV7Wrapper } from '../contract-wrappers/EverscaleMailerV7Wrapper';
 import { EverscaleMailerV6Wrapper } from '../contract-wrappers/EverscaleMailerV6Wrapper';
 import { EverscaleRegistryV2Wrapper } from '../contract-wrappers/EverscaleRegistryV2Wrapper';
 import { EverscaleMailerV5Wrapper } from '../contract-wrappers/EverscaleMailerV5Wrapper';
 import { EverscaleRegistryV1Wrapper } from '../contract-wrappers/EverscaleRegistryV1Wrapper';
-import { EverscaleMailerV5Source, EverscaleMailerV6Source } from '../messages-sources';
+import { EverscaleMailerV5Source, EverscaleMailerV6Source, EverscaleMailerV7Source } from '../messages-sources';
 
 export class EverscaleBlockchainController extends AbstractBlockchainController {
 	readonly blockchainReader: EverscaleBlockchainReader;
 
 	static readonly mailerWrappers: Record<
 		TVMMailerContractType,
-		typeof EverscaleMailerV5Wrapper | typeof EverscaleMailerV6Wrapper
+		typeof EverscaleMailerV5Wrapper | typeof EverscaleMailerV6Wrapper | typeof EverscaleMailerV7Wrapper
 	> = {
 		[TVMMailerContractType.TVMMailerV5]: EverscaleMailerV5Wrapper,
 		[TVMMailerContractType.TVMMailerV6]: EverscaleMailerV6Wrapper,
+		[TVMMailerContractType.TVMMailerV7]: EverscaleMailerV7Wrapper,
 	};
 
 	static readonly registryWrappers: Record<
@@ -68,11 +70,11 @@ export class EverscaleBlockchainController extends AbstractBlockchainController 
 
 	readonly mailers: {
 		link: ITVMMailerContractLink;
-		wrapper: EverscaleMailerV5Wrapper | EverscaleMailerV6Wrapper;
+		wrapper: EverscaleMailerV5Wrapper | EverscaleMailerV6Wrapper | EverscaleMailerV7Wrapper;
 	}[] = [];
 	readonly broadcasters: {
 		link: ITVMMailerContractLink;
-		wrapper: EverscaleMailerV5Wrapper | EverscaleMailerV6Wrapper;
+		wrapper: EverscaleMailerV5Wrapper | EverscaleMailerV6Wrapper | EverscaleMailerV7Wrapper;
 	}[] = [];
 	readonly registries: {
 		link: ITVMRegistryContractLink;
@@ -281,6 +283,8 @@ export class EverscaleBlockchainController extends AbstractBlockchainController 
 
 		if (mailer.wrapper instanceof EverscaleMailerV6Wrapper) {
 			return new EverscaleMailerV6Source(this, mailer.link, mailer.wrapper, subject);
+		} else if (mailer.wrapper instanceof EverscaleMailerV7Wrapper) {
+			return new EverscaleMailerV7Source(this, mailer.link, mailer.wrapper, subject);
 		} else {
 			return new EverscaleMailerV5Source(this, mailer.link, mailer.wrapper, subject);
 		}

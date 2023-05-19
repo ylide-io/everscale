@@ -21,8 +21,6 @@ import {
 	SendMailResult,
 } from '@ylide/sdk';
 import SmartBuffer from '@ylide/smart-buffer';
-import { EverscaleMailerV6Wrapper } from '../contract-wrappers/EverscaleMailerV6Wrapper';
-import { EverscaleRegistryV2Wrapper } from '../contract-wrappers/EverscaleRegistryV2Wrapper';
 import {
 	ITVMMailerContractLink,
 	ITVMRegistryContractLink,
@@ -32,18 +30,24 @@ import {
 } from '../misc';
 import { EverscaleBlockchainController } from './EverscaleBlockchainController';
 import { EverscaleBlockchainReader } from './helpers/EverscaleBlockchainReader';
-import { EverscaleMailerV5Wrapper, EverscaleRegistryV1Wrapper } from '../contract-wrappers';
+import {
+	EverscaleMailerV5Wrapper,
+	EverscaleMailerV6Wrapper,
+	EverscaleMailerV7Wrapper,
+	EverscaleRegistryV1Wrapper,
+	EverscaleRegistryV2Wrapper,
+} from '../contract-wrappers';
 
 export class EverscaleWalletController extends AbstractWalletController {
 	public readonly blockchainReader: EverscaleBlockchainReader;
 
 	readonly currentMailer: {
 		link: ITVMMailerContractLink;
-		wrapper: EverscaleMailerV5Wrapper | EverscaleMailerV6Wrapper;
+		wrapper: EverscaleMailerV5Wrapper | EverscaleMailerV6Wrapper | EverscaleMailerV7Wrapper;
 	};
 	readonly currentBroadcaster: {
 		link: ITVMMailerContractLink;
-		wrapper: EverscaleMailerV5Wrapper | EverscaleMailerV6Wrapper;
+		wrapper: EverscaleMailerV5Wrapper | EverscaleMailerV6Wrapper | EverscaleMailerV7Wrapper;
 	};
 	readonly currentRegistry: {
 		link: ITVMRegistryContractLink;
@@ -325,12 +329,6 @@ export class EverscaleWalletController extends AbstractWalletController {
 			return { pushes: [] };
 		} else {
 			const initTime = Math.floor(Date.now() / 1000);
-			const msgId = await this.currentMailer.wrapper.buildHash(
-				this.currentMailer.link,
-				me.publicKey!.bytes,
-				uniqueId,
-				initTime,
-			);
 			for (let i = 0; i < chunks.length; i++) {
 				await this.currentMailer.wrapper.sendMessageContentPart(
 					this.currentMailer.link,
@@ -370,6 +368,7 @@ export class EverscaleWalletController extends AbstractWalletController {
 				me.address,
 				uniqueId,
 				chunks[0],
+				feedId,
 			);
 
 			const om = transaction.childTransaction.outMessages;
@@ -404,6 +403,7 @@ export class EverscaleWalletController extends AbstractWalletController {
 				me.address,
 				uniqueId,
 				initTime,
+				feedId,
 			);
 			return msgId as any;
 		}
