@@ -83,11 +83,11 @@ export class EverscaleBlockchainController extends AbstractBlockchainController 
 
 	readonly currentMailer: {
 		link: ITVMMailerContractLink;
-		wrapper: EverscaleMailerV6Wrapper;
+		wrapper: EverscaleMailerV7Wrapper;
 	};
 	readonly currentBroadcaster: {
 		link: ITVMMailerContractLink;
-		wrapper: EverscaleMailerV6Wrapper;
+		wrapper: EverscaleMailerV7Wrapper;
 	};
 	readonly currentRegistry: { link: ITVMRegistryContractLink; wrapper: EverscaleRegistryV2Wrapper };
 
@@ -150,14 +150,14 @@ export class EverscaleBlockchainController extends AbstractBlockchainController 
 			link: currentMailerLink,
 			wrapper: new EverscaleBlockchainController.mailerWrappers[currentMailerLink.type](
 				this.blockchainReader,
-			) as EverscaleMailerV6Wrapper,
+			) as EverscaleMailerV7Wrapper,
 		};
 
 		this.currentBroadcaster = {
 			link: currentBroadcasterLink,
 			wrapper: new EverscaleBlockchainController.mailerWrappers[currentBroadcasterLink.type](
 				this.blockchainReader,
-			) as EverscaleMailerV6Wrapper,
+			) as EverscaleMailerV7Wrapper,
 		};
 
 		this.currentRegistry = {
@@ -186,6 +186,10 @@ export class EverscaleBlockchainController extends AbstractBlockchainController 
 
 	async init(): Promise<void> {
 		// np
+	}
+
+	async getComposedFeedId(feedId: Uint256, count: number) {
+		return this.currentMailer.wrapper.composeFeedId(this.currentMailer.link, feedId, count);
 	}
 
 	async getBalance(address: string) {

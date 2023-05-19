@@ -282,6 +282,14 @@ export class EverscaleMailerV7Wrapper {
 		});
 	}
 
+	async composeFeedId(mailer: ITVMMailerContractLink, feedId: Uint256, count: number): Promise<Uint256> {
+		return await this.cache.contractOperation(mailer, async contract => {
+			// @ts-ignore
+			const result: any = await contract.methods.composeFeedId({ feedId, count }).call();
+			return bigIntToUint256(BigInt(result._hash).toString(10));
+		});
+	}
+
 	async sendSmallMail(
 		mailer: ITVMMailerContractLink,
 		from: string,
