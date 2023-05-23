@@ -286,7 +286,7 @@ export class EverscaleMailerV7Wrapper {
 		return await this.cache.contractOperation(mailer, async contract => {
 			// @ts-ignore
 			const result: any = await contract.methods.composeFeedId({ feedId, count }).call();
-			return bigIntToUint256(BigInt(result._hash).toString(10));
+			return bigIntToUint256(BigInt(result._feedId).toString(10));
 		});
 	}
 
