@@ -108,8 +108,14 @@ export const VENOM_TESTNET: ITVMNetworkContracts = {
 			address: '0:12981245427f512cb1ebed1d14e4bb61c572ae6b8c4fcbbd044f752a3f764aba',
 			verified: true,
 		},
+		{
+			id: 14,
+			type: TVMMailerContractType.TVMMailerV7,
+			address: '0:e234f61191b9b2e48a68dfe21eff223b692a85dd647dfd4e97224e33470756c4',
+			verified: true,
+		},
 	],
 	currentRegistryId: 12,
 	currentMailerId: 13,
-	currentBroadcasterId: 11,
+	currentBroadcasterId: 14,
 };
