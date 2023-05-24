@@ -185,15 +185,7 @@ export class EverscaleMailerV7Wrapper {
 		});
 	}
 
-	async setOwner(
-		mailer: ITVMMailerContractLink,
-		from: string,
-		owner: string,
-	): Promise<{
-		parentTransaction: Transaction;
-		childTransaction: Transaction;
-		output?: object;
-	}> {
+	async setOwner(mailer: ITVMMailerContractLink, from: string, owner: string) {
 		return await this.cache.contractOperation(mailer, async contract => {
 			return await contract.methods.transferOwnership({ newOwner: new Address(owner) }).sendWithResult({
 				from: new Address(from),
