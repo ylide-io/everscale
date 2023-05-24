@@ -36,11 +36,11 @@ export class EverscaleMailerV7Wrapper {
 				workchain: 0,
 				publicKey: from.publicKey.toHex(),
 				initParams: {
-					beneficiary: beneficiaryAddress,
+					beneficiary: new Address(beneficiaryAddress),
 					nonce: BigInt(`0x${randomHex(64)}`).toString(10),
-				} as never,
+				},
 			},
-			{ _owner: from } as never,
+			{ _owner: new Address(from.address) },
 			'1000000000',
 		);
 
@@ -192,7 +192,7 @@ export class EverscaleMailerV7Wrapper {
 	): Promise<{
 		parentTransaction: Transaction;
 		childTransaction: Transaction;
-		output?: any;
+		output?: object;
 	}> {
 		return await this.cache.contractOperation(mailer, async contract => {
 			return await contract.methods.transferOwnership({ newOwner: new Address(owner) }).sendWithResult({
@@ -273,14 +273,14 @@ export class EverscaleMailerV7Wrapper {
 			time,
 		};
 		return await this.cache.contractOperation(mailer, async contract => {
-			const result: any = await contract.methods.buildHash(args).call();
+			const result = await contract.methods.buildHash(args).call();
 			return bigIntToUint256(BigInt(result._hash).toString(10));
 		});
 	}
 
 	async composeFeedId(mailer: ITVMMailerContractLink, feedId: Uint256, count: number): Promise<Uint256> {
 		return await this.cache.contractOperation(mailer, async contract => {
-			const result: any = await contract.methods.composeFeedId({ feedId, count }).call();
+			const result = await contract.methods.composeFeedId({ feedId, count }).call();
 			return bigIntToUint256(BigInt(result._feedId).toString(10));
 		});
 	}
