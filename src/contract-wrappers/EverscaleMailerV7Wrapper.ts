@@ -24,6 +24,9 @@ export class EverscaleMailerV7Wrapper {
 	}
 
 	static async deploy(ever: ProviderRpcClient, from: IGenericAccount, beneficiaryAddress: string): Promise<string> {
+		if (!from.publicKey) {
+			throw new Error('Public key is null');
+		}
 		const contractAddress = await EverscaleDeployer.deployContract(
 			ever,
 			from,
@@ -31,8 +34,7 @@ export class EverscaleMailerV7Wrapper {
 			{
 				tvc: MAILER_V7_TVC_BASE64,
 				workchain: 0,
-				// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-				publicKey: from.publicKey!.toHex(),
+				publicKey: from.publicKey.toHex(),
 				initParams: {
 					beneficiary: beneficiaryAddress,
 					nonce: BigInt(`0x${randomHex(64)}`).toString(10),
@@ -60,11 +62,9 @@ export class EverscaleMailerV7Wrapper {
 		if (!data) {
 			throw new Error('MailPush format is not supported');
 		}
+		const address = data.data.sender?.toString() || '';
 		return {
-			sender: (data.data.sender as string).startsWith(':')
-				? // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-				  `0${data.data.sender}`
-				: (data.data.sender as string),
+			sender: address.startsWith(':') ? `0${address}` : address,
 			msgId: bigIntToUint256(data.data.msgId as string),
 			key: SmartBuffer.ofBase64String(data.data.key as string).bytes,
 		};
@@ -178,8 +178,10 @@ export class EverscaleMailerV7Wrapper {
 
 	async getOwner(mailer: ITVMMailerContractLink): Promise<string> {
 		return await this.cache.contractOperation(mailer, async contract => {
-			// @ts-ignore
-			return await contract.methods.owner().call();
+			return await contract.methods
+				.owner()
+				.call()
+				.then(r => r.owner.toString());
 		});
 	}
 
@@ -193,8 +195,7 @@ export class EverscaleMailerV7Wrapper {
 		output?: any;
 	}> {
 		return await this.cache.contractOperation(mailer, async contract => {
-			// @ts-ignore
-			return await contract.methods.transferOwnership({ newOwner: owner }).sendWithResult({
+			return await contract.methods.transferOwnership({ newOwner: new Address(owner) }).sendWithResult({
 				from: new Address(from),
 				amount: '200000000',
 				bounce: false,
@@ -202,17 +203,18 @@ export class EverscaleMailerV7Wrapper {
 		});
 	}
 
-	async getBenificiary(mailer: ITVMMailerContractLink): Promise<string> {
+	async getBeneficiary(mailer: ITVMMailerContractLink): Promise<string> {
 		return await this.cache.contractOperation(mailer, async contract => {
-			// @ts-ignore
-			return await contract.methods.beneficiary().call();
+			return await contract.methods
+				.beneficiary()
+				.call()
+				.then(r => r.beneficiary.toString());
 		});
 	}
 
-	async setBenificiary(mailer: ITVMMailerContractLink, from: string, beneficiary: string) {
+	async setBeneficiary(mailer: ITVMMailerContractLink, from: string, beneficiary: string) {
 		return await this.cache.contractOperation(mailer, async contract => {
-			// @ts-ignore
-			return await contract.methods.setBenificiary({ _beneficiary: beneficiary }).sendWithResult({
+			return await contract.methods.setBeneficiary({ _beneficiary: new Address(beneficiary) }).sendWithResult({
 				from: new Address(from),
 				amount: '200000000',
 				bounce: false,
@@ -223,15 +225,12 @@ export class EverscaleMailerV7Wrapper {
 	async getFees(
 		mailer: ITVMMailerContractLink,
 	): Promise<{ contentPartFee: string; recipientFee: string; broadcastFee: string }> {
-		//  broadcastFee: BigNumber
 		return await this.cache.contractOperation(mailer, async contract => {
-			// @ts-ignore
-			const contentPartFee = await contract.methods.contentPartFee().call();
-			// @ts-ignore
-			const recipientFee = await contract.methods.recipientFee().call();
-			// @ts-ignore
-			const broadcastFee = await contract.functions.broadcastFee().call();
-
+			const [{ contentPartFee }, { recipientFee }, { broadcastFee }] = await Promise.all([
+				contract.methods.contentPartFee().call(),
+				contract.methods.recipientFee().call(),
+				contract.methods.broadcastFee().call(),
+			]);
 			return {
 				contentPartFee,
 				recipientFee,
@@ -247,13 +246,11 @@ export class EverscaleMailerV7Wrapper {
 	) {
 		return await this.cache.contractOperation(mailer, async contract => {
 			return await contract.methods
-				// @ts-ignore
 				.setFees({
-					// @ts-ignore
 					_contentPartFee: BigInt(fees.contentPartFee).toString(10),
-					// @ts-ignore
+
 					_recipientFee: BigInt(fees.recipientFee).toString(10),
-					// @ts-ignore
+
 					_broadcastFee: BigInt(fees.broadcastFee).toString(10),
 				})
 				.sendWithResult({
@@ -276,7 +273,6 @@ export class EverscaleMailerV7Wrapper {
 			time,
 		};
 		return await this.cache.contractOperation(mailer, async contract => {
-			// @ts-ignore
 			const result: any = await contract.methods.buildHash(args).call();
 			return bigIntToUint256(BigInt(result._hash).toString(10));
 		});
@@ -284,7 +280,6 @@ export class EverscaleMailerV7Wrapper {
 
 	async composeFeedId(mailer: ITVMMailerContractLink, feedId: Uint256, count: number): Promise<Uint256> {
 		return await this.cache.contractOperation(mailer, async contract => {
-			// @ts-ignore
 			const result: any = await contract.methods.composeFeedId({ feedId, count }).call();
 			return bigIntToUint256(BigInt(result._feedId).toString(10));
 		});
@@ -300,15 +295,10 @@ export class EverscaleMailerV7Wrapper {
 	) {
 		return await this.cache.contractOperation(mailer, async contract => {
 			return await contract.methods
-				// @ts-ignore
 				.sendSmallMail({
-					// @ts-ignore
 					uniqueId,
-					// @ts-ignore
-					recipient: uint256ToAddress(recipient),
-					// @ts-ignore
+					recipient: new Address(uint256ToAddress(recipient)),
 					key: new SmartBuffer(key).toBase64String(),
-					// @ts-ignore
 					content: new SmartBuffer(content).toBase64String(),
 				})
 				.sendWithResult({
@@ -329,15 +319,10 @@ export class EverscaleMailerV7Wrapper {
 	) {
 		return await this.cache.contractOperation(mailer, async contract => {
 			return await contract.methods
-				// @ts-ignore
 				.sendBulkMail({
-					// @ts-ignore
 					uniqueId,
-					// @ts-ignore
-					recipients: recipients.map(r => uint256ToAddress(r)),
-					// @ts-ignore
+					recipients: recipients.map(r => new Address(uint256ToAddress(r))),
 					keys: keys.map(k => new SmartBuffer(k).toBase64String()),
-					// @ts-ignore
 					content: new SmartBuffer(content).toBase64String(),
 				})
 				.sendWithResult({
@@ -356,18 +341,12 @@ export class EverscaleMailerV7Wrapper {
 		recipients: Uint256[],
 		keys: Uint8Array[],
 	) {
-		// uint256 publicKey, uint32 uniqueId, uint32 initTime, address[] recipients, bytes[] keys
 		return await this.cache.contractOperation(mailer, async contract => {
 			return await contract.methods
-				// @ts-ignore
 				.addRecipients({
-					// @ts-ignore
 					uniqueId,
-					// @ts-ignore
 					initTime,
-					// @ts-ignore
-					recipients: recipients.map(r => uint256ToAddress(r)),
-					// @ts-ignore
+					recipients: recipients.map(r => new Address(uint256ToAddress(r))),
 					keys: keys.map(k => new SmartBuffer(k).toBase64String()),
 				})
 				.sendWithResult({
@@ -387,13 +366,9 @@ export class EverscaleMailerV7Wrapper {
 	) {
 		return await this.cache.contractOperation(mailer, async contract => {
 			return await contract.methods
-				// @ts-ignore
 				.broadcastMail({
-					// @ts-ignore
 					feedId,
-					// @ts-ignore
 					uniqueId,
-					// @ts-ignore
 					content: new SmartBuffer(content).toBase64String(),
 				})
 				.sendWithResult({
@@ -413,13 +388,9 @@ export class EverscaleMailerV7Wrapper {
 	) {
 		return await this.cache.contractOperation(mailer, async contract => {
 			return await contract.methods
-				// @ts-ignore
-				.broadcastMail({
-					// @ts-ignore
+				.broadcastMailHeader({
 					feedId,
-					// @ts-ignore
 					uniqueId,
-					// @ts-ignore
 					initTime,
 				})
 				.sendWithResult({
@@ -441,17 +412,11 @@ export class EverscaleMailerV7Wrapper {
 	) {
 		return await this.cache.contractOperation(mailer, async contract => {
 			return await contract.methods
-				// @ts-ignore
 				.sendMultipartMailPart({
-					// @ts-ignore
 					uniqueId,
-					// @ts-ignore
 					initTime,
-					// @ts-ignore
 					parts,
-					// @ts-ignore
 					partIdx,
-					// @ts-ignore
 					content: new SmartBuffer(content).toBase64String(),
 				})
 				.sendWithResult({
@@ -706,7 +671,7 @@ export const MAILER_V7_ABI = {
 		{ name: 'broadcastFee', type: 'uint128' },
 		{ name: 'beneficiary', type: 'address' },
 	],
-};
+} as const;
 
 const MAILER_V7_TVC_BASE64 =
 	'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';
