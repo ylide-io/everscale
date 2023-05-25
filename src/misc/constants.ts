@@ -91,7 +91,7 @@ export const VENOM_TESTNET: ITVMNetworkContracts = {
 		{
 			id: 13,
 			type: TVMMailerContractType.TVMMailerV7,
-			address: '0:e234f61191b9b2e48a68dfe21eff223b692a85dd647dfd4e97224e33470756c4',
+			address: '0:eabbbaaca95ac62b0c47edad0b2427a27408b9d045241bd82ca512c7907345d3',
 			verified: true,
 		},
 	],
@@ -111,7 +111,7 @@ export const VENOM_TESTNET: ITVMNetworkContracts = {
 		{
 			id: 14,
 			type: TVMMailerContractType.TVMMailerV7,
-			address: '0:e234f61191b9b2e48a68dfe21eff223b692a85dd647dfd4e97224e33470756c4',
+			address: '0:eabbbaaca95ac62b0c47edad0b2427a27408b9d045241bd82ca512c7907345d3',
 			verified: true,
 		},
 	],
