@@ -80,31 +80,33 @@ export class GqlSender implements nt.IGqlSender {
 			let lastLatency: { endpoint: Endpoint; latency: number | undefined } | undefined;
 
 			for (const endpoint of this.endpoints) {
-				GqlSocket.checkLatency(endpoint).then(latency => {
-					++checkedEndpoints;
+				GqlSocket.checkLatency(endpoint)
+					.then(latency => {
+						++checkedEndpoints;
 
-					if (latency !== undefined && latency <= maxLatency) {
-						return handlers.resolve(endpoint);
-					}
-
-					if (
-						lastLatency === undefined ||
-						lastLatency.latency === undefined ||
-						(latency !== undefined && latency < lastLatency.latency)
-					) {
-						lastLatency = { endpoint, latency };
-					}
-
-					if (checkedEndpoints >= endpointCount) {
-						if (lastLatency?.latency !== undefined) {
-							handlers.resolve(lastLatency.endpoint);
-						} else {
-							handlers.reject();
+						if (latency !== undefined && latency <= maxLatency) {
+							return handlers.resolve(endpoint);
 						}
-					}
-				}).catch(err => {
-					// do nothing
-				});
+
+						if (
+							lastLatency === undefined ||
+							lastLatency.latency === undefined ||
+							(latency !== undefined && latency < lastLatency.latency)
+						) {
+							lastLatency = { endpoint, latency };
+						}
+
+						if (checkedEndpoints >= endpointCount) {
+							if (lastLatency?.latency !== undefined) {
+								handlers.resolve(lastLatency.endpoint);
+							} else {
+								handlers.reject();
+							}
+						}
+					})
+					.catch(err => {
+						// do nothing
+					});
 			}
 
 			try {
@@ -132,13 +134,16 @@ export class GqlSender implements nt.IGqlSender {
 		if (
 			!data ||
 			!data.data ||
-			!data.data.messages ||
-			!Array.isArray(data.data.messages) ||
-			!data.data.messages.length
+			!data.data.blockchain ||
+			!data.data.blockchain.account ||
+			!data.data.blockchain.account.messages ||
+			!data.data.blockchain.account.messages.edges ||
+			!Array.isArray(data.data.blockchain.account.messages.edges) ||
+			!data.data.blockchain.account.messages.edges.length
 		) {
 			return [];
 		}
-		return data.data.messages as ITVMInternalMessage[];
+		return data.data.blockchain.account.messages.edges.map((e: any) => e.node) as ITVMInternalMessage[];
 	}
 
 	async query(query: string, variables: Record<string, any> = {}) {
