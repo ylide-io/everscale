@@ -2,8 +2,8 @@ lockfileVersion: '6.0'
 
 dependencies:
   '@ylide/sdk':
-    specifier: 0.8.0-beta.10
-    version: 0.8.0-beta.10
+    specifier: 0.8.0-beta.13
+    version: 0.8.0-beta.13
   '@ylide/smart-buffer':
     specifier: 0.0.11
     version: 0.0.11
@@ -65,8 +65,8 @@ packages:
       '@jridgewell/trace-mapping': 0.3.9
     dev: true
 
-  /@datastructures-js/binary-search-tree@5.2.0:
-    resolution: {integrity: sha512-35OWgLeG+mGv5cZkpFdwSGmzgPDbsGQCEgWMH5STpdLs6B5d+oXSHXexQwU0/D1E8OaTt0QqJZ1TdISgQGmQCg==}
+  /@datastructures-js/binary-search-tree@5.3.1:
+    resolution: {integrity: sha512-FgNcahe8U9yaofirAzXUs+gLhR+z6sQgAKnIjdGyBLLemFhrsqyJIHyWxnGWtekELbH9XAUJ8/WezNYNDtPetA==}
     dev: false
 
   /@datastructures-js/linked-list@5.2.5:
@@ -353,13 +353,13 @@ packages:
       eslint-visitor-keys: 3.4.1
     dev: true
 
-  /@ylide/sdk@0.8.0-beta.10:
-    resolution: {integrity: sha512-q84Yqhw7jKid08yZppbqx4PygsS0LxCgWIU9+89t9pB0cbS77yzh4YaCFqrJmZGxdHHmFOEepeGNV819j+AcqA==}
+  /@ylide/sdk@0.8.0-beta.13:
+    resolution: {integrity: sha512-nlaYVCo3d6QNhX9lqfw8Ai22KY1OM7SNq84vk7bAz9DZUFZ+uM2UeDGqTSxmjv8gFOC7FVMlJsm7XR2lYzaZBw==}
     dependencies:
-      '@datastructures-js/binary-search-tree': 5.2.0
+      '@datastructures-js/binary-search-tree': 5.3.1
       '@datastructures-js/linked-list': 5.2.5
       '@ylide/smart-buffer': 0.0.11
-      eventemitter3: 5.0.0
+      eventemitter3: 5.0.1
       idb: 7.1.1
       js-sha256: 0.9.0
       pako: 2.1.0
@@ -702,8 +702,8 @@ packages:
     engines: {node: '>=0.10.0'}
     dev: true
 
-  /eventemitter3@5.0.0:
-    resolution: {integrity: sha512-riuVbElZZNXLeLEoprfNYoDSwTBRR44X3mnhdI1YcnENpWTCsTTVZ2zFuqQcpoyqPQIUXdiPEU0ECAq0KQRaHg==}
+  /eventemitter3@5.0.1:
+    resolution: {integrity: sha512-GWkBvjiSZK87ELrYOSESUYeVIc9mvLLf/nXalMOS5dYrgZq9o5OVkbZAVM06CVxYsCwH9BDZFPlQTlPA1j4ahA==}
     dev: false
 
   /events@3.3.0:
