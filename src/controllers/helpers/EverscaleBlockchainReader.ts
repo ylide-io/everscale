@@ -4,7 +4,13 @@ import { ProviderRpcClient } from 'everscale-inpage-provider';
 
 import { initAsync } from '../../encrypt';
 import { GqlSender } from '../../network';
-import { convertMsgIdToAddress, ITVMContentMessageBody, ITVMInternalMessage, ITVMMessage } from '../../misc';
+import {
+	convertMsgIdToAddress,
+	ITVMContentMessageBody,
+	ITVMInternalMessage,
+	ITVMInternalMessageBase,
+	ITVMMessage,
+} from '../../misc';
 import { IMessageContent, IMessageCorruptedContent, MessageContentFailure } from '@ylide/sdk';
 import SmartBuffer from '@ylide/smart-buffer';
 
@@ -13,7 +19,7 @@ initAsync().catch(err => {
 	throw err;
 });
 
-export type NekotonCore = (typeof nekotonCore)['nekoton'];
+export type NekotonCore = typeof nekotonCore['nekoton'];
 
 export class EverscaleBlockchainReader {
 	ever: ProviderRpcClient;
@@ -84,92 +90,125 @@ export class EverscaleBlockchainReader {
 		throw new Error('Was not able to execute in all of RPC providers');
 	}
 
-	static async queryMessagesListDescRaw(
-		gql: GqlSender,
-		contractAddress: string,
-		dst: string | null,
-		fromMessageLt: bigint | null,
-		includeFromMessage: boolean,
-		toMessageLt: bigint | null,
-		includeToMessage: boolean,
-		limit?: number,
-		nextPageAfterMessage?: ITVMInternalMessage,
-	): Promise<ITVMInternalMessage[]> {
-		const createdLt: {
-			gt?: bigint;
-			gte?: bigint;
-			lt?: bigint;
-			lte?: bigint;
-		} = {};
+	// static async queryMessagesListDescRaw(
+	// 	gql: GqlSender,
+	// 	contractAddress: string,
+	// 	dst: string | null,
+	// 	fromMessage: ITVMInternalMessageBase | null,
+	// 	includeFromMessage: boolean,
+	// 	toMessage: ITVMInternalMessageBase | null,
+	// 	includeToMessage: boolean,
+	// 	limit?: number,
+	// ): Promise<ITVMInternalMessage[]> {
+	// 	const result = await this._queryMessagesListDescRaw(
+	// 		gql,
+	// 		contractAddress,
+	// 		dst,
+	// 		fromMessage,
+	// 		// includeFromMessage,
+	// 		toMessage,
+	// 		// includeToMessage,
+	// 		limit,
+	// 	);
+	// 	if (includeFromMessage) {
+	// 		result.unshift(fromMessage as ITVMInternalMessage);
+	// 	}
+	// 	if (includeToMessage) {
+	// 		result.push(toMessage as ITVMInternalMessage);
+	// 	}
+	// }
 
-		if (fromMessageLt) {
-			if (nextPageAfterMessage && nextPageAfterMessage.created_lt) {
-				const nextPageAfterMessageLt = BigInt(nextPageAfterMessage.created_lt);
-				if (nextPageAfterMessageLt < fromMessageLt) {
-					createdLt.lt = nextPageAfterMessageLt;
-				} else {
-					if (includeFromMessage) {
-						createdLt.lte = fromMessageLt;
-					} else {
-						createdLt.lt = fromMessageLt;
-					}
-				}
-			} else {
-				if (includeFromMessage) {
-					createdLt.lte = fromMessageLt;
-				} else {
-					createdLt.lt = fromMessageLt;
-				}
-			}
-		} else {
-			if (nextPageAfterMessage && nextPageAfterMessage.created_lt) {
-				createdLt.lt = BigInt(nextPageAfterMessage.created_lt);
-			}
-		}
-
-		if (toMessageLt) {
-			if (includeToMessage) {
-				createdLt.gte = toMessageLt;
-			} else {
-				createdLt.gt = toMessageLt;
-			}
-		}
-
-		const _lt =
-			createdLt.gt !== undefined ||
-			createdLt.gte !== undefined ||
-			createdLt.lt !== undefined ||
-			createdLt.lte !== undefined;
-
-		const ltStatements = [
-			createdLt.lt !== undefined ? `lt: "${'0x' + createdLt.lt.toString(16)}", ` : null,
-			createdLt.lte !== undefined ? `lte: "${'0x' + createdLt.lte.toString(16)}", ` : null,
-			createdLt.gt !== undefined ? `gt: "${'0x' + createdLt.gt.toString(16)}", ` : null,
-			createdLt.gte !== undefined ? `gte: "${'0x' + createdLt.gte.toString(16)}", ` : null,
-		].filter(t => t !== null) as string[];
-
-		const result: ITVMInternalMessage[] = await gql.queryMessages(`
-			query {
-				messages(
-					filter: {
-						msg_type: { eq: 2 },
-						${dst ? `dst: { eq: "${dst}" },` : ''}
-						src: { eq: "${contractAddress}" },
-						${ltStatements.length ? `created_lt: { ${ltStatements.join('')} }, ` : ''}
-					}
-					orderBy: [{path: "created_at", direction: DESC}]
-					limit: ${Math.min(limit || 50, 50)}
-				) {
+	static async getMessage(gql: GqlSender, id: string) {
+		const result = await gql.queryMessage(`
+		query {
+			blockchain {
+				message(hash: "${id}") {
 					body
+					msg_type
 					id
 					src
 					created_at
 					created_lt
 					dst
 				}
-			}`);
+			}
+		}
+		`);
+		return result;
+	}
 
-		if (limit && result.length === limit) {
+	static async queryMessagesListDescRaw(
+		gql: GqlSender,
+		contractAddress: string,
+		dst: string | null,
+		fromMessage: ITVMInternalMessageBase | null,
+		// includeFromMessage: boolean,
+		toMessage: ITVMInternalMessageBase | null,
+		// includeToMessage: boolean,
+		limit?: number,
+		nextPageAfterMessage?: ITVMInternalMessage,
+	): Promise<ITVMInternalMessage[]> {
+		let fromCursor: string | null = null;
+
+		if (fromMessage && !fromMessage.cursor) {
+			throw new Error('fromMessage.cursor is not defined');
+		}
+		if (toMessage && !toMessage.cursor) {
+			throw new Error('toMessage.cursor is not defined');
+		}
+
+		if (fromMessage) {
+			if (
+				nextPageAfterMessage &&
+				nextPageAfterMessage.created_lt &&
+				BigInt(nextPageAfterMessage.created_lt) < BigInt(fromMessage.created_lt)
+			) {
+				fromCursor = nextPageAfterMessage.cursor;
+			} else {
+				fromCursor = fromMessage.cursor;
+			}
+		} else {
+			if (nextPageAfterMessage && nextPageAfterMessage.created_lt) {
+				fromCursor = nextPageAfterMessage.cursor;
+			}
+		}
+
+		const result: ITVMInternalMessage[] = await gql.queryMessages(`
+			query {
+				blockchain {
+					account(address:"${contractAddress}") {
+						messages(
+							msg_type: [ExtOut],
+							${dst ? `counterparties: ["${dst}"]` : ''}
+							${fromCursor ? `before: "${fromCursor}"` : ''}
+							last: ${Math.min(limit || 50, 50)}
+						) {
+							edges {
+								node {
+									body
+									msg_type
+									id
+									src
+									created_at
+									created_lt
+									dst
+								}
+								cursor
+							}
+						}
+					}
+				}
+			}
+			`);
+
+		let end = false;
+		const findTo = toMessage ? result.findIndex(x => x.id === toMessage.id) : -1;
+		if (findTo !== -1) {
+			result.splice(findTo);
+			end = true;
+		}
+
+		if (end || (limit && result.length === limit)) {
 			return result;
 		} else {
 			if (result.length === 0) {
@@ -179,10 +218,10 @@ export class EverscaleBlockchainReader {
 					gql,
 					contractAddress,
 					dst,
-					fromMessageLt,
-					includeFromMessage,
-					toMessageLt,
-					includeToMessage,
+					fromMessage,
+					// includeFromMessage,
+					toMessage,
+					// includeToMessage,
 					limit ? limit - result.length : undefined,
 					result[result.length - 1],
 				);
@@ -196,19 +235,19 @@ export class EverscaleBlockchainReader {
 		contractAddress: string,
 		dst: string | null,
 		fromMessage: ITVMMessage | null,
-		includeFromMessage: boolean,
+		// includeFromMessage: boolean,
 		toMessage: ITVMMessage | null,
-		includeToMessage: boolean,
+		// includeToMessage: boolean,
 		limit?: number,
 	): Promise<ITVMInternalMessage[]> {
 		return this.queryMessagesListDescRaw(
 			gql,
 			contractAddress,
 			dst,
-			fromMessage ? BigInt(fromMessage.$$meta.created_lt) : null,
-			includeFromMessage,
-			toMessage ? BigInt(toMessage.$$meta.created_lt) : null,
-			includeToMessage,
+			fromMessage ? fromMessage.$$meta : null,
+			// includeFromMessage,
+			toMessage ? toMessage.$$meta : null,
+			// includeToMessage,
 			limit,
 		);
 	}

@@ -62,8 +62,8 @@ export class EverscaleMailerV6Wrapper {
 		}
 		return {
 			sender: (data.data.sender as string).startsWith(':')
-				// eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-				? `0${data.data.sender}`
+				? // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+				  `0${data.data.sender}`
 				: (data.data.sender as string),
 			msgId: bigIntToUint256(data.data.msgId as string),
 			key: SmartBuffer.ofBase64String(data.data.key as string).bytes,
@@ -90,7 +90,7 @@ export class EverscaleMailerV6Wrapper {
 		return {
 			isBroadcast: false,
 			feedId: '0000000000000000000000000000000000000000000000000000000000000000' as Uint256,
-			msgId: encodeTvmMsgId(false, mailer.id, BigInt(message.created_lt)),
+			msgId: encodeTvmMsgId(false, mailer.id, message.id),
 			createdAt: message.created_at,
 			senderAddress: body.sender,
 			recipientAddress: everscaleAddressToUint256(message.dst),
@@ -105,6 +105,8 @@ export class EverscaleMailerV6Wrapper {
 				dst: message.dst,
 
 				internalMsgId: body.msgId,
+
+				cursor: message.cursor,
 			},
 		};
 	}
@@ -120,7 +122,7 @@ export class EverscaleMailerV6Wrapper {
 			isBroadcast: true,
 			// TODO!!!
 			feedId: '0000000000000000000000000000000000000000000000000000000000000000' as Uint256,
-			msgId: encodeTvmMsgId(true, mailer.id, BigInt(message.created_lt)),
+			msgId: encodeTvmMsgId(true, mailer.id, message.id),
 			createdAt: message.created_at,
 			senderAddress: message.dst,
 			recipientAddress: everscaleAddressToUint256(message.dst),
@@ -135,6 +137,8 @@ export class EverscaleMailerV6Wrapper {
 				dst: message.dst,
 
 				internalMsgId: body.msgId,
+
+				cursor: message.cursor,
 			},
 		};
 	}
@@ -143,9 +147,9 @@ export class EverscaleMailerV6Wrapper {
 		mailer: ITVMMailerContractLink,
 		subject: ISourceSubject,
 		fromMessage: ITVMMessage | null,
-		includeFromMessage: boolean,
+		// includeFromMessage: boolean,
 		toMessage: ITVMMessage | null,
-		includeToMessage: boolean,
+		// includeToMessage: boolean,
 		limit?: number,
 	): Promise<ITVMMessage[]> {
 		return await this.cache.contractOperation(mailer, async (contract, ever, gql, core) => {
@@ -161,9 +165,9 @@ export class EverscaleMailerV6Wrapper {
 				mailer.address,
 				dst,
 				fromMessage,
-				includeFromMessage,
+				// includeFromMessage,
 				toMessage,
-				includeToMessage,
+				// includeToMessage,
 				limit,
 			);
 
@@ -453,42 +457,22 @@ export class EverscaleMailerV6Wrapper {
 		});
 	}
 
-	async getBroadcastPushEvent(mailer: ITVMMailerContractLink, lt: bigint): Promise<ITVMMessage | null> {
+	async getBroadcastPushEvent(mailer: ITVMMailerContractLink, id: string): Promise<ITVMMessage | null> {
 		return this.cache.contractOperation(mailer, async (contract, ever, gql, core) => {
-			const events = await EverscaleBlockchainReader.queryMessagesListDescRaw(
-				gql,
-				mailer.address,
-				null,
-				lt,
-				true,
-				lt,
-				true,
-				1,
-			);
-			if (events.length === 0) {
+			const event = await EverscaleBlockchainReader.getMessage(gql, id);
+			if (!event) {
 				return null;
 			}
-			const event = events[0];
 			return this.formatBroadcastMessage(core, mailer, event);
 		});
 	}
 
-	async getMailPushEvent(mailer: ITVMMailerContractLink, lt: bigint): Promise<ITVMMessage | null> {
+	async getMailPushEvent(mailer: ITVMMailerContractLink, id: string): Promise<ITVMMessage | null> {
 		return this.cache.contractOperation(mailer, async (contract, ever, gql, core) => {
-			const events = await EverscaleBlockchainReader.queryMessagesListDescRaw(
-				gql,
-				mailer.address,
-				null,
-				lt,
-				true,
-				lt,
-				true,
-				1,
-			);
-			if (events.length === 0) {
+			const event = await EverscaleBlockchainReader.getMessage(gql, id);
+			if (!event) {
 				return null;
 			}
-			const event = events[0];
 			return this.formatMailMessage(core, mailer, event);
 		});
 	}

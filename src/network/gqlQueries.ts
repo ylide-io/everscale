@@ -38,6 +38,7 @@ query {
 						created_lt
 						dst
 					}
+					cursor
 				}
 			}
 		}

@@ -1,23 +1,21 @@
 import { IMessage, Uint256 } from '@ylide/sdk';
 
-export interface ITVMInternalMessage {
-	id: string;
-
-	created_at: number;
+export interface ITVMInternalMessageBase {
+	id: Uint256;
 	created_lt: string;
 
 	src: string;
 	dst: string;
 
+	cursor: string | null;
+}
+
+export interface ITVMInternalMessage extends ITVMInternalMessageBase {
+	created_at: number;
 	body: string;
 }
 
-export interface ITVMMeta {
-	id: string;
-	created_lt: string;
-	src: string;
-	dst: string;
-
+export interface ITVMMeta extends ITVMInternalMessageBase {
 	internalMsgId: Uint256;
 }
 

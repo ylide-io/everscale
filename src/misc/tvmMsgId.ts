@@ -1,17 +1,16 @@
-import { BitPackReader, BitPackWriter } from '@ylide/sdk';
+import { BitPackReader, BitPackWriter, Uint256 } from '@ylide/sdk';
 import SmartBuffer from '@ylide/smart-buffer';
 
-export const encodeTvmMsgId = (isBroacast: boolean, contractId2bytes: number, lt: bigint) => {
+export const encodeTvmMsgId = (isBroacast: boolean, contractId2bytes: number, id: Uint256) => {
 	const writer = new BitPackWriter();
 	writer.writeBit(1);
 	writer.writeBit(isBroacast ? 1 : 0);
 	writer.writeBits(2, 4); // TVM
 	writer.writeUintVariableSize(contractId2bytes);
-	writer.writeUint64(lt);
-	// const bytes = SmartBuffer.ofHexString(contentIdUint256Hex).bytes;
-	// writer.writeBytes(bytes);
+	const bytes = SmartBuffer.ofHexString(id).bytes;
+	writer.writeBytes(bytes);
 	return new SmartBuffer(writer.toBuffer()).toBase64String();
-}
+};
 
 export const decodeTvmMsgId = (msgId: string) => {
 	const buffer = SmartBuffer.ofBase64String(msgId);
@@ -25,13 +24,13 @@ export const decodeTvmMsgId = (msgId: string) => {
 		throw new Error('Invalid TVM flag');
 	}
 	const contractId2bytes = reader.readUintVariableSize();
-	const lt8bytes = reader.readUint64();
-	// const contentIdUint256Hex = new SmartBuffer(reader.readBytes(32)).toHexString();
+	// const lt8bytes = reader.readUint64();
+	const idUint256Hex = new SmartBuffer(reader.readBytes(32)).toHexString();
 
 	return {
 		isBroadcast,
 		contractId: contractId2bytes,
-		lt: lt8bytes,
+		id: idUint256Hex as Uint256,
 		// contentId: contentIdUint256Hex as Uint256,
 	};
-}
+};

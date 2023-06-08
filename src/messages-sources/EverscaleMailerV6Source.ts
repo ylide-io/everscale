@@ -14,7 +14,7 @@ export class EverscaleMailerV6Source extends GenericMessagesSource {
 			'EverscaleMailerV6Source',
 			controller.compareMessagesTime.bind(controller),
 			(fromMessage, toMessage, limit) =>
-				wrapper.retrieveHistoryDesc(mailer, source, fromMessage, false, toMessage, false, limit),
+				wrapper.retrieveHistoryDesc(mailer, source, fromMessage, toMessage, limit),
 			20000,
 			50,
 		);

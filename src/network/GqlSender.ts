@@ -129,6 +129,19 @@ export class GqlSender implements nt.IGqlSender {
 		return await this.queryMessages(query);
 	}
 
+	async queryMessage(query: string, variables: Record<string, any> = {}) {
+		const data = await this.query(query, variables);
+		if (!data || !data.data || !data.data.blockchain || !data.data.blockchain.message) {
+			return null;
+		}
+		const m = data.data.blockchain.message;
+		return {
+			...m,
+			id: m.id.startsWith('message/') ? m.id.split('message/')[1] : m.id,
+			cursor: null,
+		} as ITVMInternalMessage;
+	}
+
 	async queryMessages(query: string, variables: Record<string, any> = {}) {
 		const data = await this.query(query, variables);
 		if (
@@ -143,7 +156,14 @@ export class GqlSender implements nt.IGqlSender {
 		) {
 			return [];
 		}
-		return data.data.blockchain.account.messages.edges.map((e: any) => e.node) as ITVMInternalMessage[];
+		const msgs = data.data.blockchain.account.messages.edges.map((e: any) => ({
+			...e.node,
+			id: e.node.id.startsWith('message/') ? e.node.id.split('message/')[1] : e.node.id,
+			cursor: e.cursor,
+		})) as ITVMInternalMessage[];
+		msgs.sort((a, b) => b.created_at - a.created_at);
+
+		return msgs;
 	}
 
 	async query(query: string, variables: Record<string, any> = {}) {

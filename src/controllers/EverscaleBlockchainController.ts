@@ -246,9 +246,9 @@ export class EverscaleBlockchainController extends AbstractBlockchainController 
 		}
 
 		if (parsed.isBroadcast) {
-			return await mailer.wrapper.getBroadcastPushEvent(mailer.link, parsed.lt);
+			return await mailer.wrapper.getBroadcastPushEvent(mailer.link, parsed.id);
 		} else {
-			return await mailer.wrapper.getMailPushEvent(mailer.link, parsed.lt);
+			return await mailer.wrapper.getMailPushEvent(mailer.link, parsed.id);
 		}
 	}
 
