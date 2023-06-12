@@ -38,6 +38,12 @@ export const EVERSCALE_MAINNET: ITVMNetworkContracts = {
 			address: '0:c68ec196b86fe001c3762e454991b460e115862f64a9f929591557e00fb0cb3a',
 			verified: false,
 		},
+		{
+			id: 15,
+			type: TVMRegistryContractType.TVMRegistryV2,
+			address: '0:40b51e25b86925335c085480e59763981b58defec327056c6f97dcbdaf055800',
+			verified: false,
+		},
 	],
 	mailerContracts: [
 		{
@@ -55,7 +61,7 @@ export const EVERSCALE_MAINNET: ITVMNetworkContracts = {
 			verified: false,
 		},
 	],
-	currentRegistryId: 4,
+	currentRegistryId: 15,
 	currentMailerId: 5,
 	currentBroadcasterId: 6,
 };
