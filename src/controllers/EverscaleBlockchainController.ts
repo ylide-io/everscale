@@ -101,6 +101,7 @@ export class EverscaleBlockchainController extends AbstractBlockchainController 
 			type?: 'everscale-mainnet' | 'venom-testnet';
 			dev?: boolean;
 			endpoints?: string[];
+			provider?: any;
 		} = {},
 	) {
 		super();
@@ -123,7 +124,9 @@ export class EverscaleBlockchainController extends AbstractBlockchainController 
 			? EVERSCALE_MAINNET
 			: VENOM_TESTNET;
 
-		this.blockchainReader = new EverscaleBlockchainReader(options.type, endpoints, null, options.dev || false);
+		this.blockchainReader = new EverscaleBlockchainReader(options.type, endpoints, this.options.provider
+			? this.options.provider
+			: null, options.dev || false);
 
 		this.mailers = contracts.mailerContracts.map(link => ({
 			link,

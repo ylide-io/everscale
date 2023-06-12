@@ -4,7 +4,7 @@
 	"publishConfig": {
 		"access": "public"
 	},
-	"version": "0.8.0-beta.25",
+	"version": "0.8.0-beta.26",
 	"description": "Ylide Protocol SDK implementation for Everscale & Venom blockchains",
 	"main": "lib/index.js",
 	"types": "lib/index.d.ts",
@@ -37,11 +37,11 @@
 		"@ylide/sdk": "0.8.0-beta.14",
 		"@ylide/smart-buffer": "0.0.11",
 		"everscale-inpage-provider": "0.3.61",
-		"everscale-standalone-client": "2.1.18",
+		"everscale-standalone-client": "2.1.19",
 		"nekoton-wasm": "1.1.7"
 	},
 	"devDependencies": {
-		"@types/node": "20.2.5",
+		"@types/node": "20.3.0",
 		"prettier": "2.8.8",
 		"rimraf": "5.0.1",
 		"ts-node": "10.9.1",
@@ -51,6 +51,6 @@
 		"eslint-config-prettier": "8.8.0",
 		"eslint-plugin-jsdoc": "39.6.8",
 		"eslint-plugin-prefer-arrow": "1.2.3",
-		"typescript": "5.0.4"
+		"typescript": "5.1.3"
 	}
 }
