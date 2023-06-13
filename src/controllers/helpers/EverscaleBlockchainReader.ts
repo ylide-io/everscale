@@ -30,6 +30,7 @@ export class EverscaleBlockchainReader {
 		public readonly endpoints: string[],
 		public readonly provider: any,
 		public readonly dev = false,
+		public readonly core: typeof nekotonCore = nekotonCore,
 	) {
 		this.ever = new ProviderRpcClient({
 			forceUseFallback: true,
@@ -68,11 +69,11 @@ export class EverscaleBlockchainReader {
 		let lastError;
 		const rpcs = [{ ever: this.ever, gql: this.gql }];
 		const errors: { rpc: any; err: any }[] = [];
-		await nekotonCore.ensureNekotonLoaded();
+		await this.core.ensureNekotonLoaded();
 		for (const rpc of rpcs) {
 			let doBreak = false;
 			try {
-				return await callback(rpc.ever, rpc.gql, nekotonCore.nekoton, () => (doBreak = true));
+				return await callback(rpc.ever, rpc.gql, this.core.nekoton, () => (doBreak = true));
 			} catch (err: any) {
 				lastError = err;
 				errors.push({ rpc, err });
