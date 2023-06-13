@@ -102,6 +102,7 @@ export class EverscaleBlockchainController extends AbstractBlockchainController 
 			dev?: boolean;
 			endpoints?: string[];
 			provider?: any;
+			nekotonCore?: any;
 		} = {},
 	) {
 		super();
@@ -126,7 +127,7 @@ export class EverscaleBlockchainController extends AbstractBlockchainController 
 
 		this.blockchainReader = new EverscaleBlockchainReader(options.type, endpoints, this.options.provider
 			? this.options.provider
-			: null, options.dev || false);
+			: null, options.dev || false, options.nekotonCore || undefined);
 
 		this.mailers = contracts.mailerContracts.map(link => ({
 			link,
