@@ -125,9 +125,13 @@ export class EverscaleBlockchainController extends AbstractBlockchainController 
 			? EVERSCALE_MAINNET
 			: VENOM_TESTNET;
 
-		this.blockchainReader = new EverscaleBlockchainReader(options.type, endpoints, this.options.provider
-			? this.options.provider
-			: null, options.dev || false, options.nekotonCore || undefined);
+		this.blockchainReader = new EverscaleBlockchainReader(
+			options.type,
+			endpoints,
+			this.options.provider ? this.options.provider : null,
+			options.dev || false,
+			options.nekotonCore || undefined,
+		);
 
 		this.mailers = contracts.mailerContracts.map(link => ({
 			link,
@@ -190,6 +194,10 @@ export class EverscaleBlockchainController extends AbstractBlockchainController 
 
 	async init(): Promise<void> {
 		// np
+	}
+
+	async getComposedFeedIdDeprecated(feedId: Uint256, count: number) {
+		return this.currentMailer.wrapper.composeFeedId(this.currentMailer.link, `0x${feedId}`, count);
 	}
 
 	async getComposedFeedId(feedId: Uint256, count: number) {
