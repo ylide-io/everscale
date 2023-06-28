@@ -6,8 +6,8 @@ settings:
 
 dependencies:
   '@ylide/sdk':
-    specifier: 0.8.0-beta.15
-    version: 0.8.0-beta.15
+    specifier: 0.8.0-beta.16
+    version: 0.8.0-beta.16
   '@ylide/smart-buffer':
     specifier: 0.0.11
     version: 0.0.11
@@ -357,8 +357,8 @@ packages:
       eslint-visitor-keys: 3.4.1
     dev: true
 
-  /@ylide/sdk@0.8.0-beta.15:
-    resolution: {integrity: sha512-4ailkM8DC4SAF+sD6iA1P7qpJ9LqrRCs20i6HrZuy6hELY62MBxG0jTBCKAPjUgMPOd5P1Es4FvQYAwM6AO8yg==}
+  /@ylide/sdk@0.8.0-beta.16:
+    resolution: {integrity: sha512-u3em67faVZ+PJVWWDvbpjH1UCzKrEKtq95O3LSNi8pxiQ6/QEyt7pV+AGXOx5tFb9sPR243TIRg5PlYZHW6wfg==}
     dependencies:
       '@datastructures-js/binary-search-tree': 5.3.1
       '@datastructures-js/linked-list': 5.2.5

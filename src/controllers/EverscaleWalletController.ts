@@ -39,6 +39,8 @@ import {
 } from '../contract-wrappers';
 
 export class EverscaleWalletController extends AbstractWalletController {
+	private readonly _isVerbose: boolean;
+
 	public readonly blockchainReader: EverscaleBlockchainReader;
 
 	readonly currentMailer: {
@@ -70,10 +72,13 @@ export class EverscaleWalletController extends AbstractWalletController {
 			dev?: boolean;
 			endpoints?: string[];
 			provider?: any;
+			verbose?: boolean;
 			onSwitchAccountRequest?: SwitchAccountCallback;
 		} = {},
 	) {
 		super(options);
+
+		this._isVerbose = options.verbose || false;
 
 		if (typeof options.type === 'undefined') {
 			throw new Error('You must provide network type for Everscale controller');
@@ -134,6 +139,25 @@ export class EverscaleWalletController extends AbstractWalletController {
 		};
 	}
 
+	private verboseLog(...args: any[]) {
+		if (this._isVerbose) {
+			console.log('[Y-SDK]', ...args);
+		}
+	}
+
+	private verboseLogTick(...args: any[]) {
+		if (this._isVerbose) {
+			console.log('[Y-EVER-SDK]', ...args);
+			const timer = setTimeout(() => {
+				console.log('[Y-EVER-SDK]', '...still working...', ...args);
+			}, 5000);
+			return () => clearTimeout(timer);
+		} else {
+			// eslint-disable-next-line @typescript-eslint/no-empty-function
+			return () => {};
+		}
+	}
+
 	blockchainGroup(): string {
 		return this.options.type === 'everwallet' ? 'everscale' : 'venom-testnet';
 	}
@@ -147,18 +171,36 @@ export class EverscaleWalletController extends AbstractWalletController {
 	}
 
 	async init(): Promise<void> {
+		let last = Date.now();
+		const tick = (t: string) => {
+			const now = Date.now();
+			console.log(t, `${now - last} ms`);
+			last = now;
+		};
+		const doneAuthAccount = this.verboseLogTick('getAuthenticatedAccount');
 		await this.getAuthenticatedAccount();
+		doneAuthAccount();
+		tick('getAuthenticatedAccount');
 
+		const doneLogoutSubscription = this.verboseLogTick('logoutSubscription');
 		const logoutSubscription = await this.blockchainReader.ever.subscribe('loggedOut');
+		doneLogoutSubscription();
+		tick('logoutSubscription');
 		logoutSubscription.on('data', () => this.emit(WalletEvent.LOGOUT));
 
+		const doneNetworkSubscription = this.verboseLogTick('networkSubscription');
 		const networkSubscription = await this.blockchainReader.ever.subscribe('networkChanged');
+		doneNetworkSubscription();
+		tick('networkSubscription');
 		networkSubscription.on('data', data => {
 			// tslint:disable-next-line
 			console.log('networkSubscription data: ', data);
 		});
 
+		const donePermissionsChanged = this.verboseLogTick('permissionsChangedSubscription');
 		const permissionsSubscription = await this.blockchainReader.ever.subscribe('permissionsChanged');
+		donePermissionsChanged();
+		tick('permissionsSubscription');
 		permissionsSubscription.on('data', data => {
 			const oldAccount = this.lastCurrentAccount;
 			if (data.permissions.accountInteraction) {
@@ -220,8 +262,16 @@ export class EverscaleWalletController extends AbstractWalletController {
 
 	// account block
 	async getAuthenticatedAccount(): Promise<IGenericAccount | null> {
+		let last = Date.now();
+		const tick = (t: string) => {
+			const now = Date.now();
+			console.log(t, `${now - last} ms`);
+			last = now;
+		};
 		await this.blockchainReader.ever.ensureInitialized();
+		tick('ensureInitialized');
 		const providerState = await this.blockchainReader.ever.getProviderState();
+		tick('getProviderState');
 		if (providerState.permissions.accountInteraction) {
 			this.lastCurrentAccount = {
 				blockchain: this.options.type === 'everwallet' ? 'everscale' : 'venom-testnet',

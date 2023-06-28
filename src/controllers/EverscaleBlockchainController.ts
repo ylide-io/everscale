@@ -49,6 +49,8 @@ import { EverscaleRegistryV1Wrapper } from '../contract-wrappers/EverscaleRegist
 import { EverscaleMailerV5Source, EverscaleMailerV6Source, EverscaleMailerV7Source } from '../messages-sources';
 
 export class EverscaleBlockchainController extends AbstractBlockchainController {
+	private readonly _isVerbose: boolean;
+
 	readonly blockchainReader: EverscaleBlockchainReader;
 
 	static readonly mailerWrappers: Record<
@@ -103,9 +105,12 @@ export class EverscaleBlockchainController extends AbstractBlockchainController 
 			endpoints?: string[];
 			provider?: any;
 			nekotonCore?: any;
+			verbose?: boolean;
 		} = {},
 	) {
 		super();
+
+		this._isVerbose = options.verbose || false;
 
 		if (typeof options.type === 'undefined') {
 			throw new Error('You must provide network type for Everscale controller');
@@ -125,9 +130,13 @@ export class EverscaleBlockchainController extends AbstractBlockchainController 
 			? EVERSCALE_MAINNET
 			: VENOM_TESTNET;
 
-		this.blockchainReader = new EverscaleBlockchainReader(options.type, endpoints, this.options.provider
-			? this.options.provider
-			: null, options.dev || false, options.nekotonCore || undefined);
+		this.blockchainReader = new EverscaleBlockchainReader(
+			options.type,
+			endpoints,
+			this.options.provider ? this.options.provider : null,
+			options.dev || false,
+			options.nekotonCore || undefined,
+		);
 
 		this.mailers = contracts.mailerContracts.map(link => ({
 			link,
@@ -170,6 +179,25 @@ export class EverscaleBlockchainController extends AbstractBlockchainController 
 				this.blockchainReader,
 			) as EverscaleRegistryV2Wrapper,
 		};
+	}
+
+	private verboseLog(...args: any[]) {
+		if (this._isVerbose) {
+			console.log('[Y-SDK]', ...args);
+		}
+	}
+
+	private verboseLogTick(...args: any[]) {
+		if (this._isVerbose) {
+			console.log('[Y-EVER-SDK]', ...args);
+			const timer = setTimeout(() => {
+				console.log('[Y-EVER-SDK]', '...still working...', ...args);
+			}, 5000);
+			return () => clearTimeout(timer);
+		} else {
+			// eslint-disable-next-line @typescript-eslint/no-empty-function
+			return () => {};
+		}
 	}
 
 	blockchainGroup(): string {
