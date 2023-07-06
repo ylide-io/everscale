@@ -224,6 +224,10 @@ export class EverscaleBlockchainController extends AbstractBlockchainController 
 		return this.currentMailer.wrapper.composeFeedId(this.currentMailer.link, feedId, count);
 	}
 
+	async getDeprecatedComposedFeedId(feedId: Uint256, count: number) {
+		return this.currentMailer.wrapper.deprecatedComposeFeedId(this.currentMailer.link, feedId, count);
+	}
+
 	async getBalance(address: string) {
 		const stringValue = await this.blockchainReader.ever.getBalance(new Address(address));
 		return {

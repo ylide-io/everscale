@@ -278,6 +278,13 @@ export class EverscaleMailerV7Wrapper {
 
 	async composeFeedId(mailer: ITVMMailerContractLink, feedId: Uint256, count: number): Promise<Uint256> {
 		return await this.cache.contractOperation(mailer, async contract => {
+			const result = await contract.methods.composeFeedId({ feedId: `0x${feedId}`, count }).call();
+			return bigIntToUint256(BigInt(result._feedId).toString(10));
+		});
+	}
+
+	async deprecatedComposeFeedId(mailer: ITVMMailerContractLink, feedId: Uint256, count: number): Promise<Uint256> {
+		return await this.cache.contractOperation(mailer, async contract => {
 			const result = await contract.methods.composeFeedId({ feedId, count }).call();
 			return bigIntToUint256(BigInt(result._feedId).toString(10));
 		});
@@ -365,7 +372,7 @@ export class EverscaleMailerV7Wrapper {
 		return await this.cache.contractOperation(mailer, async contract => {
 			return await contract.methods
 				.broadcastMail({
-					feedId,
+					feedId: `0x${feedId}`,
 					uniqueId,
 					content: new SmartBuffer(content).toBase64String(),
 				})
@@ -387,7 +394,7 @@ export class EverscaleMailerV7Wrapper {
 		return await this.cache.contractOperation(mailer, async contract => {
 			return await contract.methods
 				.broadcastMailHeader({
-					feedId,
+					feedId: `0x${feedId}`,
 					uniqueId,
 					initTime,
 				})
