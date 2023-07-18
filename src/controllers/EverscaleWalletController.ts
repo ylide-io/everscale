@@ -421,11 +421,11 @@ export class EverscaleWalletController extends AbstractWalletController {
 		me: IGenericAccount,
 		feedId: Uint256,
 		contentData: Uint8Array,
-		options?: { extraPayment: number },
+		options?: { extraPayment: number | string },
 	): Promise<SendMailResult> {
 		await this.ensureAccount(me);
 		const uniqueId = Math.floor(Math.random() * 4 * 10 ** 9);
-		const extraPayment = options && options.extraPayment ? options.extraPayment * 1000000000 : 0;
+		const extraPayment = options && options.extraPayment ? Number(options.extraPayment) * 1000000000 : 0;
 		const chunks = MessageChunks.splitMessageChunks(contentData);
 		if (chunks.length === 1) {
 			const transaction = await this.currentBroadcaster.wrapper.sendBroadcast(
