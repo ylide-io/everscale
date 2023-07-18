@@ -253,7 +253,10 @@ export class EverscaleBlockchainController extends AbstractBlockchainController 
 	}
 
 	async getComposedFeedId(feedId: Uint256, count: number) {
-		if (this.currentMailer.wrapper instanceof EverscaleMailerV8Wrapper) {
+		if (
+			this.currentMailer.wrapper instanceof EverscaleMailerV8Wrapper ||
+			this.currentMailer.wrapper instanceof EverscaleMailerV7Wrapper
+		) {
 			return this.currentMailer.wrapper.composeFeedId(this.currentMailer.link, feedId, count);
 		} else {
 			throw new Error('Unsupported mailer version');
