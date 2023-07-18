@@ -18,8 +18,8 @@ dependencies:
     specifier: 2.1.19
     version: 2.1.19
   nekoton-wasm:
-    specifier: 1.1.8
-    version: 1.1.8
+    specifier: 1.1.7
+    version: 1.1.7
 
 devDependencies:
   '@types/node':
@@ -731,7 +731,7 @@ packages:
       events: 3.3.0
       everscale-inpage-provider: 0.3.61
       fast-safe-stringify: 2.1.1
-      nekoton-wasm: 1.1.8
+      nekoton-wasm: 1.1.7
       node-fetch: 2.6.12
     transitivePeerDependencies:
       - encoding
@@ -1056,8 +1056,8 @@ packages:
     resolution: {integrity: sha512-OWND8ei3VtNC9h7V60qff3SVobHr996CTwgxubgyQYEpg290h9J0buyECNNJexkFm5sOajh5G116RYA1c8ZMSw==}
     dev: true
 
-  /nekoton-wasm@1.1.8:
-    resolution: {integrity: sha512-wFuxsPAB4Tj31glTKQKcgWmgCvS7R+FhjIlRkR4DU64GnlAsoJW1F/YMhBZiO7P22Q7ymETi0jUMLgwqP5NVhA==}
+  /nekoton-wasm@1.1.7:
+    resolution: {integrity: sha512-9xoKoTzqKGowauP06Lph2GPO7WnPrNIhPWRpu29FDRp/wm+3psEW5tAQJNCdjAcF6KBVaZwK91iGxV7d84FrlA==}
     dev: false
 
   /node-fetch@2.6.12:

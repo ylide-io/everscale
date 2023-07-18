@@ -4,7 +4,7 @@
 	"publishConfig": {
 		"access": "public"
 	},
-	"version": "0.8.0-beta.38",
+	"version": "0.8.0-beta.39",
 	"description": "Ylide Protocol SDK implementation for Everscale & Venom blockchains",
 	"main": "lib/index.js",
 	"types": "lib/index.d.ts",
@@ -38,7 +38,7 @@
 		"@ylide/smart-buffer": "0.0.11",
 		"everscale-inpage-provider": "0.3.61",
 		"everscale-standalone-client": "2.1.19",
-		"nekoton-wasm": "1.1.8"
+		"nekoton-wasm": "1.1.7"
 	},
 	"devDependencies": {
 		"@types/node": "20.4.2",
