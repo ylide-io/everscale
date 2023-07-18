@@ -37,6 +37,7 @@ import {
 	EverscaleRegistryV1Wrapper,
 	EverscaleRegistryV2Wrapper,
 } from '../contract-wrappers';
+import { EverscaleMailerV8Wrapper } from '../contract-wrappers/EverscaleMailerV8Wrapper';
 
 export class EverscaleWalletController extends AbstractWalletController {
 	private readonly _isVerbose: boolean;
@@ -45,11 +46,19 @@ export class EverscaleWalletController extends AbstractWalletController {
 
 	readonly currentMailer: {
 		link: ITVMMailerContractLink;
-		wrapper: EverscaleMailerV5Wrapper | EverscaleMailerV6Wrapper | EverscaleMailerV7Wrapper;
+		wrapper:
+			| EverscaleMailerV5Wrapper
+			| EverscaleMailerV6Wrapper
+			| EverscaleMailerV7Wrapper
+			| EverscaleMailerV8Wrapper;
 	};
 	readonly currentBroadcaster: {
 		link: ITVMMailerContractLink;
-		wrapper: EverscaleMailerV5Wrapper | EverscaleMailerV6Wrapper | EverscaleMailerV7Wrapper;
+		wrapper:
+			| EverscaleMailerV5Wrapper
+			| EverscaleMailerV6Wrapper
+			| EverscaleMailerV7Wrapper
+			| EverscaleMailerV8Wrapper;
 	};
 	readonly currentRegistry: {
 		link: ITVMRegistryContractLink;
@@ -408,9 +417,15 @@ export class EverscaleWalletController extends AbstractWalletController {
 		}
 	}
 
-	async sendBroadcast(me: IGenericAccount, feedId: Uint256, contentData: Uint8Array): Promise<SendMailResult> {
+	async sendBroadcast(
+		me: IGenericAccount,
+		feedId: Uint256,
+		contentData: Uint8Array,
+		options?: { extraPayment: number },
+	): Promise<SendMailResult> {
 		await this.ensureAccount(me);
 		const uniqueId = Math.floor(Math.random() * 4 * 10 ** 9);
+		const extraPayment = options && options.extraPayment ? options.extraPayment * 1000000000 : 0;
 		const chunks = MessageChunks.splitMessageChunks(contentData);
 		if (chunks.length === 1) {
 			const transaction = await this.currentBroadcaster.wrapper.sendBroadcast(
@@ -419,6 +434,7 @@ export class EverscaleWalletController extends AbstractWalletController {
 				uniqueId,
 				chunks[0],
 				feedId,
+				extraPayment,
 			);
 
 			const om = transaction.childTransaction.outMessages;
@@ -454,6 +470,7 @@ export class EverscaleWalletController extends AbstractWalletController {
 				uniqueId,
 				initTime,
 				feedId,
+				extraPayment,
 			);
 			return msgId as any;
 		}

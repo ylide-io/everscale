@@ -55,7 +55,7 @@ export const EVERSCALE_MAINNET: ITVMNetworkContracts = {
 		{
 			id: 20,
 			type: TVMMailerContractType.TVMMailerV8,
-			address: '0:977ccd3e2d4558a76d2f4e39c558c66bf4471a210e0d7a8ef00c3bd22f0119bd',
+			address: '0:dabbebf837dac7484cc16aea4b34203a0f2190d1007c0339ec5114669d9cedf4',
 			verified: false,
 		},
 	],
@@ -69,7 +69,7 @@ export const EVERSCALE_MAINNET: ITVMNetworkContracts = {
 		{
 			id: 21,
 			type: TVMMailerContractType.TVMMailerV8,
-			address: '0:a2abff514338ad4cd3c42405d7cc29467376f70acea9ee976ef7e8117d69fcf3',
+			address: '0:379475cdf11bf0c479ee03bc5e9ba5e0752167e7b11c9ff76a305da2769ea286',
 			verified: false,
 		},
 	],

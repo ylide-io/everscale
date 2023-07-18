@@ -17,6 +17,7 @@ export interface ITVMInternalMessage extends ITVMInternalMessageBase {
 
 export interface ITVMMeta extends ITVMInternalMessageBase {
 	internalMsgId: Uint256;
+	extraPayment?: number;
 }
 
 export type ITVMMessage = IMessage<ITVMMeta>;

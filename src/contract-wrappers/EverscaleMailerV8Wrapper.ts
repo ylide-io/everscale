@@ -57,6 +57,7 @@ export class EverscaleMailerV8Wrapper {
 		return {
 			sender: address.startsWith(':') ? `0${address}` : address,
 			msgId: bigIntToUint256(data.data.msgId as string),
+			extraPayment: Number(data.data.extraPayment as string),
 		};
 	}
 
@@ -141,6 +142,7 @@ export class EverscaleMailerV8Wrapper {
 				internalMsgId: body.msgId,
 
 				cursor: message.cursor,
+				extraPayment: body.extraPayment,
 			},
 		};
 	}
