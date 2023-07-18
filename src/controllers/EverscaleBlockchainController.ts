@@ -106,13 +106,24 @@ export class EverscaleBlockchainController extends AbstractBlockchainController 
 
 	readonly currentMailer: {
 		link: ITVMMailerContractLink;
-		wrapper: EverscaleMailerV8Wrapper;
+		wrapper:
+			| EverscaleMailerV5Wrapper
+			| EverscaleMailerV6Wrapper
+			| EverscaleMailerV7Wrapper
+			| EverscaleMailerV8Wrapper;
 	};
 	readonly currentBroadcaster: {
 		link: ITVMMailerContractLink;
-		wrapper: EverscaleMailerV8Wrapper;
+		wrapper:
+			| EverscaleMailerV5Wrapper
+			| EverscaleMailerV6Wrapper
+			| EverscaleMailerV7Wrapper
+			| EverscaleMailerV8Wrapper;
 	};
-	readonly currentRegistry: { link: ITVMRegistryContractLink; wrapper: EverscaleRegistryV2Wrapper };
+	readonly currentRegistry: {
+		link: ITVMRegistryContractLink;
+		wrapper: EverscaleRegistryV1Wrapper | EverscaleRegistryV2Wrapper;
+	};
 
 	readonly MESSAGES_FETCH_LIMIT = 50;
 
@@ -242,7 +253,11 @@ export class EverscaleBlockchainController extends AbstractBlockchainController 
 	}
 
 	async getComposedFeedId(feedId: Uint256, count: number) {
-		return this.currentMailer.wrapper.composeFeedId(this.currentMailer.link, feedId, count);
+		if (this.currentMailer.wrapper instanceof EverscaleMailerV8Wrapper) {
+			return this.currentMailer.wrapper.composeFeedId(this.currentMailer.link, feedId, count);
+		} else {
+			throw new Error('Unsupported mailer version');
+		}
 	}
 
 	async getBalance(address: string) {
