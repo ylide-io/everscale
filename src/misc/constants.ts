@@ -52,6 +52,12 @@ export const EVERSCALE_MAINNET: ITVMNetworkContracts = {
 			address: '0:a06a244f2632aaff3573e2fa45283fc67e3ad8a11bcba62b060fe9b60c36a0c9',
 			verified: false,
 		},
+		{
+			id: 20,
+			type: TVMMailerContractType.TVMMailerV8,
+			address: '0:977ccd3e2d4558a76d2f4e39c558c66bf4471a210e0d7a8ef00c3bd22f0119bd',
+			verified: false,
+		},
 	],
 	broadcasterContracts: [
 		{
@@ -60,10 +66,16 @@ export const EVERSCALE_MAINNET: ITVMNetworkContracts = {
 			address: '0:38eaf0a6482ebdc4e1d8f7d7addabbecf14b134d23144971595552630e653f5b',
 			verified: false,
 		},
+		{
+			id: 21,
+			type: TVMMailerContractType.TVMMailerV8,
+			address: '0:a2abff514338ad4cd3c42405d7cc29467376f70acea9ee976ef7e8117d69fcf3',
+			verified: false,
+		},
 	],
 	currentRegistryId: 15,
-	currentMailerId: 5,
-	currentBroadcasterId: 6,
+	currentMailerId: 20,
+	currentBroadcasterId: 21,
 };
 
 export const VENOM_TESTNET: ITVMNetworkContracts = {

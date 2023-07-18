@@ -39,6 +39,7 @@ export enum TVMMailerContractType {
 	TVMMailerV5 = 'TVMMailerV5',
 	TVMMailerV6 = 'TVMMailerV6',
 	TVMMailerV7 = 'TVMMailerV7',
+	TVMMailerV8 = 'TVMMailerV8',
 }
 
 export enum TVMRegistryContractType {
