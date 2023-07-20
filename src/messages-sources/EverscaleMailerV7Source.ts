@@ -1,9 +1,9 @@
-import { NewGenericMessagesSource, ISourceSubject } from '@ylide/sdk';
+import { GenericMessagesSource, ISourceSubject } from '@ylide/sdk';
 import { EverscaleMailerV7Wrapper } from '../contract-wrappers/EverscaleMailerV7Wrapper';
 import { EverscaleBlockchainController } from '../controllers';
 import { ITVMMailerContractLink } from '../misc';
 
-export class EverscaleMailerV7Source extends NewGenericMessagesSource {
+export class EverscaleMailerV7Source extends GenericMessagesSource {
 	constructor(
 		private readonly controller: EverscaleBlockchainController,
 		private readonly mailer: ITVMMailerContractLink,
