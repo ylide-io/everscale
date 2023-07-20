@@ -12,6 +12,7 @@ import {
 	IBlockchainSourceSubject,
 	LowLevelMessagesSource,
 	randomBytes,
+	NewLowLevelMessagesSource,
 } from '@ylide/sdk';
 import {
 	AbstractBlockchainController,
@@ -339,7 +340,7 @@ export class EverscaleBlockchainController extends AbstractBlockchainController 
 		}
 	}
 
-	ininiateMessagesSource(subject: IBlockchainSourceSubject): LowLevelMessagesSource {
+	ininiateMessagesSource(subject: IBlockchainSourceSubject): NewLowLevelMessagesSource {
 		let mailer;
 		if (subject.type === BlockchainSourceType.BROADCAST) {
 			mailer = this.broadcasters.find(
