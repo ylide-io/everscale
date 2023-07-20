@@ -141,5 +141,5 @@ export const VENOM_TESTNET: ITVMNetworkContracts = {
 	],
 	currentRegistryId: 12,
 	currentMailerId: 13,
-	currentBroadcasterId: 30,
+	currentBroadcasterId: 14,
 };
