@@ -501,7 +501,11 @@ export class EverscaleBlockchainController extends AbstractBlockchainController 
 	}
 
 	compareMessagesTime(a: IMessage, b: IMessage): number {
-		return a.createdAt - b.createdAt;
+		if (a.createdAt === b.createdAt) {
+			return parseInt(a.$$meta.created_lt, 16) - parseInt(b.$$meta.created_lt, 16);
+		} else {
+			return a.createdAt - b.createdAt;
+		}
 	}
 }
 
