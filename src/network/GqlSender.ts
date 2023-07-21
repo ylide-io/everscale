@@ -4,7 +4,7 @@ import { GqlSocket } from 'everscale-standalone-client/client/ConnectionControll
 import { ITVMInternalMessage } from '../misc';
 import { getContractMessagesQuery } from './gqlQueries';
 
-type Endpoint = ReturnType<typeof GqlSocket['expandAddress']>;
+type Endpoint = ReturnType<(typeof GqlSocket)['expandAddress']>;
 
 export class GqlSender implements nt.IGqlSender {
 	private readonly params: GqlSocketParams;
@@ -161,7 +161,13 @@ export class GqlSender implements nt.IGqlSender {
 			id: e.node.id.startsWith('message/') ? e.node.id.split('message/')[1] : e.node.id,
 			cursor: e.cursor,
 		})) as ITVMInternalMessage[];
-		msgs.sort((a, b) => b.created_at - a.created_at);
+		msgs.sort((a, b) => {
+			if (a.created_at === b.created_at) {
+				return parseInt(b.created_lt, 16) - parseInt(a.created_lt, 16);
+			} else {
+				return b.created_at - a.created_at;
+			}
+		});
 
 		return msgs;
 	}
