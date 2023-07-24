@@ -21,7 +21,7 @@
 
 export const getContractMessagesQuery = (
 	dst: string | null,
-	cursor: null | { type: 'before'; cursor: string } | { type: 'after'; cursor: string },
+	cursor: { type: 'before'; cursor: string | null } | { type: 'after'; cursor: string | null },
 	contractAddress: string,
 	limit?: number,
 ) => `
@@ -31,8 +31,8 @@ query {
 			messages(
 				msg_type: [ExtOut],
 				${dst ? `counterparties: ["${dst}"]` : ''}
-				${cursor ? `${cursor.type}: "${cursor.cursor}"` : ''}
-				${limit ? `${cursor ? (cursor.type === 'before' ? 'last' : 'first') : 'last'}: ${limit}` : ''}
+				${cursor.cursor ? `${cursor.type}: "${cursor.cursor}"` : ''}
+				${limit ? `${cursor.type === 'before' ? 'last' : 'first'}: ${limit}` : ''}
 			) {
 				edges {
 					node {

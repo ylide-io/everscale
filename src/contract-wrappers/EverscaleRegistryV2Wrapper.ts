@@ -73,7 +73,10 @@ export class EverscaleRegistryV2Wrapper {
 			const [lastKeyMessage] = await gql.queryContractMessages(
 				':' + address.split(':')[1],
 				'desc',
-				null,
+				{
+					type: 'before',
+					cursor: null,
+				},
 				registry.address,
 				1,
 			);
@@ -134,13 +137,11 @@ export class EverscaleRegistryV2Wrapper {
 		return await this.cache.contractOperation(registry, async (contract, ever, gql, core) => {
 			const msgs = await gql.queryContractMessages(
 				null,
-				'desc',
-				fromMessage && fromMessage.cursor
-					? {
-							type: 'after',
-							cursor: fromMessage.cursor,
-					  }
-					: null,
+				'asc',
+				{
+					type: 'after',
+					cursor: fromMessage && fromMessage.cursor,
+				},
 				registry.address,
 				limit,
 			);
@@ -156,7 +157,10 @@ export class EverscaleRegistryV2Wrapper {
 			const messages = await gql.queryContractMessages(
 				':' + address.split(':')[1],
 				'desc',
-				null,
+				{
+					type: 'before',
+					cursor: null,
+				},
 				registry.address,
 				100,
 			);

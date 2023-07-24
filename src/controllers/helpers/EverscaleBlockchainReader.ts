@@ -295,7 +295,12 @@ export class EverscaleBlockchainReader {
 	): Promise<IMessageContent | IMessageCorruptedContent | null> {
 		return await this.operation(async (ever, gql, core) => {
 			const fakeAddress = convertMsgIdToAddress(msgId);
-			const messages = await gql.queryContractMessages(fakeAddress, 'desc', null, mailerAddress);
+			const messages = await gql.queryContractMessages(
+				fakeAddress,
+				'desc',
+				{ type: 'before', cursor: null },
+				mailerAddress,
+			);
 			if (!messages.length) {
 				return null;
 			}

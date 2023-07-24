@@ -127,7 +127,7 @@ export class GqlSender implements nt.IGqlSender {
 	async queryContractMessages(
 		dst: string | null,
 		sorting: 'asc' | 'desc',
-		cursor: null | { type: 'before'; cursor: string } | { type: 'after'; cursor: string },
+		cursor: { type: 'before'; cursor: string | null } | { type: 'after'; cursor: string | null },
 		contractAddress: string,
 		limit?: number,
 	): Promise<ITVMInternalMessage[]> {
