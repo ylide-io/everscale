@@ -1,4 +1,11 @@
-import type { IGenericAccount, IMessageContent, IMessageCorruptedContent, ISourceSubject, Uint256 } from '@ylide/sdk';
+import type {
+	ExternalYlidePublicKey,
+	IGenericAccount,
+	ILooseSourceSubject,
+	IMessageContent,
+	IMessageCorruptedContent,
+	Uint256,
+} from '@ylide/sdk';
 import { bigIntToUint256, BlockchainSourceType } from '@ylide/sdk';
 import SmartBuffer from '@ylide/smart-buffer';
 import { Address, ProviderRpcClient } from 'everscale-inpage-provider';
@@ -12,6 +19,7 @@ import {
 	encodeTvmMsgId,
 	publicKeyToBigIntString,
 	randomHex,
+	ITVMContentMessageBody,
 } from '../misc';
 import { ContractCache } from './ContractCache';
 import { EverscaleDeployer } from './EverscaleDeployer';
@@ -147,13 +155,82 @@ export class EverscaleMailerV8Wrapper {
 		};
 	}
 
+	parseEvent(
+		core: NekotonCore,
+		mailer: ITVMMailerContractLink,
+		message: ITVMInternalMessage,
+	):
+		| { type: 'message'; msg: ITVMMessage; raw: ITVMInternalMessage }
+		| { type: 'content'; content: ITVMContentMessageBody; raw: ITVMInternalMessage }
+		| { type: 'none'; raw: ITVMInternalMessage } {
+		try {
+			const msg = this.formatBroadcastMessage(core, mailer, message);
+			return {
+				type: 'message',
+				msg,
+				raw: message,
+			};
+		} catch (err) {
+			// nothing
+		}
+		try {
+			const msg = this.formatMailMessage(core, mailer, message);
+			return {
+				type: 'message',
+				msg,
+				raw: message,
+			};
+		} catch (err) {
+			// nothing
+		}
+		try {
+			const content = this.decodeContentMessageBody(core, message.body);
+			return {
+				type: 'content',
+				content,
+				raw: message,
+			};
+		} catch (err) {
+			// nothing
+		}
+		return {
+			type: 'none',
+			raw: message,
+		};
+	}
+
+	async retrieveHistoryAscRaw(
+		mailer: ITVMMailerContractLink,
+		fromMessage: ITVMInternalMessage | null,
+		limit?: number,
+	): Promise<
+		(
+			| { type: 'message'; msg: ITVMMessage; raw: ITVMInternalMessage }
+			| { type: 'content'; content: ITVMContentMessageBody; raw: ITVMInternalMessage }
+			| { type: 'key'; key: ExternalYlidePublicKey; raw: ITVMInternalMessage }
+			| { type: 'none'; raw: ITVMInternalMessage }
+		)[]
+	> {
+		return await this.cache.contractOperation(mailer, async (contract, ever, gql, core) => {
+			return (
+				await EverscaleBlockchainReader.queryMessagesList(
+					gql,
+					'asc',
+					mailer.address,
+					null,
+					fromMessage,
+					null,
+					limit,
+				)
+			).map(m => this.parseEvent(core, mailer, m));
+		});
+	}
+
 	async retrieveHistoryDesc(
 		mailer: ITVMMailerContractLink,
-		subject: ISourceSubject,
+		subject: ILooseSourceSubject,
 		fromMessage: ITVMMessage | null,
-		// includeFromMessage: boolean,
 		toMessage: ITVMMessage | null,
-		// includeToMessage: boolean,
 		limit?: number,
 	): Promise<ITVMMessage[]> {
 		return await this.cache.contractOperation(mailer, async (contract, ever, gql, core) => {
@@ -162,16 +239,15 @@ export class EverscaleMailerV8Wrapper {
 					? subject.recipient
 						? uint256ToAddress(subject.recipient, true, true)
 						: null
-					: uint256ToAddress(subject.feedId, true, true);
+					: subject.sender;
 
-			const events = await EverscaleBlockchainReader.queryMessagesListDesc(
+			const events = await EverscaleBlockchainReader.queryMessagesList(
 				gql,
+				'desc',
 				mailer.address,
 				dst,
-				fromMessage,
-				// includeFromMessage,
-				toMessage,
-				// includeToMessage,
+				fromMessage ? fromMessage.$$meta : null,
+				toMessage ? toMessage.$$meta : null,
 				limit,
 			);
 

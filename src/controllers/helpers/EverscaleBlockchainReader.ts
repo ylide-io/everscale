@@ -19,7 +19,7 @@ initAsync().catch(err => {
 	throw err;
 });
 
-export type NekotonCore = typeof nekotonCore['nekoton'];
+export type NekotonCore = (typeof nekotonCore)['nekoton'];
 
 export class EverscaleBlockchainReader {
 	ever: ProviderRpcClient;
@@ -91,7 +91,7 @@ export class EverscaleBlockchainReader {
 		throw new Error('Was not able to execute in all of RPC providers');
 	}
 
-	// static async queryMessagesListDescRaw(
+	// static async queryMessageListRaw(
 	// 	gql: GqlSender,
 	// 	contractAddress: string,
 	// 	dst: string | null,
@@ -101,7 +101,7 @@ export class EverscaleBlockchainReader {
 	// 	includeToMessage: boolean,
 	// 	limit?: number,
 	// ): Promise<ITVMInternalMessage[]> {
-	// 	const result = await this._queryMessagesListDescRaw(
+	// 	const result = await this._queryMessageListRaw(
 	// 		gql,
 	// 		contractAddress,
 	// 		dst,
@@ -138,8 +138,9 @@ export class EverscaleBlockchainReader {
 		return result;
 	}
 
-	static async queryMessagesListDescRaw(
+	static async queryMessagesListRaw(
 		gql: GqlSender,
+		sorting: 'asc' | 'desc',
 		contractAddress: string,
 		dst: string | null,
 		fromMessage: ITVMInternalMessageBase | null,
@@ -162,7 +163,8 @@ export class EverscaleBlockchainReader {
 			if (
 				nextPageAfterMessage &&
 				nextPageAfterMessage.created_lt &&
-				BigInt(nextPageAfterMessage.created_lt) < BigInt(fromMessage.created_lt)
+				((sorting === 'desc' && BigInt(nextPageAfterMessage.created_lt) < BigInt(fromMessage.created_lt)) ||
+					(sorting === 'asc' && BigInt(nextPageAfterMessage.created_lt) > BigInt(fromMessage.created_lt)))
 			) {
 				fromCursor = nextPageAfterMessage.cursor;
 			} else {
@@ -174,7 +176,8 @@ export class EverscaleBlockchainReader {
 			}
 		}
 
-		const result: ITVMInternalMessage[] = await gql.queryMessages(`
+		const result: ITVMInternalMessage[] = await gql.queryMessages(
+			`
 			query {
 				blockchain {
 					account(address:"${contractAddress}") {
@@ -200,7 +203,9 @@ export class EverscaleBlockchainReader {
 					}
 				}
 			}
-			`);
+			`,
+			sorting,
+		);
 
 		let end = false;
 		const findTo = toMessage ? result.findIndex(x => x.id === toMessage.id) : -1;
@@ -215,8 +220,9 @@ export class EverscaleBlockchainReader {
 			if (result.length === 0) {
 				return [];
 			} else {
-				const after = await this.queryMessagesListDescRaw(
+				const after = await this.queryMessagesListRaw(
 					gql,
+					sorting,
 					contractAddress,
 					dst,
 					fromMessage,
@@ -231,23 +237,25 @@ export class EverscaleBlockchainReader {
 		}
 	}
 
-	static async queryMessagesListDesc(
+	static async queryMessagesList(
 		gql: GqlSender,
+		sorting: 'asc' | 'desc',
 		contractAddress: string,
 		dst: string | null,
-		fromMessage: ITVMMessage | null,
+		fromMessage: ITVMInternalMessageBase | null,
 		// includeFromMessage: boolean,
-		toMessage: ITVMMessage | null,
+		toMessage: ITVMInternalMessageBase | null,
 		// includeToMessage: boolean,
 		limit?: number,
 	): Promise<ITVMInternalMessage[]> {
-		return this.queryMessagesListDescRaw(
+		return this.queryMessagesListRaw(
 			gql,
+			sorting,
 			contractAddress,
 			dst,
-			fromMessage ? fromMessage.$$meta : null,
+			fromMessage || null,
 			// includeFromMessage,
-			toMessage ? toMessage.$$meta : null,
+			toMessage || null,
 			// includeToMessage,
 			limit,
 		);
@@ -287,7 +295,7 @@ export class EverscaleBlockchainReader {
 	): Promise<IMessageContent | IMessageCorruptedContent | null> {
 		return await this.operation(async (ever, gql, core) => {
 			const fakeAddress = convertMsgIdToAddress(msgId);
-			const messages = await gql.queryContractMessages(fakeAddress, mailerAddress);
+			const messages = await gql.queryContractMessages(fakeAddress, 'desc', null, mailerAddress);
 			if (!messages.length) {
 				return null;
 			}

@@ -19,14 +19,20 @@
 //   }
 // `;
 
-export const getContractMessagesQuery = (dst: string, contractAddress: string, limit?: number) => `
+export const getContractMessagesQuery = (
+	dst: string | null,
+	cursor: null | { type: 'before'; cursor: string } | { type: 'after'; cursor: string },
+	contractAddress: string,
+	limit?: number,
+) => `
 query {
 	blockchain {
 		account(address:"${contractAddress}") {
 			messages(
 				msg_type: [ExtOut],
-				counterparties: ["${dst}"]
-				${limit ? `last: ${limit}` : ''}
+				${dst ? `counterparties: ["${dst}"]` : ''}
+				${cursor ? `${cursor.type}: "${cursor.cursor}"` : ''}
+				${limit ? `${cursor ? (cursor.type === 'before' ? 'last' : 'first') : 'last'}: ${limit}` : ''}
 			) {
 				edges {
 					node {
