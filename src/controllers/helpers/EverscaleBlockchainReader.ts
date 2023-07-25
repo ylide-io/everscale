@@ -144,9 +144,7 @@ export class EverscaleBlockchainReader {
 		contractAddress: string,
 		dst: string | null,
 		fromMessage: ITVMInternalMessageBase | null,
-		// includeFromMessage: boolean,
 		toMessage: ITVMInternalMessageBase | null,
-		// includeToMessage: boolean,
 		limit?: number,
 		nextPageAfterMessage?: ITVMInternalMessage,
 	): Promise<ITVMInternalMessage[]> {
@@ -184,8 +182,8 @@ export class EverscaleBlockchainReader {
 						messages(
 							msg_type: [ExtOut],
 							${dst ? `counterparties: ["${dst}"]` : ''}
-							${fromCursor ? `before: "${fromCursor}"` : ''}
-							last: ${Math.min(limit || 50, 50)}
+							${fromCursor ? `${sorting === 'desc' ? 'before' : 'after'}: "${fromCursor}"` : ''}
+							${sorting === 'desc' ? 'last' : 'first'}: ${Math.min(limit || 50, 50)}
 						) {
 							edges {
 								node {
@@ -226,9 +224,7 @@ export class EverscaleBlockchainReader {
 					contractAddress,
 					dst,
 					fromMessage,
-					// includeFromMessage,
 					toMessage,
-					// includeToMessage,
 					limit ? limit - result.length : undefined,
 					result[result.length - 1],
 				);
@@ -243,9 +239,7 @@ export class EverscaleBlockchainReader {
 		contractAddress: string,
 		dst: string | null,
 		fromMessage: ITVMInternalMessageBase | null,
-		// includeFromMessage: boolean,
 		toMessage: ITVMInternalMessageBase | null,
-		// includeToMessage: boolean,
 		limit?: number,
 	): Promise<ITVMInternalMessage[]> {
 		return this.queryMessagesListRaw(
@@ -254,9 +248,7 @@ export class EverscaleBlockchainReader {
 			contractAddress,
 			dst,
 			fromMessage || null,
-			// includeFromMessage,
 			toMessage || null,
-			// includeToMessage,
 			limit,
 		);
 	}
