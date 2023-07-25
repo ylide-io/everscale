@@ -4,7 +4,7 @@ import { GqlSocket } from 'everscale-standalone-client/client/ConnectionControll
 import { ITVMInternalMessage } from '../misc';
 import { getContractMessagesQuery } from './gqlQueries';
 
-type Endpoint = ReturnType<typeof GqlSocket['expandAddress']>;
+type Endpoint = ReturnType<(typeof GqlSocket)['expandAddress']>;
 
 export class GqlSender implements nt.IGqlSender {
 	private readonly params: GqlSocketParams;
@@ -124,9 +124,15 @@ export class GqlSender implements nt.IGqlSender {
 		throw new Error('Not available endpoint found');
 	}
 
-	async queryContractMessages(dst: string, contractAddress: string, limit?: number): Promise<ITVMInternalMessage[]> {
-		const query = getContractMessagesQuery(dst, contractAddress, limit);
-		return await this.queryMessages(query);
+	async queryContractMessages(
+		dst: string | null,
+		sorting: 'asc' | 'desc',
+		cursor: { type: 'before'; cursor: string | null } | { type: 'after'; cursor: string | null },
+		contractAddress: string,
+		limit?: number,
+	): Promise<ITVMInternalMessage[]> {
+		const query = getContractMessagesQuery(dst, cursor, contractAddress, limit);
+		return await this.queryMessages(query, sorting);
 	}
 
 	async queryMessage(query: string, variables: Record<string, any> = {}) {
@@ -142,7 +148,7 @@ export class GqlSender implements nt.IGqlSender {
 		} as ITVMInternalMessage;
 	}
 
-	async queryMessages(query: string, variables: Record<string, any> = {}) {
+	async queryMessages(query: string, sorting: 'asc' | 'desc', variables: Record<string, any> = {}) {
 		const data = await this.query(query, variables);
 		if (
 			!data ||
@@ -161,7 +167,15 @@ export class GqlSender implements nt.IGqlSender {
 			id: e.node.id.startsWith('message/') ? e.node.id.split('message/')[1] : e.node.id,
 			cursor: e.cursor,
 		})) as ITVMInternalMessage[];
-		msgs.sort((a, b) => b.created_at - a.created_at);
+		if (sorting === 'desc') {
+			msgs.sort((a, b) => {
+				if (a.created_at === b.created_at) {
+					return parseInt(b.created_lt, 16) - parseInt(a.created_lt, 16);
+				} else {
+					return b.created_at - a.created_at;
+				}
+			});
+		}
 
 		return msgs;
 	}

@@ -3,7 +3,14 @@ import { PublicKey, PublicKeyType } from '@ylide/sdk';
 import SmartBuffer from '@ylide/smart-buffer';
 import { Address, ProviderRpcClient, Transaction } from 'everscale-inpage-provider';
 import { EverscaleBlockchainReader, NekotonCore } from '../controllers/helpers/EverscaleBlockchainReader';
-import { ITVMRegistryContractLink, publicKeyToBigIntString, randomHex } from '../misc';
+import {
+	ITVMContentMessageBody,
+	ITVMInternalMessage,
+	ITVMMessage,
+	ITVMRegistryContractLink,
+	publicKeyToBigIntString,
+	randomHex,
+} from '../misc';
 import { ContractCache } from './ContractCache';
 import { EverscaleDeployer } from './EverscaleDeployer';
 
@@ -63,7 +70,16 @@ export class EverscaleRegistryV2Wrapper {
 		address: string,
 	): Promise<ExternalYlidePublicKey | null> {
 		return await this.cache.contractOperation(registry, async (contract, ever, gql, core) => {
-			const [lastKeyMessage] = await gql.queryContractMessages(':' + address.split(':')[1], registry.address, 1);
+			const [lastKeyMessage] = await gql.queryContractMessages(
+				':' + address.split(':')[1],
+				'desc',
+				{
+					type: 'before',
+					cursor: null,
+				},
+				registry.address,
+				1,
+			);
 			if (lastKeyMessage) {
 				const key = this.decodeAddressToPublicKeyMessageBody(core, lastKeyMessage.body);
 				return {
@@ -78,12 +94,76 @@ export class EverscaleRegistryV2Wrapper {
 		});
 	}
 
+	parseEvent(
+		core: NekotonCore,
+		registry: ITVMRegistryContractLink,
+		message: ITVMInternalMessage,
+	):
+		| { type: 'key'; key: ExternalYlidePublicKey; raw: ITVMInternalMessage }
+		| { type: 'none'; raw: ITVMInternalMessage } {
+		try {
+			const key = this.decodeAddressToPublicKeyMessageBody(core, message.body);
+			return {
+				type: 'key',
+				key: {
+					keyVersion: key.keyVersion,
+					publicKey: PublicKey.fromBytes(PublicKeyType.YLIDE, key.publicKey),
+					timestamp: message.created_at,
+					registrar: key.registrar,
+				},
+				raw: message,
+			};
+		} catch (err) {
+			// nothing
+		}
+		return {
+			type: 'none',
+			raw: message,
+		};
+	}
+
+	async retrieveHistoryAscRaw(
+		registry: ITVMRegistryContractLink,
+		fromMessage: ITVMInternalMessage | null,
+		limit?: number,
+	): Promise<
+		(
+			| { type: 'message'; msg: ITVMMessage; raw: ITVMInternalMessage }
+			| { type: 'content'; content: ITVMContentMessageBody; raw: ITVMInternalMessage }
+			| { type: 'key'; key: ExternalYlidePublicKey; raw: ITVMInternalMessage }
+			| { type: 'none'; raw: ITVMInternalMessage }
+		)[]
+	> {
+		return await this.cache.contractOperation(registry, async (contract, ever, gql, core) => {
+			const msgs = await gql.queryContractMessages(
+				null,
+				'asc',
+				{
+					type: 'after',
+					cursor: fromMessage && fromMessage.cursor,
+				},
+				registry.address,
+				limit,
+			);
+			return msgs.map(m => this.parseEvent(core, registry, m));
+		});
+	}
+
 	async getPublicKeysHistoryForAddress(
 		registry: ITVMRegistryContractLink,
 		address: string,
 	): Promise<ExternalYlidePublicKey[]> {
 		return await this.cache.contractOperation(registry, async (contract, ever, gql, core) => {
-			const messages = await gql.queryContractMessages(':' + address.split(':')[1], registry.address, 100);
+			const messages = await gql.queryContractMessages(
+				':' + address.split(':')[1],
+				'desc',
+				{
+					type: 'before',
+					cursor: null,
+				},
+				registry.address,
+				100,
+			);
 			return messages.map(m => {
 				const key = this.decodeAddressToPublicKeyMessageBody(core, m.body);
 				return {
