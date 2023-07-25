@@ -132,7 +132,11 @@ export class EverscaleMailerV8Wrapper {
 
 		return {
 			isBroadcast: true,
-			feedId: message.dst as Uint256,
+			feedId: (message.dst.startsWith('0:')
+				? message.dst.replace('0:', '')
+				: message.dst.startsWith(':')
+				? message.dst.replace(':', '')
+				: message.dst) as Uint256,
 			msgId: encodeTvmMsgId(true, mailer.id, message.id),
 			createdAt: message.created_at,
 			senderAddress: body.sender,
