@@ -282,6 +282,60 @@ export class EverscaleBlockchainReader {
 		return result;
 	}
 
+	processMessageParts(
+		msgId: string,
+		messages: { msg: ITVMInternalMessage; body: ITVMContentMessageBody }[],
+	): IMessageContent | IMessageCorruptedContent | null {
+		const parts = messages[0].body.parts;
+		const sender = messages[0].body.sender;
+		if (!messages.every(t => t.body.parts === parts) || !messages.every(t => t.body.sender === sender)) {
+			return {
+				msgId,
+				corrupted: true,
+				chunks: messages.map(m => ({ createdAt: m.msg.created_at })),
+				reason: MessageContentFailure.NON_INTEGRITY_PARTS,
+			};
+		}
+		for (let idx = 0; idx < parts; idx++) {
+			if (!messages.find(d => d.body.partIdx === idx)) {
+				return {
+					msgId,
+					corrupted: true,
+					chunks: messages.map(m => ({ createdAt: m.msg.created_at })),
+					reason: MessageContentFailure.NOT_ALL_PARTS,
+				};
+			}
+		}
+		if (messages.length !== parts) {
+			return {
+				msgId,
+				corrupted: true,
+				chunks: messages.map(m => ({ createdAt: m.msg.created_at })),
+				reason: MessageContentFailure.DOUBLED_PARTS,
+			};
+		}
+		const sortedChunks = messages
+			.sort((a, b) => {
+				return a.body.partIdx - b.body.partIdx;
+			})
+			.map(m => m.body.content);
+		const contentSize = sortedChunks.reduce((p, c) => p + c.length, 0);
+		const buf = SmartBuffer.ofSize(contentSize);
+		for (const chunk of sortedChunks) {
+			buf.writeBytes(chunk);
+		}
+
+		return {
+			msgId,
+			corrupted: false,
+			storage: this.type === 'everscale-mainnet' ? 'everscale' : 'venom-testnet',
+			createdAt: Math.min(...messages.map(d => d.msg.created_at)),
+			senderAddress: sender,
+			parts,
+			content: buf.bytes,
+		};
+	}
+
 	async retrieveMessageContentByInternalMsgId(
 		mailerAddress: string,
 		decoder: (core: NekotonCore, body: string) => ITVMContentMessageBody,
@@ -312,57 +366,7 @@ export class EverscaleBlockchainReader {
 					reason: MessageContentFailure.NON_DECRYPTABLE,
 				};
 			}
-			const parts = decodedChunks[0].body.parts;
-			const sender = decodedChunks[0].body.sender;
-			if (
-				!decodedChunks.every(t => t.body.parts === parts) ||
-				!decodedChunks.every(t => t.body.sender === sender)
-			) {
-				return {
-					msgId,
-					corrupted: true,
-					chunks: decodedChunks.map(m => ({ createdAt: m.msg.created_at })),
-					reason: MessageContentFailure.NON_INTEGRITY_PARTS,
-				};
-			}
-			for (let idx = 0; idx < parts; idx++) {
-				if (!decodedChunks.find(d => d.body.partIdx === idx)) {
-					return {
-						msgId,
-						corrupted: true,
-						chunks: decodedChunks.map(m => ({ createdAt: m.msg.created_at })),
-						reason: MessageContentFailure.NOT_ALL_PARTS,
-					};
-				}
-			}
-			if (decodedChunks.length !== parts) {
-				return {
-					msgId,
-					corrupted: true,
-					chunks: decodedChunks.map(m => ({ createdAt: m.msg.created_at })),
-					reason: MessageContentFailure.DOUBLED_PARTS,
-				};
-			}
-			const sortedChunks = decodedChunks
-				.sort((a, b) => {
-					return a.body.partIdx - b.body.partIdx;
-				})
-				.map(m => m.body.content);
-			const contentSize = sortedChunks.reduce((p, c) => p + c.length, 0);
-			const buf = SmartBuffer.ofSize(contentSize);
-			for (const chunk of sortedChunks) {
-				buf.writeBytes(chunk);
-			}
-
-			return {
-				msgId,
-				corrupted: false,
-				storage: this.type === 'everscale-mainnet' ? 'everscale' : 'venom-testnet',
-				createdAt: Math.min(...decodedChunks.map(d => d.msg.created_at)),
-				senderAddress: sender,
-				parts,
-				content: buf.bytes,
-			};
+			return this.processMessageParts(msgId, decodedChunks);
 		});
 	}
 }
