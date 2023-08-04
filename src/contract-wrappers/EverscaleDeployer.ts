@@ -1,5 +1,5 @@
-import type { IGenericAccount } from '@ylide/sdk';
 import { Address, Contract, GetExpectedAddressParams, ProviderRpcClient, Transaction } from 'everscale-inpage-provider';
+import { TVMWalletAccount } from '../misc';
 
 export type DeployParams<Abi> = GetExpectedAddressParams<Abi> & { publicKey: string };
 export type ConstructorParams<Abi> = Parameters<constructorParamsType<Abi, Contract<Abi>['methods']>>[0];
@@ -29,7 +29,7 @@ export const errorExtractor = async <T extends { transaction: Transaction; outpu
 export class EverscaleDeployer {
 	static async deployContract<Abi>(
 		ever: ProviderRpcClient,
-		me: IGenericAccount,
+		me: TVMWalletAccount,
 
 		abi: Abi,
 		deployParams: DeployParams<Abi>,

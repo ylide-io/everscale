@@ -12,7 +12,7 @@ import {
 	ITVMMessage,
 } from '../../misc';
 import { IMessageContent, IMessageCorruptedContent, MessageContentFailure } from '@ylide/sdk';
-import SmartBuffer from '@ylide/smart-buffer';
+import { SmartBuffer } from '@ylide/smart-buffer';
 
 initAsync().catch(err => {
 	console.error('Failed to init Everscale encryption library');
@@ -26,6 +26,8 @@ export class EverscaleBlockchainReader {
 	gql: GqlSender;
 
 	constructor(
+		public readonly blockchainGroup: string,
+		public readonly blockchain: string,
 		public readonly type: 'everscale-mainnet' | 'venom-testnet',
 		public readonly endpoints: string[],
 		public readonly provider: any,

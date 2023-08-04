@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 
 import {
-	IGenericAccount,
 	AbstractWalletController,
 	PublicKey,
 	PublicKeyType,
@@ -16,11 +15,12 @@ import {
 	YlideError,
 	YlideErrorType,
 	SwitchAccountCallback,
-	YlidePublicKeyVersion,
+	YlideKeyVersion,
 	ServiceCode,
 	SendMailResult,
+	EncryptionPublicKey,
 } from '@ylide/sdk';
-import SmartBuffer from '@ylide/smart-buffer';
+import { SmartBuffer } from '@ylide/smart-buffer';
 import {
 	ITVMMailerContractLink,
 	ITVMRegistryContractLink,
@@ -28,6 +28,7 @@ import {
 	EVERSCALE_MAINNET,
 	VENOM_TESTNET,
 } from '../misc';
+import { TVMWalletAccount } from '../misc/TVMWalletAccount';
 import { EverscaleBlockchainController } from './EverscaleBlockchainController';
 import { EverscaleBlockchainReader } from './helpers/EverscaleBlockchainReader';
 import {
@@ -68,11 +69,11 @@ export class EverscaleWalletController extends AbstractWalletController {
 	readonly everscaleMainnetEndpoints = ['https://mainnet.evercloud.dev/695e40eeac6b4e3fa4a11666f6e0d6af/graphql'];
 	readonly venomTestnetEndpoints = ['https://gql-testnet.venom.foundation/graphql'];
 
-	private lastCurrentAccount: IGenericAccount | null = null;
+	private lastCurrentAccount: TVMWalletAccount | null = null;
 
-	// on(event: WalletEvent.ACCOUNT_CHANGED, fn: (newAccount: IGenericAccount) => void, context?: any): this;
+	// on(event: WalletEvent.ACCOUNT_CHANGED, fn: (newAccount: TVMWalletAccount) => void, context?: any): this;
 	// on(event: WalletEvent.BLOCKCHAIN_CHANGED, fn: (newBlockchain: string) => void, context?: any): this;
-	// on(event: WalletEvent.LOGIN, fn: (newAccount: IGenericAccount) => void, context?: any): this;
+	// on(event: WalletEvent.LOGIN, fn: (newAccount: TVMWalletAccount) => void, context?: any): this;
 	// on(event: WalletEvent.LOGOUT, fn: () => void, context?: any): this;
 
 	constructor(
@@ -110,6 +111,8 @@ export class EverscaleWalletController extends AbstractWalletController {
 			: VENOM_TESTNET;
 
 		this.blockchainReader = new EverscaleBlockchainReader(
+			this.blockchainGroup(),
+			options.type === 'everwallet' ? 'everscale' : 'venom-testnet',
 			options.type === 'everwallet' ? 'everscale-mainnet' : 'venom-testnet',
 			endpoints,
 			this.options.provider
@@ -213,14 +216,12 @@ export class EverscaleWalletController extends AbstractWalletController {
 		permissionsSubscription.on('data', data => {
 			const oldAccount = this.lastCurrentAccount;
 			if (data.permissions.accountInteraction) {
-				this.lastCurrentAccount = {
-					blockchain: this.options.type === 'everwallet' ? 'everscale' : 'venom-testnet',
-					address: data.permissions.accountInteraction.address.toString(),
-					publicKey: PublicKey.fromHexString(
-						PublicKeyType.EVERSCALE_NATIVE,
-						data.permissions.accountInteraction.publicKey,
-					),
-				};
+				this.lastCurrentAccount = new TVMWalletAccount(
+					this.blockchainGroup(),
+					this.wallet(),
+					data.permissions.accountInteraction.address.toString(),
+					{ publicKeyHex: data.permissions.accountInteraction.publicKey },
+				);
 				if (oldAccount) {
 					this.emit(WalletEvent.ACCOUNT_CHANGED, this.lastCurrentAccount);
 				} else {
@@ -234,14 +235,17 @@ export class EverscaleWalletController extends AbstractWalletController {
 		});
 	}
 
-	private async ensureAccount(needAccount: IGenericAccount) {
+	private async ensureAccount(needAccount: TVMWalletAccount) {
 		let me = await this.getAuthenticatedAccount();
 		if (!me || me.address !== needAccount.address) {
 			await this.switchAccountRequest(me, needAccount);
 			me = await this.getAuthenticatedAccount();
 		}
 		if (!me || me.address !== needAccount.address) {
-			throw new YlideError(YlideErrorType.ACCOUNT_UNREACHABLE, { currentAccount: me, needAccount });
+			throw new YlideError(YlideErrorType.ACCOUNT_UNREACHABLE, 'Wrong account selected in wallet', {
+				currentAccount: me,
+				needAccount,
+			});
 		}
 
 		return me;
@@ -251,18 +255,14 @@ export class EverscaleWalletController extends AbstractWalletController {
 		return hexToUint256(address.split(':')[1].toLowerCase());
 	}
 
-	async requestYlidePrivateKey(me: IGenericAccount): Promise<Uint8Array | null> {
-		throw new Error('Method not available.');
-	}
-
-	async signMagicString(account: IGenericAccount, magicString: string): Promise<Uint8Array> {
+	async signMagicString(account: TVMWalletAccount, magicString: string): Promise<Uint8Array> {
 		await this.ensureAccount(account);
 		const me = await this.getAuthenticatedAccount();
 		if (!me) {
 			throw new Error(`Can't derive without auth`);
 		}
 		const result = await this.blockchainReader.ever.signData({
-			publicKey: me.publicKey!.toHex(),
+			publicKey: me.$$meta.publicKeyHex,
 			data: SmartBuffer.ofUTF8String(magicString).toBase64String(),
 		});
 		// @ts-ignore
@@ -270,7 +270,7 @@ export class EverscaleWalletController extends AbstractWalletController {
 	}
 
 	// account block
-	async getAuthenticatedAccount(): Promise<IGenericAccount | null> {
+	async getAuthenticatedAccount(): Promise<TVMWalletAccount | null> {
 		let last = Date.now();
 		const tick = (t: string) => {
 			const now = Date.now();
@@ -282,14 +282,12 @@ export class EverscaleWalletController extends AbstractWalletController {
 		const providerState = await this.blockchainReader.ever.getProviderState();
 		tick('getProviderState');
 		if (providerState.permissions.accountInteraction) {
-			this.lastCurrentAccount = {
-				blockchain: this.options.type === 'everwallet' ? 'everscale' : 'venom-testnet',
-				address: providerState.permissions.accountInteraction.address.toString(),
-				publicKey: PublicKey.fromHexString(
-					PublicKeyType.EVERSCALE_NATIVE,
-					providerState.permissions.accountInteraction.publicKey,
-				),
-			};
+			this.lastCurrentAccount = new TVMWalletAccount(
+				this.blockchainGroup(),
+				this.wallet(),
+				providerState.permissions.accountInteraction.address.toString(),
+				{ publicKeyHex: providerState.permissions.accountInteraction.publicKey },
+			);
 			return this.lastCurrentAccount;
 		} else {
 			this.lastCurrentAccount = null;
@@ -302,22 +300,22 @@ export class EverscaleWalletController extends AbstractWalletController {
 	}
 
 	async attachPublicKey(
-		me: IGenericAccount,
+		me: TVMWalletAccount,
 		publicKey: Uint8Array,
-		keyVersion: YlidePublicKeyVersion = YlidePublicKeyVersion.KEY_V2,
+		keyVersion: YlideKeyVersion = YlideKeyVersion.KEY_V2,
 		registrar: number = ServiceCode.SDK,
 		options?: any,
 	) {
 		await this.ensureAccount(me);
-		await this.currentRegistry.wrapper.attachPublicKey(this.currentRegistry.link, me.address, {
-			keyVersion,
-			publicKey: PublicKey.fromBytes(PublicKeyType.YLIDE, publicKey),
-			timestamp: Math.floor(Date.now() / 1000),
+		await this.currentRegistry.wrapper.attachPublicKey(
+			this.currentRegistry.link,
+			me.address,
+			new PublicKey(PublicKeyType.YLIDE, keyVersion, publicKey),
 			registrar,
-		});
+		);
 	}
 
-	async requestAuthentication(): Promise<null | IGenericAccount> {
+	async requestAuthentication(): Promise<null | TVMWalletAccount> {
 		const acc = await this.getAuthenticatedAccount();
 		if (acc) {
 			await this.disconnectAccount(acc);
@@ -326,23 +324,21 @@ export class EverscaleWalletController extends AbstractWalletController {
 			permissions: ['basic', 'accountInteraction'],
 		});
 		if (accountInteraction) {
-			return {
-				blockchain: this.options.type === 'everwallet' ? 'everscale' : 'venom-testnet',
-				address: accountInteraction.address.toString(),
-				publicKey: PublicKey.fromHexString(PublicKeyType.EVERSCALE_NATIVE, accountInteraction.publicKey),
-			};
+			return new TVMWalletAccount(this.blockchainGroup(), this.wallet(), accountInteraction.address.toString(), {
+				publicKeyHex: accountInteraction.publicKey,
+			});
 		} else {
 			throw new Error('Not authenticated');
 		}
 	}
 
-	async disconnectAccount(account: IGenericAccount): Promise<void> {
+	async disconnectAccount(account: TVMWalletAccount): Promise<void> {
 		await this.ensureAccount(account);
 		await this.blockchainReader.ever.disconnect();
 	}
 
 	async sendMail(
-		me: IGenericAccount,
+		me: TVMWalletAccount,
 		feedId: Uint256,
 		contentData: Uint8Array,
 		recipients: { address: Uint256; messageKey: MessageKey }[],
@@ -418,7 +414,7 @@ export class EverscaleWalletController extends AbstractWalletController {
 	}
 
 	async sendBroadcast(
-		me: IGenericAccount,
+		me: TVMWalletAccount,
 		feedId: Uint256,
 		contentData: Uint8Array,
 		options?: { extraPayment: number | string },
@@ -448,7 +444,7 @@ export class EverscaleWalletController extends AbstractWalletController {
 			const initTime = Math.floor(Date.now() / 1000);
 			const msgId = await this.currentBroadcaster.wrapper.buildHash(
 				this.currentBroadcaster.link,
-				me.publicKey!.bytes,
+				SmartBuffer.ofHexString(me.$$meta.publicKeyHex).bytes,
 				uniqueId,
 				initTime,
 			);
@@ -477,8 +473,8 @@ export class EverscaleWalletController extends AbstractWalletController {
 	}
 
 	async decryptMessageKey(
-		recipientAccount: IGenericAccount,
-		senderPublicKey: PublicKey,
+		recipientAccount: TVMWalletAccount,
+		senderPublicKey: EncryptionPublicKey,
 		encryptedKey: Uint8Array,
 	): Promise<Uint8Array> {
 		if (senderPublicKey.type !== PublicKeyType.EVERSCALE_NATIVE) {
@@ -487,8 +483,8 @@ export class EverscaleWalletController extends AbstractWalletController {
 		const { encData, nonce } = unpackSymmetricalyEncryptedData(encryptedKey);
 		const decryptionResultBase64 = await this.blockchainReader.ever.decryptData({
 			algorithm: 'ChaCha20Poly1305',
-			sourcePublicKey: senderPublicKey.toHex(),
-			recipientPublicKey: recipientAccount.publicKey!.toHex(),
+			sourcePublicKey: new SmartBuffer(senderPublicKey.keyBytes).toHexString(),
+			recipientPublicKey: recipientAccount.$$meta.publicKeyHex,
 			data: new SmartBuffer(encData).toBase64String(),
 			nonce: new SmartBuffer(nonce).toBase64String(),
 		});
@@ -497,22 +493,22 @@ export class EverscaleWalletController extends AbstractWalletController {
 
 	// Deployments:
 
-	async deployMailerV5(me: IGenericAccount, beneficiaryAddress: string): Promise<string> {
+	async deployMailerV5(me: TVMWalletAccount, beneficiaryAddress: string): Promise<string> {
 		const fullMe = await this.ensureAccount(me);
 		return await EverscaleMailerV5Wrapper.deploy(this.blockchainReader.ever, fullMe, beneficiaryAddress);
 	}
 
-	async deployMailerV6(me: IGenericAccount, beneficiaryAddress: string): Promise<string> {
+	async deployMailerV6(me: TVMWalletAccount, beneficiaryAddress: string): Promise<string> {
 		const fullMe = await this.ensureAccount(me);
 		return await EverscaleMailerV6Wrapper.deploy(this.blockchainReader.ever, fullMe, beneficiaryAddress);
 	}
 
-	async deployRegistryV1(me: IGenericAccount): Promise<string> {
+	async deployRegistryV1(me: TVMWalletAccount): Promise<string> {
 		const fullMe = await this.ensureAccount(me);
 		return await EverscaleRegistryV1Wrapper.deploy(this.blockchainReader.ever, fullMe);
 	}
 
-	async deployRegistryV2(me: IGenericAccount): Promise<string> {
+	async deployRegistryV2(me: TVMWalletAccount): Promise<string> {
 		const fullMe = await this.ensureAccount(me);
 		return await EverscaleRegistryV2Wrapper.deploy(this.blockchainReader.ever, fullMe);
 	}

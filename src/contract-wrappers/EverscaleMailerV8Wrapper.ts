@@ -1,13 +1,12 @@
 import type {
-	ExternalYlidePublicKey,
-	IGenericAccount,
+	RemotePublicKey,
 	ILooseSourceSubject,
 	IMessageContent,
 	IMessageCorruptedContent,
 	Uint256,
 } from '@ylide/sdk';
 import { bigIntToUint256, BlockchainSourceType } from '@ylide/sdk';
-import SmartBuffer from '@ylide/smart-buffer';
+import { SmartBuffer } from '@ylide/smart-buffer';
 import { Address, ProviderRpcClient } from 'everscale-inpage-provider';
 import { EverscaleBlockchainReader, NekotonCore } from '../controllers/helpers/EverscaleBlockchainReader';
 import {
@@ -20,6 +19,7 @@ import {
 	publicKeyToBigIntString,
 	randomHex,
 	ITVMContentMessageBody,
+	TVMWalletAccount,
 } from '../misc';
 import { ContractCache } from './ContractCache';
 import { EverscaleDeployer } from './EverscaleDeployer';
@@ -31,10 +31,7 @@ export class EverscaleMailerV8Wrapper {
 		this.cache = new ContractCache(MAILER_V8_ABI, blockchainReader);
 	}
 
-	static async deploy(ever: ProviderRpcClient, from: IGenericAccount, beneficiaryAddress: string): Promise<string> {
-		if (!from.publicKey) {
-			throw new Error('Public key is null');
-		}
+	static async deploy(ever: ProviderRpcClient, from: TVMWalletAccount, beneficiaryAddress: string): Promise<string> {
 		const contractAddress = await EverscaleDeployer.deployContract(
 			ever,
 			from,
@@ -42,7 +39,7 @@ export class EverscaleMailerV8Wrapper {
 			{
 				tvc: MAILER_V8_TVC_BASE64,
 				workchain: 0,
-				publicKey: from.publicKey.toHex(),
+				publicKey: from.$$meta.publicKeyHex,
 				initParams: {
 					nonce: BigInt(`0x${randomHex(64)}`).toString(10),
 					beneficiary: new Address(beneficiaryAddress),
@@ -211,7 +208,7 @@ export class EverscaleMailerV8Wrapper {
 		(
 			| { type: 'message'; msg: ITVMMessage; raw: ITVMInternalMessage }
 			| { type: 'content'; content: ITVMContentMessageBody; raw: ITVMInternalMessage }
-			| { type: 'key'; key: ExternalYlidePublicKey; raw: ITVMInternalMessage }
+			| { type: 'key'; key: RemotePublicKey; raw: ITVMInternalMessage }
 			| { type: 'none'; raw: ITVMInternalMessage }
 		)[]
 	> {

@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
-import SmartBuffer from '@ylide/smart-buffer';
+import { SmartBuffer } from '@ylide/smart-buffer';
 import { Address } from 'everscale-inpage-provider';
 import {
 	IMessage,
@@ -12,6 +12,8 @@ import {
 	IBlockchainSourceSubject,
 	randomBytes,
 	LowLevelMessagesSource,
+	YlideKeyVersion,
+	EncryptionPublicKey,
 } from '@ylide/sdk';
 import {
 	AbstractBlockchainController,
@@ -24,6 +26,7 @@ import {
 	BlockchainSourceType,
 	AbstractNameService,
 	DynamicEncryptionRouter,
+	RemotePublicKey,
 } from '@ylide/sdk';
 import {
 	decodeTvmMsgId,
@@ -39,7 +42,6 @@ import {
 	VENOM_TESTNET,
 } from '../misc';
 import { encrypt, generate_ephemeral, get_public_key } from '../encrypt';
-import { ExternalYlidePublicKey } from '@ylide/sdk';
 import { EverscaleBlockchainReader } from './helpers/EverscaleBlockchainReader';
 
 import { EverscaleMailerV5Wrapper } from '../contract-wrappers/EverscaleMailerV5Wrapper';
@@ -163,6 +165,8 @@ export class EverscaleBlockchainController extends AbstractBlockchainController 
 			: VENOM_TESTNET;
 
 		this.blockchainReader = new EverscaleBlockchainReader(
+			this.blockchainGroup(),
+			this.blockchain(),
 			options.type,
 			endpoints,
 			this.options.provider ? this.options.provider : null,
@@ -278,14 +282,14 @@ export class EverscaleBlockchainController extends AbstractBlockchainController 
 		return [];
 	}
 
-	async extractPublicKeyFromAddress(address: string): Promise<ExternalYlidePublicKey | null> {
+	async extractPublicKeyFromAddress(address: string): Promise<RemotePublicKey | null> {
 		const raw = await Promise.all(this.registries.map(reg => reg.wrapper.getPublicKeyByAddress(reg.link, address)));
-		const active = raw.filter(r => r !== null) as ExternalYlidePublicKey[];
+		const active = raw.filter(r => r !== null) as RemotePublicKey[];
 		active.sort((a, b) => b.timestamp - a.timestamp);
 		return active.length ? active[0] : null;
 	}
 
-	async extractPublicKeysHistoryByAddress(address: string): Promise<ExternalYlidePublicKey[]> {
+	async extractPublicKeysHistoryByAddress(address: string): Promise<RemotePublicKey[]> {
 		const raw = (
 			await Promise.all(this.registries.map(reg => reg.wrapper.getPublicKeysHistoryForAddress(reg.link, address)))
 		).flat();
@@ -458,7 +462,10 @@ export class EverscaleBlockchainController extends AbstractBlockchainController 
 			const ephemeralPublic = get_public_key(ephemeralSecret);
 			return {
 				addedPublicKey: {
-					key: PublicKey.fromHexString(PublicKeyType.EVERSCALE_NATIVE, ephemeralPublic),
+					key: new EncryptionPublicKey(
+						PublicKeyType.EVERSCALE_NATIVE,
+						SmartBuffer.ofHexString(ephemeralPublic).bytes,
+					),
 				},
 				blockchain: this.options.type === 'everscale-mainnet' ? 'everscale' : 'venom-testnet',
 				type: this.options.type === 'everscale-mainnet' ? 'everscale-native' : 'venom-native',
@@ -488,11 +495,7 @@ export class EverscaleBlockchainController extends AbstractBlockchainController 
 				),
 			);
 			const packedKey = packSymmetricalyEncryptedData(encryptedKey.bytes, nonce.bytes);
-			return new MessageKey(
-				addedPublicKeyIndex!,
-				DynamicEncryptionRouter.getPublicKeySignature(bulk.addedPublicKey!.key),
-				packedKey,
-			);
+			return new MessageKey(addedPublicKeyIndex!, bulk.addedPublicKey!.key.signature, packedKey);
 		});
 	}
 

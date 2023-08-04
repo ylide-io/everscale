@@ -1,5 +1,5 @@
 import { BitPackReader, BitPackWriter, Uint256 } from '@ylide/sdk';
-import SmartBuffer from '@ylide/smart-buffer';
+import { SmartBuffer } from '@ylide/smart-buffer';
 
 export const encodeTvmMsgId = (isBroacast: boolean, contractId2bytes: number, id: Uint256) => {
 	const writer = new BitPackWriter();

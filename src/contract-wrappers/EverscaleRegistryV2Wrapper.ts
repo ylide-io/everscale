@@ -1,6 +1,5 @@
-import type { ExternalYlidePublicKey, IGenericAccount } from '@ylide/sdk';
-import { PublicKey, PublicKeyType } from '@ylide/sdk';
-import SmartBuffer from '@ylide/smart-buffer';
+import { RemotePublicKey, PublicKey, PublicKeyType } from '@ylide/sdk';
+import { SmartBuffer } from '@ylide/smart-buffer';
 import { Address, ProviderRpcClient, Transaction } from 'everscale-inpage-provider';
 import { EverscaleBlockchainReader, NekotonCore } from '../controllers/helpers/EverscaleBlockchainReader';
 import {
@@ -8,6 +7,7 @@ import {
 	ITVMInternalMessage,
 	ITVMMessage,
 	ITVMRegistryContractLink,
+	TVMWalletAccount,
 	publicKeyToBigIntString,
 	randomHex,
 } from '../misc';
@@ -21,7 +21,7 @@ export class EverscaleRegistryV2Wrapper {
 		this.cache = new ContractCache(REGISTRY_V2_ABI, blockchainReader);
 	}
 
-	static async deploy(ever: ProviderRpcClient, from: IGenericAccount): Promise<string> {
+	static async deploy(ever: ProviderRpcClient, from: TVMWalletAccount): Promise<string> {
 		const contractAddress = await EverscaleDeployer.deployContract(
 			ever,
 			from,
@@ -29,8 +29,7 @@ export class EverscaleRegistryV2Wrapper {
 			{
 				tvc: REGISTRY_V2_TVC_BASE64,
 				workchain: 0,
-				// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-				publicKey: from.publicKey!.toHex(),
+				publicKey: from.$$meta.publicKeyHex,
 				initParams: {
 					nonce: BigInt(`0x${randomHex(64)}`).toString(10),
 				} as never,
@@ -65,10 +64,7 @@ export class EverscaleRegistryV2Wrapper {
 		};
 	}
 
-	async getPublicKeyByAddress(
-		registry: ITVMRegistryContractLink,
-		address: string,
-	): Promise<ExternalYlidePublicKey | null> {
+	async getPublicKeyByAddress(registry: ITVMRegistryContractLink, address: string): Promise<RemotePublicKey | null> {
 		return await this.cache.contractOperation(registry, async (contract, ever, gql, core) => {
 			const [lastKeyMessage] = await gql.queryContractMessages(
 				':' + address.split(':')[1],
@@ -82,12 +78,14 @@ export class EverscaleRegistryV2Wrapper {
 			);
 			if (lastKeyMessage) {
 				const key = this.decodeAddressToPublicKeyMessageBody(core, lastKeyMessage.body);
-				return {
-					keyVersion: key.keyVersion,
-					publicKey: PublicKey.fromBytes(PublicKeyType.YLIDE, key.publicKey),
-					timestamp: lastKeyMessage.created_at,
-					registrar: key.registrar,
-				};
+				return new RemotePublicKey(
+					this.blockchainReader.blockchainGroup,
+					this.blockchainReader.blockchain,
+					address.toLowerCase(),
+					new PublicKey(PublicKeyType.YLIDE, key.keyVersion, key.publicKey),
+					lastKeyMessage.created_at,
+					key.registrar,
+				);
 			} else {
 				return null;
 			}
@@ -98,19 +96,19 @@ export class EverscaleRegistryV2Wrapper {
 		core: NekotonCore,
 		registry: ITVMRegistryContractLink,
 		message: ITVMInternalMessage,
-	):
-		| { type: 'key'; key: ExternalYlidePublicKey; raw: ITVMInternalMessage }
-		| { type: 'none'; raw: ITVMInternalMessage } {
+	): { type: 'key'; key: RemotePublicKey; raw: ITVMInternalMessage } | { type: 'none'; raw: ITVMInternalMessage } {
 		try {
 			const key = this.decodeAddressToPublicKeyMessageBody(core, message.body);
 			return {
 				type: 'key',
-				key: {
-					keyVersion: key.keyVersion,
-					publicKey: PublicKey.fromBytes(PublicKeyType.YLIDE, key.publicKey),
-					timestamp: message.created_at,
-					registrar: key.registrar,
-				},
+				key: new RemotePublicKey(
+					this.blockchainReader.blockchainGroup,
+					this.blockchainReader.blockchain,
+					message.dst.startsWith(':') ? `0${message.dst.toLowerCase()}` : message.dst.toLowerCase(),
+					new PublicKey(PublicKeyType.YLIDE, key.keyVersion, key.publicKey),
+					message.created_at,
+					key.registrar,
+				),
 				raw: message,
 			};
 		} catch (err) {
@@ -130,7 +128,7 @@ export class EverscaleRegistryV2Wrapper {
 		(
 			| { type: 'message'; msg: ITVMMessage; raw: ITVMInternalMessage }
 			| { type: 'content'; content: ITVMContentMessageBody; raw: ITVMInternalMessage }
-			| { type: 'key'; key: ExternalYlidePublicKey; raw: ITVMInternalMessage }
+			| { type: 'key'; key: RemotePublicKey; raw: ITVMInternalMessage }
 			| { type: 'none'; raw: ITVMInternalMessage }
 		)[]
 	> {
@@ -152,7 +150,7 @@ export class EverscaleRegistryV2Wrapper {
 	async getPublicKeysHistoryForAddress(
 		registry: ITVMRegistryContractLink,
 		address: string,
-	): Promise<ExternalYlidePublicKey[]> {
+	): Promise<RemotePublicKey[]> {
 		return await this.cache.contractOperation(registry, async (contract, ever, gql, core) => {
 			const messages = await gql.queryContractMessages(
 				':' + address.split(':')[1],
@@ -166,12 +164,14 @@ export class EverscaleRegistryV2Wrapper {
 			);
 			return messages.map(m => {
 				const key = this.decodeAddressToPublicKeyMessageBody(core, m.body);
-				return {
-					keyVersion: key.keyVersion,
-					publicKey: PublicKey.fromBytes(PublicKeyType.YLIDE, key.publicKey),
-					timestamp: m.created_at,
-					registrar: key.registrar,
-				};
+				return new RemotePublicKey(
+					this.blockchainReader.blockchainGroup,
+					this.blockchainReader.blockchain,
+					address.toLowerCase(),
+					new PublicKey(PublicKeyType.YLIDE, key.keyVersion, key.publicKey),
+					m.created_at,
+					key.registrar,
+				);
 			});
 		});
 	}
@@ -179,7 +179,8 @@ export class EverscaleRegistryV2Wrapper {
 	async attachPublicKey(
 		registry: ITVMRegistryContractLink,
 		from: string,
-		publicKey: ExternalYlidePublicKey,
+		publicKey: PublicKey,
+		registrar: number,
 	): Promise<{
 		parentTransaction: Transaction;
 		childTransaction: Transaction;
@@ -189,9 +190,9 @@ export class EverscaleRegistryV2Wrapper {
 			return await contract.methods
 				// @ts-ignore
 				.attachPublicKey({
-					publicKey: publicKeyToBigIntString(publicKey.publicKey.bytes),
+					publicKey: publicKeyToBigIntString(publicKey.keyBytes),
 					keyVersion: publicKey.keyVersion,
-					registrar: publicKey.registrar,
+					registrar,
 				})
 				.sendWithResult({
 					from: new Address(from),

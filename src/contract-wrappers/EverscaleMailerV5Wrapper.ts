@@ -1,14 +1,12 @@
 import type {
-	ExternalYlidePublicKey,
-	IGenericAccount,
+	RemotePublicKey,
 	ILooseSourceSubject,
 	IMessageContent,
 	IMessageCorruptedContent,
-	ISourceSubject,
 	Uint256,
 } from '@ylide/sdk';
 import { BlockchainSourceType, bigIntToUint256 } from '@ylide/sdk';
-import SmartBuffer from '@ylide/smart-buffer';
+import { SmartBuffer } from '@ylide/smart-buffer';
 import { Address, ProviderRpcClient, Transaction } from 'everscale-inpage-provider';
 import { EverscaleBlockchainReader, NekotonCore } from '../controllers/helpers/EverscaleBlockchainReader';
 import {
@@ -20,6 +18,7 @@ import {
 	encodeTvmMsgId,
 	ITVMContentMessageBody,
 	publicKeyToBigIntString,
+	TVMWalletAccount,
 } from '../misc';
 import { ContractCache } from './ContractCache';
 import { EverscaleDeployer } from './EverscaleDeployer';
@@ -31,7 +30,7 @@ export class EverscaleMailerV5Wrapper {
 		this.cache = new ContractCache(MAILER_V5_ABI, blockchainReader);
 	}
 
-	static async deploy(ever: ProviderRpcClient, from: IGenericAccount, beneficiaryAddress: string): Promise<string> {
+	static async deploy(ever: ProviderRpcClient, from: TVMWalletAccount, beneficiaryAddress: string): Promise<string> {
 		const contractAddress = await EverscaleDeployer.deployContract(
 			ever,
 			from,
@@ -39,8 +38,7 @@ export class EverscaleMailerV5Wrapper {
 			{
 				tvc: MAILER_V5_TVC_BASE64,
 				workchain: 0,
-				// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-				publicKey: from.publicKey!.toHex(),
+				publicKey: from.$$meta.publicKeyHex,
 				initParams: {
 					beneficiary: beneficiaryAddress,
 				} as never,
@@ -202,7 +200,7 @@ export class EverscaleMailerV5Wrapper {
 		(
 			| { type: 'message'; msg: ITVMMessage; raw: ITVMInternalMessage }
 			| { type: 'content'; content: ITVMContentMessageBody; raw: ITVMInternalMessage }
-			| { type: 'key'; key: ExternalYlidePublicKey; raw: ITVMInternalMessage }
+			| { type: 'key'; key: RemotePublicKey; raw: ITVMInternalMessage }
 			| { type: 'none'; raw: ITVMInternalMessage }
 		)[]
 	> {

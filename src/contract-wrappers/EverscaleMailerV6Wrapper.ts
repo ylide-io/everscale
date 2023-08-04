@@ -1,14 +1,12 @@
 import type {
-	ExternalYlidePublicKey,
-	IGenericAccount,
+	RemotePublicKey,
 	ILooseSourceSubject,
 	IMessageContent,
 	IMessageCorruptedContent,
-	ISourceSubject,
 	Uint256,
 } from '@ylide/sdk';
 import { bigIntToUint256, BlockchainSourceType } from '@ylide/sdk';
-import SmartBuffer from '@ylide/smart-buffer';
+import { SmartBuffer } from '@ylide/smart-buffer';
 import { Address, ProviderRpcClient, Transaction } from 'everscale-inpage-provider';
 import { EverscaleBlockchainReader, NekotonCore } from '../controllers/helpers/EverscaleBlockchainReader';
 import {
@@ -21,6 +19,7 @@ import {
 	publicKeyToBigIntString,
 	randomHex,
 	ITVMContentMessageBody,
+	TVMWalletAccount,
 } from '../misc';
 import { ContractCache } from './ContractCache';
 import { EverscaleDeployer } from './EverscaleDeployer';
@@ -32,7 +31,7 @@ export class EverscaleMailerV6Wrapper {
 		this.cache = new ContractCache(MAILER_V6_ABI, blockchainReader);
 	}
 
-	static async deploy(ever: ProviderRpcClient, from: IGenericAccount, beneficiaryAddress: string): Promise<string> {
+	static async deploy(ever: ProviderRpcClient, from: TVMWalletAccount, beneficiaryAddress: string): Promise<string> {
 		const contractAddress = await EverscaleDeployer.deployContract(
 			ever,
 			from,
@@ -40,8 +39,7 @@ export class EverscaleMailerV6Wrapper {
 			{
 				tvc: MAILER_V6_TVC_BASE64,
 				workchain: 0,
-				// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-				publicKey: from.publicKey!.toHex(),
+				publicKey: from.$$meta.publicKeyHex,
 				initParams: {
 					beneficiary: beneficiaryAddress,
 					nonce: BigInt(`0x${randomHex(64)}`).toString(10),
@@ -204,7 +202,7 @@ export class EverscaleMailerV6Wrapper {
 		(
 			| { type: 'message'; msg: ITVMMessage; raw: ITVMInternalMessage }
 			| { type: 'content'; content: ITVMContentMessageBody; raw: ITVMInternalMessage }
-			| { type: 'key'; key: ExternalYlidePublicKey; raw: ITVMInternalMessage }
+			| { type: 'key'; key: RemotePublicKey; raw: ITVMInternalMessage }
 			| { type: 'none'; raw: ITVMInternalMessage }
 		)[]
 	> {
