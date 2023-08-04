@@ -1,3 +1,10 @@
+/* eslint-disable @typescript-eslint/no-empty-function */
+/* eslint-disable no-bitwise */
+/* eslint-disable prefer-rest-params */
+/* eslint-disable @typescript-eslint/no-shadow */
+/* eslint-disable @typescript-eslint/restrict-plus-operands */
+/* eslint-disable @typescript-eslint/naming-convention */
+/* eslint-disable prefer-arrow/prefer-arrow-functions */
 /* tslint:disable */
 let wasm: any;
 
@@ -64,8 +71,8 @@ function getInt32Memory0() {
  * @returns {string}
  */
 function generate_ephemeral(): string {
-	var r0;
-	var r1;
+	let r0;
+	let r1;
 	try {
 		const retptr = wasm.__wbindgen_add_to_stack_pointer(-16);
 		wasm.generate_ephemeral(retptr);
@@ -129,6 +136,7 @@ function passStringToWasm0(arg: any, malloc: any, realloc: any) {
 		const view = getUint8Memory0().subarray(ptr + offset, ptr + len);
 		const ret = encodeString(arg, view);
 
+		// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 		offset += ret.written!;
 	}
 
@@ -140,8 +148,8 @@ function passStringToWasm0(arg: any, malloc: any, realloc: any) {
  * @returns {string}
  */
 function get_public_key(secret_key_hex: string): string {
-	var r0;
-	var r1;
+	let r0;
+	let r1;
 	try {
 		const retptr = wasm.__wbindgen_add_to_stack_pointer(-16);
 		const ptr0 = passStringToWasm0(secret_key_hex, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
@@ -157,8 +165,8 @@ function get_public_key(secret_key_hex: string): string {
 }
 
 function encrypt(secret_key_hex: string, recipient_public_hex: string, raw_data: string, raw_nonce: string): string {
-	var r0;
-	var r1;
+	let r0;
+	let r1;
 	try {
 		const retptr = wasm.__wbindgen_add_to_stack_pointer(-16);
 		const ptr0 = passStringToWasm0(secret_key_hex, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
@@ -198,7 +206,7 @@ async function load(module: any, imports: any) {
 			try {
 				return await WebAssembly.instantiateStreaming(module, imports);
 			} catch (e) {
-				if (module.headers.get('Content-Type') != 'application/wasm') {
+				if (module.headers.get('Content-Type') !== 'application/wasm') {
 					console.warn(
 						'`WebAssembly.instantiateStreaming` failed because your server does not serve wasm with `application/wasm` MIME type. Falling back to `WebAssembly.instantiate` which is slower. Original error:\n',
 						e,
@@ -278,6 +286,8 @@ function getImports() {
 		}, arguments);
 	};
 	imports.wbg.__wbg_newnoargs_971e9a5abe185139 = function (arg0: any, arg1: any) {
+		console.warn('Possible eval injection detected, avoid using this function: ', getStringFromWasm0(arg0, arg1));
+		// eslint-disable-next-line @typescript-eslint/no-implied-eval
 		const ret = new Function(getStringFromWasm0(arg0, arg1));
 		return addHeapObject(ret);
 	};
