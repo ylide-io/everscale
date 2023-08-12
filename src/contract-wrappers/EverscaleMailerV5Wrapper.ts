@@ -232,7 +232,9 @@ export class EverscaleMailerV5Wrapper {
 					? subject.recipient
 						? uint256ToAddress(subject.recipient, true, true)
 						: null
-					: subject.sender;
+					: subject.feedId
+					? uint256ToAddress(subject.feedId, true, true)
+					: null;
 
 			const events = await EverscaleBlockchainReader.queryMessagesList(
 				gql,
