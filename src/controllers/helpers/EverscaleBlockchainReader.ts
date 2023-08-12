@@ -90,7 +90,7 @@ export class EverscaleBlockchainReader {
 			// eslint-disable-next-line @typescript-eslint/restrict-template-expressions
 			console.error(`${err.rpc || '[provider] error: '}`, err);
 		}
-		throw new Error('Was not able to execute in all of RPC providers');
+		throw new Error('Was not able to execute in all of RPC providers', lastError);
 	}
 
 	// static async queryMessageListRaw(
