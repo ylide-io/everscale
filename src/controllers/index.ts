@@ -1,2 +1,2 @@
-export * from './EverscaleBlockchainController';
-export * from './EverscaleWalletController';
+export * from './TVMBlockchainController';
+export * from './TVMWalletController';

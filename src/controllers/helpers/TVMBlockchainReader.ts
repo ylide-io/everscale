@@ -21,7 +21,7 @@ initAsync().catch(err => {
 
 export type NekotonCore = (typeof nekotonCore)['nekoton'];
 
-export class EverscaleBlockchainReader {
+export class TVMBlockchainReader {
 	ever: ProviderRpcClient;
 	gql: GqlSender;
 

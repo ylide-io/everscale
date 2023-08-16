@@ -42,89 +42,65 @@ import {
 	VENOM_TESTNET,
 } from '../misc';
 import { encrypt, generate_ephemeral, get_public_key } from '../encrypt';
-import { EverscaleBlockchainReader } from './helpers/EverscaleBlockchainReader';
+import { TVMBlockchainReader } from './helpers/TVMBlockchainReader';
 
-import { EverscaleMailerV5Wrapper } from '../contract-wrappers/EverscaleMailerV5Wrapper';
-import { EverscaleMailerV6Wrapper } from '../contract-wrappers/EverscaleMailerV6Wrapper';
-import { EverscaleMailerV7Wrapper } from '../contract-wrappers/EverscaleMailerV7Wrapper';
-import { EverscaleMailerV8Wrapper } from '../contract-wrappers/EverscaleMailerV8Wrapper';
+import { TVMMailerV5Wrapper } from '../contract-wrappers/TVMMailerV5Wrapper';
+import { TVMMailerV6Wrapper } from '../contract-wrappers/TVMMailerV6Wrapper';
+import { TVMMailerV7Wrapper } from '../contract-wrappers/TVMMailerV7Wrapper';
+import { TVMMailerV8Wrapper } from '../contract-wrappers/TVMMailerV8Wrapper';
 
-import { EverscaleRegistryV1Wrapper } from '../contract-wrappers/EverscaleRegistryV1Wrapper';
-import { EverscaleRegistryV2Wrapper } from '../contract-wrappers/EverscaleRegistryV2Wrapper';
+import { TVMRegistryV1Wrapper } from '../contract-wrappers/TVMRegistryV1Wrapper';
+import { TVMRegistryV2Wrapper } from '../contract-wrappers/TVMRegistryV2Wrapper';
 
-import {
-	EverscaleMailerV5Source,
-	EverscaleMailerV6Source,
-	EverscaleMailerV7Source,
-	EverscaleMailerV8Source,
-} from '../messages-sources';
+import { TVMMailerV5Source, TVMMailerV6Source, TVMMailerV7Source, TVMMailerV8Source } from '../messages-sources';
 
-export class EverscaleBlockchainController extends AbstractBlockchainController {
+export class TVMBlockchainController extends AbstractBlockchainController {
 	private readonly _isVerbose: boolean;
 
-	readonly blockchainReader: EverscaleBlockchainReader;
+	readonly blockchainReader: TVMBlockchainReader;
 
 	static readonly mailerWrappers: Record<
 		TVMMailerContractType,
-		| typeof EverscaleMailerV5Wrapper
-		| typeof EverscaleMailerV6Wrapper
-		| typeof EverscaleMailerV7Wrapper
-		| typeof EverscaleMailerV8Wrapper
+		typeof TVMMailerV5Wrapper | typeof TVMMailerV6Wrapper | typeof TVMMailerV7Wrapper | typeof TVMMailerV8Wrapper
 	> = {
-		[TVMMailerContractType.TVMMailerV5]: EverscaleMailerV5Wrapper,
-		[TVMMailerContractType.TVMMailerV6]: EverscaleMailerV6Wrapper,
-		[TVMMailerContractType.TVMMailerV7]: EverscaleMailerV7Wrapper,
-		[TVMMailerContractType.TVMMailerV8]: EverscaleMailerV8Wrapper,
+		[TVMMailerContractType.TVMMailerV5]: TVMMailerV5Wrapper,
+		[TVMMailerContractType.TVMMailerV6]: TVMMailerV6Wrapper,
+		[TVMMailerContractType.TVMMailerV7]: TVMMailerV7Wrapper,
+		[TVMMailerContractType.TVMMailerV8]: TVMMailerV8Wrapper,
 	};
 
 	static readonly registryWrappers: Record<
 		TVMRegistryContractType,
-		typeof EverscaleRegistryV1Wrapper | typeof EverscaleRegistryV2Wrapper
+		typeof TVMRegistryV1Wrapper | typeof TVMRegistryV2Wrapper
 	> = {
-		[TVMRegistryContractType.TVMRegistryV1]: EverscaleRegistryV1Wrapper,
-		[TVMRegistryContractType.TVMRegistryV2]: EverscaleRegistryV2Wrapper,
+		[TVMRegistryContractType.TVMRegistryV1]: TVMRegistryV1Wrapper,
+		[TVMRegistryContractType.TVMRegistryV2]: TVMRegistryV2Wrapper,
 	};
 
 	readonly mailers: {
 		link: ITVMMailerContractLink;
-		wrapper:
-			| EverscaleMailerV5Wrapper
-			| EverscaleMailerV6Wrapper
-			| EverscaleMailerV7Wrapper
-			| EverscaleMailerV8Wrapper;
+		wrapper: TVMMailerV5Wrapper | TVMMailerV6Wrapper | TVMMailerV7Wrapper | TVMMailerV8Wrapper;
 	}[] = [];
 	readonly broadcasters: {
 		link: ITVMMailerContractLink;
-		wrapper:
-			| EverscaleMailerV5Wrapper
-			| EverscaleMailerV6Wrapper
-			| EverscaleMailerV7Wrapper
-			| EverscaleMailerV8Wrapper;
+		wrapper: TVMMailerV5Wrapper | TVMMailerV6Wrapper | TVMMailerV7Wrapper | TVMMailerV8Wrapper;
 	}[] = [];
 	readonly registries: {
 		link: ITVMRegistryContractLink;
-		wrapper: EverscaleRegistryV1Wrapper | EverscaleRegistryV2Wrapper;
+		wrapper: TVMRegistryV1Wrapper | TVMRegistryV2Wrapper;
 	}[] = [];
 
 	readonly currentMailer: {
 		link: ITVMMailerContractLink;
-		wrapper:
-			| EverscaleMailerV5Wrapper
-			| EverscaleMailerV6Wrapper
-			| EverscaleMailerV7Wrapper
-			| EverscaleMailerV8Wrapper;
+		wrapper: TVMMailerV5Wrapper | TVMMailerV6Wrapper | TVMMailerV7Wrapper | TVMMailerV8Wrapper;
 	};
 	readonly currentBroadcaster: {
 		link: ITVMMailerContractLink;
-		wrapper:
-			| EverscaleMailerV5Wrapper
-			| EverscaleMailerV6Wrapper
-			| EverscaleMailerV7Wrapper
-			| EverscaleMailerV8Wrapper;
+		wrapper: TVMMailerV5Wrapper | TVMMailerV6Wrapper | TVMMailerV7Wrapper | TVMMailerV8Wrapper;
 	};
 	readonly currentRegistry: {
 		link: ITVMRegistryContractLink;
-		wrapper: EverscaleRegistryV1Wrapper | EverscaleRegistryV2Wrapper;
+		wrapper: TVMRegistryV1Wrapper | TVMRegistryV2Wrapper;
 	};
 
 	readonly MESSAGES_FETCH_LIMIT = 50;
@@ -147,7 +123,7 @@ export class EverscaleBlockchainController extends AbstractBlockchainController 
 		this._isVerbose = options.verbose || false;
 
 		if (typeof options.type === 'undefined') {
-			throw new Error('You must provide network type for Everscale controller');
+			throw new Error('You must provide network type for TVM controller');
 		}
 
 		const endpoints =
@@ -164,7 +140,7 @@ export class EverscaleBlockchainController extends AbstractBlockchainController 
 			? EVERSCALE_MAINNET
 			: VENOM_TESTNET;
 
-		this.blockchainReader = new EverscaleBlockchainReader(
+		this.blockchainReader = new TVMBlockchainReader(
 			this.blockchainGroup(),
 			this.blockchain(),
 			options.type,
@@ -176,17 +152,17 @@ export class EverscaleBlockchainController extends AbstractBlockchainController 
 
 		this.mailers = contracts.mailerContracts.map(link => ({
 			link,
-			wrapper: new EverscaleBlockchainController.mailerWrappers[link.type](this.blockchainReader),
+			wrapper: new TVMBlockchainController.mailerWrappers[link.type](this.blockchainReader),
 		}));
 
 		this.broadcasters = contracts.broadcasterContracts.map(link => ({
 			link,
-			wrapper: new EverscaleBlockchainController.mailerWrappers[link.type](this.blockchainReader),
+			wrapper: new TVMBlockchainController.mailerWrappers[link.type](this.blockchainReader),
 		}));
 
 		this.registries = contracts.registryContracts.map(link => ({
 			link,
-			wrapper: new EverscaleBlockchainController.registryWrappers[link.type](this.blockchainReader),
+			wrapper: new TVMBlockchainController.registryWrappers[link.type](this.blockchainReader),
 		}));
 
 		const currentMailerLink = contracts.mailerContracts.find(c => c.id === contracts.currentMailerId)!;
@@ -197,23 +173,23 @@ export class EverscaleBlockchainController extends AbstractBlockchainController 
 
 		this.currentMailer = {
 			link: currentMailerLink,
-			wrapper: new EverscaleBlockchainController.mailerWrappers[currentMailerLink.type](
+			wrapper: new TVMBlockchainController.mailerWrappers[currentMailerLink.type](
 				this.blockchainReader,
-			) as EverscaleMailerV8Wrapper,
+			) as TVMMailerV8Wrapper,
 		};
 
 		this.currentBroadcaster = {
 			link: currentBroadcasterLink,
-			wrapper: new EverscaleBlockchainController.mailerWrappers[currentBroadcasterLink.type](
+			wrapper: new TVMBlockchainController.mailerWrappers[currentBroadcasterLink.type](
 				this.blockchainReader,
-			) as EverscaleMailerV8Wrapper,
+			) as TVMMailerV8Wrapper,
 		};
 
 		this.currentRegistry = {
 			link: currentRegistryLink,
-			wrapper: new EverscaleBlockchainController.registryWrappers[currentRegistryLink.type](
+			wrapper: new TVMBlockchainController.registryWrappers[currentRegistryLink.type](
 				this.blockchainReader,
-			) as EverscaleRegistryV2Wrapper,
+			) as TVMRegistryV2Wrapper,
 		};
 	}
 
@@ -258,8 +234,8 @@ export class EverscaleBlockchainController extends AbstractBlockchainController 
 
 	async getComposedFeedId(feedId: Uint256, count: number) {
 		if (
-			this.currentMailer.wrapper instanceof EverscaleMailerV8Wrapper ||
-			this.currentMailer.wrapper instanceof EverscaleMailerV7Wrapper
+			this.currentMailer.wrapper instanceof TVMMailerV8Wrapper ||
+			this.currentMailer.wrapper instanceof TVMMailerV7Wrapper
 		) {
 			return this.currentMailer.wrapper.composeFeedId(this.currentMailer.link, feedId, count);
 		} else {
@@ -360,14 +336,14 @@ export class EverscaleBlockchainController extends AbstractBlockchainController 
 			throw new Error('Sender is not supported for direct messages request in TVM');
 		}
 
-		if (mailer.wrapper instanceof EverscaleMailerV6Wrapper) {
-			return new EverscaleMailerV6Source(this, mailer.link, mailer.wrapper, subject);
-		} else if (mailer.wrapper instanceof EverscaleMailerV7Wrapper) {
-			return new EverscaleMailerV7Source(this, mailer.link, mailer.wrapper, subject);
-		} else if (mailer.wrapper instanceof EverscaleMailerV8Wrapper) {
-			return new EverscaleMailerV8Source(this, mailer.link, mailer.wrapper, subject);
+		if (mailer.wrapper instanceof TVMMailerV6Wrapper) {
+			return new TVMMailerV6Source(this, mailer.link, mailer.wrapper, subject);
+		} else if (mailer.wrapper instanceof TVMMailerV7Wrapper) {
+			return new TVMMailerV7Source(this, mailer.link, mailer.wrapper, subject);
+		} else if (mailer.wrapper instanceof TVMMailerV8Wrapper) {
+			return new TVMMailerV8Source(this, mailer.link, mailer.wrapper, subject);
 		} else {
-			return new EverscaleMailerV5Source(this, mailer.link, mailer.wrapper, subject);
+			return new TVMMailerV5Source(this, mailer.link, mailer.wrapper, subject);
 		}
 	}
 
@@ -514,14 +490,14 @@ export class EverscaleBlockchainController extends AbstractBlockchainController 
 
 export const everscaleBlockchainFactory: BlockchainControllerFactory = {
 	create: async (options?: any) =>
-		new EverscaleBlockchainController(Object.assign({ type: 'everscale-mainnet' }, options || {})),
+		new TVMBlockchainController(Object.assign({ type: 'everscale-mainnet' }, options || {})),
 	blockchain: 'everscale',
 	blockchainGroup: 'everscale',
 };
 
 export const venomBlockchainFactory: BlockchainControllerFactory = {
 	create: async (options?: any) =>
-		new EverscaleBlockchainController(Object.assign({ type: 'venom-testnet' }, options || {})),
+		new TVMBlockchainController(Object.assign({ type: 'venom-testnet' }, options || {})),
 	blockchain: 'venom-testnet',
 	blockchainGroup: 'venom-testnet',
 };

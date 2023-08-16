@@ -8,7 +8,7 @@ import type {
 import { bigIntToUint256, BlockchainSourceType } from '@ylide/sdk';
 import { SmartBuffer } from '@ylide/smart-buffer';
 import { Address, ProviderRpcClient } from 'everscale-inpage-provider';
-import { EverscaleBlockchainReader, NekotonCore } from '../controllers/helpers/EverscaleBlockchainReader';
+import { TVMBlockchainReader, NekotonCore } from '../controllers/helpers/TVMBlockchainReader';
 import {
 	everscaleAddressToUint256,
 	ITVMMessage,
@@ -22,17 +22,17 @@ import {
 	TVMWalletAccount,
 } from '../misc';
 import { ContractCache } from './ContractCache';
-import { EverscaleDeployer } from './EverscaleDeployer';
+import { TVMDeployer } from './TVMDeployer';
 
-export class EverscaleMailerV8Wrapper {
+export class TVMMailerV8Wrapper {
 	private readonly cache: ContractCache<typeof MAILER_V8_ABI>;
 
-	constructor(public readonly blockchainReader: EverscaleBlockchainReader) {
+	constructor(public readonly blockchainReader: TVMBlockchainReader) {
 		this.cache = new ContractCache(MAILER_V8_ABI, blockchainReader);
 	}
 
 	static async deploy(ever: ProviderRpcClient, from: TVMWalletAccount, beneficiaryAddress: string): Promise<string> {
-		const contractAddress = await EverscaleDeployer.deployContract(
+		const contractAddress = await TVMDeployer.deployContract(
 			ever,
 			from,
 			MAILER_V8_ABI,
@@ -214,15 +214,7 @@ export class EverscaleMailerV8Wrapper {
 	> {
 		return await this.cache.contractOperation(mailer, async (contract, ever, gql, core) => {
 			return (
-				await EverscaleBlockchainReader.queryMessagesList(
-					gql,
-					'asc',
-					mailer.address,
-					null,
-					fromMessage,
-					null,
-					limit,
-				)
+				await TVMBlockchainReader.queryMessagesList(gql, 'asc', mailer.address, null, fromMessage, null, limit)
 			).map(m => this.parseEvent(core, mailer, m));
 		});
 	}
@@ -244,7 +236,7 @@ export class EverscaleMailerV8Wrapper {
 					? uint256ToAddress(subject.feedId, true, true)
 					: null;
 
-			const events = await EverscaleBlockchainReader.queryMessagesList(
+			const events = await TVMBlockchainReader.queryMessagesList(
 				gql,
 				'desc',
 				mailer.address,
@@ -534,7 +526,7 @@ export class EverscaleMailerV8Wrapper {
 
 	async getBroadcastPushEvent(mailer: ITVMMailerContractLink, id: string): Promise<ITVMMessage | null> {
 		return this.cache.contractOperation(mailer, async (contract, ever, gql, core) => {
-			const event = await EverscaleBlockchainReader.getMessage(gql, id);
+			const event = await TVMBlockchainReader.getMessage(gql, id);
 			if (!event) {
 				return null;
 			}
@@ -544,7 +536,7 @@ export class EverscaleMailerV8Wrapper {
 
 	async getMailPushEvent(mailer: ITVMMailerContractLink, id: string): Promise<ITVMMessage | null> {
 		return this.cache.contractOperation(mailer, async (contract, ever, gql, core) => {
-			const event = await EverscaleBlockchainReader.getMessage(gql, id);
+			const event = await TVMBlockchainReader.getMessage(gql, id);
 			if (!event) {
 				return null;
 			}

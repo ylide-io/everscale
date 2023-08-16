@@ -1,17 +1,17 @@
 import { GenericMessagesSource, ISourceSubject } from '@ylide/sdk';
-import { EverscaleMailerV6Wrapper } from '../contract-wrappers/EverscaleMailerV6Wrapper';
-import { EverscaleBlockchainController } from '../controllers';
+import { TVMMailerV5Wrapper } from '../contract-wrappers/TVMMailerV5Wrapper';
+import { TVMBlockchainController } from '../controllers';
 import { ITVMMailerContractLink } from '../misc';
 
-export class EverscaleMailerV6Source extends GenericMessagesSource {
+export class TVMMailerV5Source extends GenericMessagesSource {
 	constructor(
-		private readonly controller: EverscaleBlockchainController,
+		private readonly controller: TVMBlockchainController,
 		private readonly mailer: ITVMMailerContractLink,
-		private readonly wrapper: EverscaleMailerV6Wrapper,
+		private readonly wrapper: TVMMailerV5Wrapper,
 		private readonly source: ISourceSubject,
 	) {
 		super(
-			'EverscaleMailerV6Source',
+			'TVMMailerV5Source',
 			controller.compareMessagesTime.bind(controller),
 			(fromMessage, toMessage, limit) =>
 				wrapper.retrieveHistoryDesc(mailer, source, fromMessage, toMessage, limit),

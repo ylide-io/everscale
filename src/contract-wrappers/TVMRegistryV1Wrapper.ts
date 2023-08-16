@@ -1,7 +1,7 @@
 import { RemotePublicKey, PublicKey, PublicKeyType, YlideKeyVersion } from '@ylide/sdk';
 import { SmartBuffer } from '@ylide/smart-buffer';
 import { Address, ProviderRpcClient, Transaction } from 'everscale-inpage-provider';
-import { EverscaleBlockchainReader, NekotonCore } from '../controllers/helpers/EverscaleBlockchainReader';
+import { TVMBlockchainReader, NekotonCore } from '../controllers/helpers/TVMBlockchainReader';
 import {
 	ITVMContentMessageBody,
 	ITVMInternalMessage,
@@ -11,17 +11,17 @@ import {
 	publicKeyToBigIntString,
 } from '../misc';
 import { ContractCache } from './ContractCache';
-import { EverscaleDeployer } from './EverscaleDeployer';
+import { TVMDeployer } from './TVMDeployer';
 
-export class EverscaleRegistryV1Wrapper {
+export class TVMRegistryV1Wrapper {
 	private readonly cache: ContractCache<typeof REGISTRY_V1_ABI>;
 
-	constructor(public readonly blockchainReader: EverscaleBlockchainReader) {
+	constructor(public readonly blockchainReader: TVMBlockchainReader) {
 		this.cache = new ContractCache(REGISTRY_V1_ABI, blockchainReader);
 	}
 
 	static async deploy(ever: ProviderRpcClient, from: TVMWalletAccount): Promise<string> {
-		const contractAddress = await EverscaleDeployer.deployContract(
+		const contractAddress = await TVMDeployer.deployContract(
 			ever,
 			from,
 			REGISTRY_V1_ABI,

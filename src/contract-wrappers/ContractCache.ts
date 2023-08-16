@@ -1,6 +1,6 @@
 import { Address, ProviderRpcClient, Contract } from 'everscale-inpage-provider';
 import nekotonCore from 'everscale-standalone-client/core';
-import { EverscaleBlockchainReader, NekotonCore } from '../controllers/helpers/EverscaleBlockchainReader';
+import { TVMBlockchainReader, NekotonCore } from '../controllers/helpers/TVMBlockchainReader';
 import { ITVMMailerContractLink, ITVMRegistryContractLink } from '../misc';
 import { GqlSender } from '../network';
 
@@ -9,7 +9,7 @@ export type SigningContext = any;
 export class ContractCache<ABI = any> {
 	private readonly contractCache: Record<string, Map<SigningContext, Contract<ABI>>> = {};
 
-	constructor(public readonly abi: any, public readonly blockchainReader: EverscaleBlockchainReader) {
+	constructor(public readonly abi: any, public readonly blockchainReader: TVMBlockchainReader) {
 		//
 	}
 

@@ -26,7 +26,7 @@ export const errorExtractor = async <T extends { transaction: Transaction; outpu
 	});
 };
 
-export class EverscaleDeployer {
+export class TVMDeployer {
 	static async deployContract<Abi>(
 		ever: ProviderRpcClient,
 		me: TVMWalletAccount,

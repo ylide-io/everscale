@@ -19,6 +19,7 @@ import {
 	ServiceCode,
 	SendMailResult,
 	EncryptionPublicKey,
+	AbstractFaucetService,
 } from '@ylide/sdk';
 import { SmartBuffer } from '@ylide/smart-buffer';
 import {
@@ -29,41 +30,33 @@ import {
 	VENOM_TESTNET,
 } from '../misc';
 import { TVMWalletAccount } from '../misc/TVMWalletAccount';
-import { EverscaleBlockchainController } from './EverscaleBlockchainController';
-import { EverscaleBlockchainReader } from './helpers/EverscaleBlockchainReader';
+import { TVMBlockchainController } from './TVMBlockchainController';
+import { TVMBlockchainReader } from './helpers/TVMBlockchainReader';
 import {
-	EverscaleMailerV5Wrapper,
-	EverscaleMailerV6Wrapper,
-	EverscaleMailerV7Wrapper,
-	EverscaleRegistryV1Wrapper,
-	EverscaleRegistryV2Wrapper,
+	TVMMailerV5Wrapper,
+	TVMMailerV6Wrapper,
+	TVMMailerV7Wrapper,
+	TVMRegistryV1Wrapper,
+	TVMRegistryV2Wrapper,
 } from '../contract-wrappers';
-import { EverscaleMailerV8Wrapper } from '../contract-wrappers/EverscaleMailerV8Wrapper';
+import { TVMMailerV8Wrapper } from '../contract-wrappers/TVMMailerV8Wrapper';
 
-export class EverscaleWalletController extends AbstractWalletController {
+export class TVMWalletController extends AbstractWalletController {
 	private readonly _isVerbose: boolean;
 
-	public readonly blockchainReader: EverscaleBlockchainReader;
+	public readonly blockchainReader: TVMBlockchainReader;
 
 	readonly currentMailer: {
 		link: ITVMMailerContractLink;
-		wrapper:
-			| EverscaleMailerV5Wrapper
-			| EverscaleMailerV6Wrapper
-			| EverscaleMailerV7Wrapper
-			| EverscaleMailerV8Wrapper;
+		wrapper: TVMMailerV5Wrapper | TVMMailerV6Wrapper | TVMMailerV7Wrapper | TVMMailerV8Wrapper;
 	};
 	readonly currentBroadcaster: {
 		link: ITVMMailerContractLink;
-		wrapper:
-			| EverscaleMailerV5Wrapper
-			| EverscaleMailerV6Wrapper
-			| EverscaleMailerV7Wrapper
-			| EverscaleMailerV8Wrapper;
+		wrapper: TVMMailerV5Wrapper | TVMMailerV6Wrapper | TVMMailerV7Wrapper | TVMMailerV8Wrapper;
 	};
 	readonly currentRegistry: {
 		link: ITVMRegistryContractLink;
-		wrapper: EverscaleRegistryV1Wrapper | EverscaleRegistryV2Wrapper;
+		wrapper: TVMRegistryV1Wrapper | TVMRegistryV2Wrapper;
 	};
 
 	readonly everscaleMainnetEndpoints = ['https://mainnet.evercloud.dev/695e40eeac6b4e3fa4a11666f6e0d6af/graphql'];
@@ -91,7 +84,7 @@ export class EverscaleWalletController extends AbstractWalletController {
 		this._isVerbose = options.verbose || false;
 
 		if (typeof options.type === 'undefined') {
-			throw new Error('You must provide network type for Everscale controller');
+			throw new Error('You must provide network type for TVM controller');
 		}
 
 		this.onSwitchAccountRequest = options?.onSwitchAccountRequest || null;
@@ -110,7 +103,7 @@ export class EverscaleWalletController extends AbstractWalletController {
 			? EVERSCALE_MAINNET
 			: VENOM_TESTNET;
 
-		this.blockchainReader = new EverscaleBlockchainReader(
+		this.blockchainReader = new TVMBlockchainReader(
 			this.blockchainGroup(),
 			options.type === 'everwallet' ? 'everscale' : 'venom-testnet',
 			options.type === 'everwallet' ? 'everscale-mainnet' : 'venom-testnet',
@@ -131,23 +124,23 @@ export class EverscaleWalletController extends AbstractWalletController {
 
 		this.currentMailer = {
 			link: currentMailerLink,
-			wrapper: new EverscaleBlockchainController.mailerWrappers[currentMailerLink.type](
+			wrapper: new TVMBlockchainController.mailerWrappers[currentMailerLink.type](
 				this.blockchainReader,
-			) as EverscaleMailerV6Wrapper,
+			) as TVMMailerV6Wrapper,
 		};
 
 		this.currentBroadcaster = {
 			link: currentBroadcasterLink,
-			wrapper: new EverscaleBlockchainController.mailerWrappers[currentBroadcasterLink.type](
+			wrapper: new TVMBlockchainController.mailerWrappers[currentBroadcasterLink.type](
 				this.blockchainReader,
-			) as EverscaleMailerV6Wrapper,
+			) as TVMMailerV6Wrapper,
 		};
 
 		this.currentRegistry = {
 			link: currentRegistryLink,
-			wrapper: new EverscaleBlockchainController.registryWrappers[currentRegistryLink.type](
+			wrapper: new TVMBlockchainController.registryWrappers[currentRegistryLink.type](
 				this.blockchainReader,
-			) as EverscaleRegistryV2Wrapper,
+			) as TVMRegistryV2Wrapper,
 		};
 	}
 
@@ -468,6 +461,7 @@ export class EverscaleWalletController extends AbstractWalletController {
 				feedId,
 				extraPayment,
 			);
+			// eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
 			return msgId as any;
 		}
 	}
@@ -491,32 +485,39 @@ export class EverscaleWalletController extends AbstractWalletController {
 		return SmartBuffer.ofBase64String(decryptionResultBase64).bytes;
 	}
 
+	isFaucetAvailable(): boolean {
+		return false;
+	}
+
+	getFaucet(options?: any): Promise<AbstractFaucetService> {
+		throw new Error('TVM faucet is not available.');
+	}
+
 	// Deployments:
 
 	async deployMailerV5(me: TVMWalletAccount, beneficiaryAddress: string): Promise<string> {
 		const fullMe = await this.ensureAccount(me);
-		return await EverscaleMailerV5Wrapper.deploy(this.blockchainReader.ever, fullMe, beneficiaryAddress);
+		return await TVMMailerV5Wrapper.deploy(this.blockchainReader.ever, fullMe, beneficiaryAddress);
 	}
 
 	async deployMailerV6(me: TVMWalletAccount, beneficiaryAddress: string): Promise<string> {
 		const fullMe = await this.ensureAccount(me);
-		return await EverscaleMailerV6Wrapper.deploy(this.blockchainReader.ever, fullMe, beneficiaryAddress);
+		return await TVMMailerV6Wrapper.deploy(this.blockchainReader.ever, fullMe, beneficiaryAddress);
 	}
 
 	async deployRegistryV1(me: TVMWalletAccount): Promise<string> {
 		const fullMe = await this.ensureAccount(me);
-		return await EverscaleRegistryV1Wrapper.deploy(this.blockchainReader.ever, fullMe);
+		return await TVMRegistryV1Wrapper.deploy(this.blockchainReader.ever, fullMe);
 	}
 
 	async deployRegistryV2(me: TVMWalletAccount): Promise<string> {
 		const fullMe = await this.ensureAccount(me);
-		return await EverscaleRegistryV2Wrapper.deploy(this.blockchainReader.ever, fullMe);
+		return await TVMRegistryV2Wrapper.deploy(this.blockchainReader.ever, fullMe);
 	}
 }
 
 export const everscaleWalletFactory: WalletControllerFactory = {
-	create: async (options?: any) =>
-		new EverscaleWalletController(Object.assign({ type: 'everwallet' }, options || {})),
+	create: async (options?: any) => new TVMWalletController(Object.assign({ type: 'everwallet' }, options || {})),
 	isWalletAvailable: async () => !!window.__ever,
 	blockchainGroup: 'everscale',
 	wallet: 'everwallet',
@@ -524,7 +525,7 @@ export const everscaleWalletFactory: WalletControllerFactory = {
 
 export const everscaleProxyWalletFactory: WalletControllerFactory = {
 	create: async (options?: any) =>
-		new EverscaleWalletController(
+		new TVMWalletController(
 			Object.assign(
 				{ type: 'everwallet' },
 				options || {
@@ -538,8 +539,7 @@ export const everscaleProxyWalletFactory: WalletControllerFactory = {
 };
 
 export const venomWalletFactory: WalletControllerFactory = {
-	create: async (options?: any) =>
-		new EverscaleWalletController(Object.assign({ type: 'venomwallet' }, options || {})),
+	create: async (options?: any) => new TVMWalletController(Object.assign({ type: 'venomwallet' }, options || {})),
 	isWalletAvailable: async () => !!(window as any).__venom,
 	blockchainGroup: 'venom-testnet',
 	wallet: 'venomwallet',
