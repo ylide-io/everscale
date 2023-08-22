@@ -248,6 +248,26 @@ export class TVMWalletController extends AbstractWalletController {
 		return hexToUint256(address.split(':')[1].toLowerCase());
 	}
 
+	async signString(
+		account: TVMWalletAccount,
+		message: string,
+	): Promise<{
+		message: string;
+		signature: string;
+		dataHash: string;
+	}> {
+		await this.ensureAccount(account);
+		const me = await this.getAuthenticatedAccount();
+		if (!me) {
+			throw new Error(`Can't derive without auth`);
+		}
+		const signature = await this.blockchainReader.ever.signData({
+			publicKey: me.$$meta.publicKeyHex,
+			data: SmartBuffer.ofUTF8String(message).toBase64String(),
+		});
+		return { message, signature: signature.signature, dataHash: signature.dataHash };
+	}
+
 	async signMagicString(account: TVMWalletAccount, magicString: string): Promise<Uint8Array> {
 		await this.ensureAccount(account);
 		const me = await this.getAuthenticatedAccount();
