@@ -256,11 +256,7 @@ export class TVMWalletController extends AbstractWalletController {
 		signature: string;
 		dataHash: string;
 	}> {
-		await this.ensureAccount(account);
-		const me = await this.getAuthenticatedAccount();
-		if (!me) {
-			throw new Error(`Can't derive without auth`);
-		}
+		const me = await this.ensureAccount(account);
 		const signature = await this.blockchainReader.ever.signData({
 			publicKey: me.$$meta.publicKeyHex,
 			data: SmartBuffer.ofUTF8String(message).toBase64String(),
@@ -269,11 +265,7 @@ export class TVMWalletController extends AbstractWalletController {
 	}
 
 	async signMagicString(account: TVMWalletAccount, magicString: string): Promise<Uint8Array> {
-		await this.ensureAccount(account);
-		const me = await this.getAuthenticatedAccount();
-		if (!me) {
-			throw new Error(`Can't derive without auth`);
-		}
+		const me = await this.ensureAccount(account);
 		const result = await this.blockchainReader.ever.signData({
 			publicKey: me.$$meta.publicKeyHex,
 			data: SmartBuffer.ofUTF8String(magicString).toBase64String(),
