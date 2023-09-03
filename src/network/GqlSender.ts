@@ -1,7 +1,7 @@
 import type * as nt from 'nekoton-wasm';
 import { GqlSocketParams } from 'everscale-standalone-client';
 import { GqlSocket } from 'everscale-standalone-client/client/ConnectionController/gql';
-import { ITVMInternalMessage } from '../misc';
+import { ILogService, ITVMInternalMessage } from '../misc';
 import { getContractMessagesQuery } from './gqlQueries';
 
 type Endpoint = ReturnType<(typeof GqlSocket)['expandAddress']>;
@@ -148,8 +148,15 @@ export class GqlSender implements nt.IGqlSender {
 		} as ITVMInternalMessage;
 	}
 
-	async queryMessages(query: string, sorting: 'asc' | 'desc', variables: Record<string, any> = {}) {
+	async queryMessages(
+		query: string,
+		sorting: 'asc' | 'desc',
+		variables: Record<string, any> = {},
+		options?: { log: ILogService },
+	) {
+		options?.log.log('GqlSender.queryMessages start');
 		const data = await this.query(query, variables);
+		options?.log.log('GqlSender.queryMessages end');
 		if (
 			!data ||
 			!data.data ||
@@ -160,6 +167,7 @@ export class GqlSender implements nt.IGqlSender {
 			!Array.isArray(data.data.blockchain.account.messages.edges) ||
 			!data.data.blockchain.account.messages.edges.length
 		) {
+			options?.log.log('GqlSender.queryMessages return []');
 			return [];
 		}
 		const msgs = data.data.blockchain.account.messages.edges.map((e: any) => ({
@@ -177,6 +185,7 @@ export class GqlSender implements nt.IGqlSender {
 			});
 		}
 
+		options?.log.log('GqlSender.queryMessages return msgs;');
 		return msgs;
 	}
 

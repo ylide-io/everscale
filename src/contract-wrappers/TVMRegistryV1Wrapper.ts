@@ -3,6 +3,7 @@ import { SmartBuffer } from '@ylide/smart-buffer';
 import { Address, ProviderRpcClient, Transaction } from 'everscale-inpage-provider';
 import { TVMBlockchainReader, NekotonCore } from '../controllers/helpers/TVMBlockchainReader';
 import {
+	ILogService,
 	ITVMContentMessageBody,
 	ITVMInternalMessage,
 	ITVMMessage,
@@ -113,6 +114,7 @@ export class TVMRegistryV1Wrapper {
 		registry: ITVMRegistryContractLink,
 		fromMessage: ITVMInternalMessage | null,
 		limit?: number,
+		options?: { log: ILogService },
 	): Promise<
 		(
 			| { type: 'message'; msg: ITVMMessage; raw: ITVMInternalMessage }
@@ -121,7 +123,9 @@ export class TVMRegistryV1Wrapper {
 			| { type: 'none'; raw: ITVMInternalMessage }
 		)[]
 	> {
-		return await this.cache.contractOperation(registry, async (contract, ever, gql, core) => {
+		options?.log.log('RevistryV1 retrieveHistoryAscRaw external start');
+		const result = await this.cache.contractOperation(registry, async (contract, ever, gql, core) => {
+			options?.log.log('RevistryV1 retrieveHistoryAscRaw internal start');
 			const msgs = await gql.queryContractMessages(
 				null,
 				'asc',
@@ -132,8 +136,11 @@ export class TVMRegistryV1Wrapper {
 				registry.address,
 				limit,
 			);
+			options?.log.log('RevistryV1 retrieveHistoryAscRaw internal end');
 			return msgs.map(m => this.parseEvent(core, registry, m));
 		});
+		options?.log.log('RevistryV1 retrieveHistoryAscRaw external end');
+		return result;
 	}
 
 	async getPublicKeysHistoryForAddress(

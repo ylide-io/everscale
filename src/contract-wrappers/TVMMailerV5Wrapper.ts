@@ -19,6 +19,7 @@ import {
 	ITVMContentMessageBody,
 	publicKeyToBigIntString,
 	TVMWalletAccount,
+	ILogService,
 } from '../misc';
 import { ContractCache } from './ContractCache';
 import { TVMDeployer } from './TVMDeployer';
@@ -196,6 +197,7 @@ export class TVMMailerV5Wrapper {
 		mailer: ITVMMailerContractLink,
 		fromMessage: ITVMInternalMessage | null,
 		limit?: number,
+		options?: { log: ILogService },
 	): Promise<
 		(
 			| { type: 'message'; msg: ITVMMessage; raw: ITVMInternalMessage }
@@ -204,11 +206,26 @@ export class TVMMailerV5Wrapper {
 			| { type: 'none'; raw: ITVMInternalMessage }
 		)[]
 	> {
-		return await this.cache.contractOperation(mailer, async (contract, ever, gql, core) => {
-			return (
-				await TVMBlockchainReader.queryMessagesList(gql, 'asc', mailer.address, null, fromMessage, null, limit)
+		options?.log.log('MailerV5 retrieveHistoryAscRaw external start');
+		const result = await this.cache.contractOperation(mailer, async (contract, ever, gql, core) => {
+			options?.log.log('MailerV5 retrieveHistoryAscRaw internal start');
+			const internalResult = (
+				await TVMBlockchainReader.queryMessagesList(
+					gql,
+					'asc',
+					mailer.address,
+					null,
+					fromMessage,
+					null,
+					limit,
+					options,
+				)
 			).map(m => this.parseEvent(core, mailer, m));
+			options?.log.log('MailerV5 retrieveHistoryAscRaw internal end');
+			return internalResult;
 		});
+		options?.log.log('MailerV5 retrieveHistoryAscRaw external end');
+		return result;
 	}
 
 	async retrieveHistoryDesc(

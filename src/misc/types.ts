@@ -71,3 +71,8 @@ export interface ITVMNetworkContracts {
 	currentBroadcasterId: number;
 	currentRegistryId: number;
 }
+
+export interface ILogService {
+	log(...args: any[]): void;
+	error(...args: any[]): void;
+}

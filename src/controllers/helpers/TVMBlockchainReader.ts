@@ -6,6 +6,7 @@ import { initAsync } from '../../encrypt';
 import { GqlSender } from '../../network';
 import {
 	convertMsgIdToAddress,
+	ILogService,
 	ITVMContentMessageBody,
 	ITVMInternalMessage,
 	ITVMInternalMessageBase,
@@ -149,13 +150,17 @@ export class TVMBlockchainReader {
 		toMessage: ITVMInternalMessageBase | null,
 		limit?: number,
 		nextPageAfterMessage?: ITVMInternalMessage,
+		options?: { log: ILogService },
 	): Promise<ITVMInternalMessage[]> {
+		options?.log.log('queryMessagesListRaw start');
 		let fromCursor: string | null = null;
 
 		if (fromMessage && !fromMessage.cursor) {
+			options?.log.log('fromMessage.cursor is not defined');
 			throw new Error('fromMessage.cursor is not defined');
 		}
 		if (toMessage && !toMessage.cursor) {
+			options?.log.log('toMessage.cursor is not defined');
 			throw new Error('toMessage.cursor is not defined');
 		}
 
@@ -176,6 +181,7 @@ export class TVMBlockchainReader {
 			}
 		}
 
+		options?.log.log('gql.queryMessages external call');
 		const result: ITVMInternalMessage[] = await gql.queryMessages(
 			`
 			query {
@@ -205,7 +211,10 @@ export class TVMBlockchainReader {
 			}
 			`,
 			sorting,
+			{},
+			options,
 		);
+		options?.log.log('gql.queryMessages external call ended');
 
 		let end = false;
 		const findTo = toMessage ? result.findIndex(x => x.id === toMessage.id) : -1;
@@ -215,11 +224,14 @@ export class TVMBlockchainReader {
 		}
 
 		if (end || (limit && result.length === limit)) {
+			options?.log.log('queryMessagesListRaw return (end || (limit && result.length === limit))');
 			return result;
 		} else {
 			if (result.length === 0) {
+				options?.log.log('queryMessagesListRaw return (result.length === 0)');
 				return [];
 			} else {
+				options?.log.log('this.queryMessagesListRaw internal recursion call');
 				const after = await this.queryMessagesListRaw(
 					gql,
 					sorting,
@@ -229,7 +241,9 @@ export class TVMBlockchainReader {
 					toMessage,
 					limit ? limit - result.length : undefined,
 					result[result.length - 1],
+					options,
 				);
+				options?.log.log('queryMessagesListRaw return result.concat(after)');
 				return result.concat(after);
 			}
 		}
@@ -243,6 +257,7 @@ export class TVMBlockchainReader {
 		fromMessage: ITVMInternalMessageBase | null,
 		toMessage: ITVMInternalMessageBase | null,
 		limit?: number,
+		options?: { log: ILogService },
 	): Promise<ITVMInternalMessage[]> {
 		return this.queryMessagesListRaw(
 			gql,
@@ -252,6 +267,8 @@ export class TVMBlockchainReader {
 			fromMessage || null,
 			toMessage || null,
 			limit,
+			undefined,
+			options,
 		);
 	}
 
