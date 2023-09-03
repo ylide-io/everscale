@@ -181,11 +181,7 @@ export class TVMRegistryV2Wrapper {
 		from: string,
 		publicKey: PublicKey,
 		registrar: number,
-	): Promise<{
-		parentTransaction: Transaction;
-		childTransaction: Transaction;
-		output?: any;
-	}> {
+	): Promise<Transaction> {
 		return await this.cache.contractOperation(registry, async (contract, ever, gql, core) => {
 			return await contract.methods
 				// @ts-ignore
@@ -194,7 +190,7 @@ export class TVMRegistryV2Wrapper {
 					keyVersion: publicKey.keyVersion,
 					registrar,
 				})
-				.sendWithResult({
+				.send({
 					from: new Address(from),
 					amount: '1000000000',
 					bounce: false,

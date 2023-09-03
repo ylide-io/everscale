@@ -264,7 +264,7 @@ export class TVMMailerV7Wrapper {
 
 	async setOwner(mailer: ITVMMailerContractLink, from: string, owner: string) {
 		return await this.cache.contractOperation(mailer, async contract => {
-			return await contract.methods.transferOwnership({ newOwner: new Address(owner) }).sendWithResult({
+			return await contract.methods.transferOwnership({ newOwner: new Address(owner) }).send({
 				from: new Address(from),
 				amount: '200000000',
 				bounce: false,
@@ -283,7 +283,7 @@ export class TVMMailerV7Wrapper {
 
 	async setBeneficiary(mailer: ITVMMailerContractLink, from: string, beneficiary: string) {
 		return await this.cache.contractOperation(mailer, async contract => {
-			return await contract.methods.setBeneficiary({ _beneficiary: new Address(beneficiary) }).sendWithResult({
+			return await contract.methods.setBeneficiary({ _beneficiary: new Address(beneficiary) }).send({
 				from: new Address(from),
 				amount: '200000000',
 				bounce: false,
@@ -322,7 +322,7 @@ export class TVMMailerV7Wrapper {
 
 					_broadcastFee: BigInt(fees.broadcastFee).toString(10),
 				})
-				.sendWithResult({
+				.send({
 					from: new Address(from),
 					amount: '200000000',
 					bounce: false,
@@ -370,7 +370,7 @@ export class TVMMailerV7Wrapper {
 					key: new SmartBuffer(key).toBase64String(),
 					content: new SmartBuffer(content).toBase64String(),
 				})
-				.sendWithResult({
+				.send({
 					from: new Address(from),
 					amount: '1000000000',
 					bounce: false,
@@ -394,7 +394,7 @@ export class TVMMailerV7Wrapper {
 					keys: keys.map(k => new SmartBuffer(k).toBase64String()),
 					content: new SmartBuffer(content).toBase64String(),
 				})
-				.sendWithResult({
+				.send({
 					from: new Address(from),
 					amount: '1000000000',
 					bounce: false,
@@ -418,7 +418,7 @@ export class TVMMailerV7Wrapper {
 					recipients: recipients.map(r => new Address(uint256ToAddress(r))),
 					keys: keys.map(k => new SmartBuffer(k).toBase64String()),
 				})
-				.sendWithResult({
+				.send({
 					from: new Address(from),
 					amount: '1000000000',
 					bounce: false,
@@ -440,7 +440,7 @@ export class TVMMailerV7Wrapper {
 					uniqueId,
 					content: new SmartBuffer(content).toBase64String(),
 				})
-				.sendWithResult({
+				.send({
 					from: new Address(from),
 					amount: '1000000000',
 					bounce: false,
@@ -462,7 +462,7 @@ export class TVMMailerV7Wrapper {
 					uniqueId,
 					initTime,
 				})
-				.sendWithResult({
+				.send({
 					from: new Address(from),
 					amount: '1000000000',
 					bounce: false,
@@ -488,7 +488,7 @@ export class TVMMailerV7Wrapper {
 					partIdx,
 					content: new SmartBuffer(content).toBase64String(),
 				})
-				.sendWithResult({
+				.send({
 					from: new Address(from),
 					amount: '1000000000',
 					bounce: false,

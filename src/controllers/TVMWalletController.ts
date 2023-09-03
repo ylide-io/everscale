@@ -17,9 +17,10 @@ import {
 	SwitchAccountCallback,
 	YlideKeyVersion,
 	ServiceCode,
-	SendMailResult,
 	EncryptionPublicKey,
 	AbstractFaucetService,
+	SendingProcess,
+	SendingProcessBuilder,
 } from '@ylide/sdk';
 import { SmartBuffer } from '@ylide/smart-buffer';
 import {
@@ -347,22 +348,55 @@ export class TVMWalletController extends AbstractWalletController {
 		feedId: Uint256,
 		contentData: Uint8Array,
 		recipients: { address: Uint256; messageKey: MessageKey }[],
-	): Promise<SendMailResult> {
+	): Promise<SendingProcess> {
 		me = await this.ensureAccount(me);
 		if (feedId !== '0000000000000000000000000000000000000000000000000000000000000000') {
 			throw new Error('Non-main feeds are not supported for everscale for now.');
 		}
 		const uniqueId = Math.floor(Math.random() * 4 * 10 ** 9);
 		const chunks = MessageChunks.splitMessageChunks(contentData);
+
+		const builder = new SendingProcessBuilder<{
+			type: 'transaction';
+			subtype: 'push' | 'content' | 'both';
+			tx: any;
+		}>();
+
 		if (chunks.length === 1 && recipients.length === 1) {
-			const transaction = await this.currentMailer.wrapper.sendSmallMail(
-				this.currentMailer.link,
-				me.address,
-				uniqueId,
-				recipients[0].address,
-				recipients[0].messageKey.toBytes(),
-				chunks[0],
+			builder.chain(
+				'transaction',
+				'both',
+				{
+					wrapper: this.currentMailer.wrapper,
+					link: this.currentMailer.link,
+					from: me.address,
+					uniqueId,
+					to: recipients[0].address,
+					messageKey: recipients[0].messageKey.toBytes(),
+					content: chunks[0],
+				},
+				async data => {
+					return data.wrapper.sendSmallMail(
+						data.link,
+						data.from,
+						data.uniqueId,
+						data.to,
+						data.messageKey,
+						data.content,
+					);
+				},
+				async tx => {
+					return { type: 'transaction', subtype: 'both', tx };
+				},
 			);
+			// await this.currentMailer.wrapper.sendSmallMail(
+			// 	this.currentMailer.link,
+			// 	me.address,
+			// 	uniqueId,
+			// 	recipients[0].address,
+			// 	recipients[0].messageKey.toBytes(),
+			// 	chunks[0],
+			// );
 
 			// const om = transaction.childTransaction.outMessages;
 			// const contentMsg = om.length ? om[0] : null;
@@ -373,49 +407,147 @@ export class TVMWalletController extends AbstractWalletController {
 
 			// tslint:disable-next-line
 			console.log('Push events decoding is not implemented yet.');
-			return { pushes: [] };
+			// return { pushes: [] };
 		} else if (chunks.length === 1 && recipients.length < Math.ceil((15.5 * 1024 - chunks[0].byteLength) / 70)) {
-			const transaction = await this.currentMailer.wrapper.sendBulkMail(
-				this.currentMailer.link,
-				me.address,
-				uniqueId,
-				recipients.map(r => r.address),
-				recipients.map(r => r.messageKey.toBytes()),
-				chunks[0],
+			builder.chain(
+				'transaction',
+				'both',
+				{
+					wrapper: this.currentMailer.wrapper,
+					link: this.currentMailer.link,
+					from: me.address,
+					uniqueId,
+					recipientAddresses: recipients.map(r => r.address),
+					recipientMessageKeys: recipients.map(r => r.messageKey.toBytes()),
+					content: chunks[0],
+				},
+				async data => {
+					return data.wrapper.sendBulkMail(
+						data.link,
+						data.from,
+						data.uniqueId,
+						data.recipientAddresses,
+						data.recipientMessageKeys,
+						data.content,
+					);
+				},
+				async tx => {
+					return { type: 'transaction', subtype: 'both', tx };
+				},
 			);
+			// await this.currentMailer.wrapper.sendBulkMail(
+			// 	this.currentMailer.link,
+			// 	me.address,
+			// 	uniqueId,
+			// 	recipients.map(r => r.address),
+			// 	recipients.map(r => r.messageKey.toBytes()),
+			// 	chunks[0],
+			// );
 
 			// tslint:disable-next-line
 			console.log('Push events decoding is not implemented yet.');
-			return { pushes: [] };
+			// return { pushes: [] };
 		} else {
 			const initTime = Math.floor(Date.now() / 1000);
 			for (let i = 0; i < chunks.length; i++) {
-				await this.currentMailer.wrapper.sendMessageContentPart(
-					this.currentMailer.link,
-					me.address,
-					uniqueId,
-					initTime,
-					chunks.length,
-					i,
-					chunks[i],
+				builder.chain(
+					'transaction',
+					'content',
+					{
+						wrapper: this.currentMailer.wrapper,
+						link: this.currentMailer.link,
+						from: me.address,
+						uniqueId,
+						initTime,
+						totalChunks: chunks.length,
+						chunkIndex: i,
+						content: chunks[i],
+					},
+					async data => {
+						return data.wrapper.sendMessageContentPart(
+							data.link,
+							data.from,
+							data.uniqueId,
+							data.initTime,
+							data.totalChunks,
+							data.chunkIndex,
+							data.content,
+						);
+					},
+					async tx => {
+						return { type: 'transaction', subtype: 'content', tx };
+					},
 				);
+				// await this.currentMailer.wrapper.sendMessageContentPart(
+				// 	this.currentMailer.link,
+				// 	me.address,
+				// 	uniqueId,
+				// 	initTime,
+				// 	chunks.length,
+				// 	i,
+				// 	chunks[i],
+				// );
 			}
 			for (let i = 0; i < recipients.length; i += 210) {
 				const recs = recipients.slice(i, i + 210);
-				await this.currentMailer.wrapper.addRecipients(
-					this.currentMailer.link,
-					me.address,
-					uniqueId,
-					initTime,
-					recs.map(r => r.address),
-					recs.map(r => r.messageKey.toBytes()),
+				builder.chain(
+					'transaction',
+					'push',
+					{
+						wrapper: this.currentMailer.wrapper,
+						link: this.currentMailer.link,
+						from: me.address,
+						uniqueId,
+						initTime,
+						recipientAddresses: recs.map(r => r.address),
+						recipientMessageKeys: recs.map(r => r.messageKey.toBytes()),
+					},
+					async data => {
+						return data.wrapper.addRecipients(
+							data.link,
+							data.from,
+							data.uniqueId,
+							data.initTime,
+							data.recipientAddresses,
+							data.recipientMessageKeys,
+						);
+					},
+					async tx => {
+						return { type: 'transaction', subtype: 'push', tx };
+					},
 				);
+				// await this.currentMailer.wrapper.addRecipients(
+				// 	this.currentMailer.link,
+				// 	me.address,
+				// 	uniqueId,
+				// 	initTime,
+				// 	recs.map(r => r.address),
+				// 	recs.map(r => r.messageKey.toBytes()),
+				// );
 			}
 
 			// tslint:disable-next-line
 			console.log('Push events decoding is not implemented yet.');
-			return { pushes: [] };
+			// return { pushes: [] };
 		}
+
+		const sendingProcess = builder.compile(
+			results => {
+				const txs = results.filter(result => result.type === 'transaction') as {
+					type: 'transaction';
+					subtype: 'push' | 'content' | 'both';
+					tx: any;
+				}[];
+
+				// const om = transaction.childTransaction.outMessages;
+				return txs.map(result => ({ type: result.subtype, hash: '' }));
+			},
+			async results => {
+				return { contentId: '', pushes: [] };
+			},
+		);
+
+		return sendingProcess;
 	}
 
 	async sendBroadcast(
@@ -423,28 +555,61 @@ export class TVMWalletController extends AbstractWalletController {
 		feedId: Uint256,
 		contentData: Uint8Array,
 		options?: { extraPayment: number | string },
-	): Promise<SendMailResult> {
+	): Promise<SendingProcess> {
 		await this.ensureAccount(me);
 		const uniqueId = Math.floor(Math.random() * 4 * 10 ** 9);
 		const extraPayment = options && options.extraPayment ? Number(options.extraPayment) * 1000000000 : 0;
 		const chunks = MessageChunks.splitMessageChunks(contentData);
-		if (chunks.length === 1) {
-			const transaction = await this.currentBroadcaster.wrapper.sendBroadcast(
-				this.currentBroadcaster.link,
-				me.address,
-				uniqueId,
-				chunks[0],
-				feedId,
-				extraPayment,
-			);
 
-			const om = transaction.childTransaction.outMessages;
-			const contentMsg = om.length ? om[0] : null;
-			if (!contentMsg || !contentMsg.body) {
-				throw new Error('Content event was not found');
-			}
-			const decodedEvent = 'yappy' as any; // decodeContentMessageBody(contentMsg.body!);
-			return decodedEvent.msgId;
+		const builder = new SendingProcessBuilder<{
+			type: 'transaction';
+			subtype: 'push' | 'content' | 'both';
+			tx: any;
+		}>();
+
+		if (chunks.length === 1) {
+			builder.chain(
+				'transaction',
+				'both',
+				{
+					wrapper: this.currentBroadcaster.wrapper,
+					link: this.currentBroadcaster.link,
+					from: me.address,
+					uniqueId,
+					content: chunks[0],
+					feedId,
+					extraPayment,
+				},
+				async data => {
+					return data.wrapper.sendBroadcast(
+						data.link,
+						data.from,
+						data.uniqueId,
+						data.content,
+						data.feedId,
+						data.extraPayment,
+					);
+				},
+				async tx => {
+					return { type: 'transaction', subtype: 'both', tx };
+				},
+			);
+			// const transaction = await this.currentBroadcaster.wrapper.sendBroadcast(
+			// 	this.currentBroadcaster.link,
+			// 	me.address,
+			// 	uniqueId,
+			// 	chunks[0],
+			// 	feedId,
+			// 	extraPayment,
+			// );
+
+			// const om = transaction.childTransaction.outMessages;
+			// const contentMsg = om.length ? om[0] : null;
+			// if (!contentMsg || !contentMsg.body) {
+			// 	throw new Error('Content event was not found');
+			// }
+			// const decodedEvent = 'yappy' as any; // decodeContentMessageBody(contentMsg.body!);
+			// return decodedEvent.msgId;
 		} else {
 			const initTime = Math.floor(Date.now() / 1000);
 			const msgId = await this.currentBroadcaster.wrapper.buildHash(
@@ -454,28 +619,100 @@ export class TVMWalletController extends AbstractWalletController {
 				initTime,
 			);
 			for (let i = 0; i < chunks.length; i++) {
-				await this.currentBroadcaster.wrapper.sendMessageContentPart(
-					this.currentBroadcaster.link,
-					me.address,
-					uniqueId,
-					initTime,
-					chunks.length,
-					i,
-					chunks[i],
+				builder.chain(
+					'transaction',
+					'content',
+					{
+						wrapper: this.currentBroadcaster.wrapper,
+						link: this.currentBroadcaster.link,
+						from: me.address,
+						uniqueId,
+						initTime,
+						totalChunks: chunks.length,
+						chunkIndex: i,
+						content: chunks[i],
+					},
+					async data => {
+						return data.wrapper.sendMessageContentPart(
+							data.link,
+							data.from,
+							data.uniqueId,
+							data.initTime,
+							data.totalChunks,
+							data.chunkIndex,
+							data.content,
+						);
+					},
+					async tx => {
+						return { type: 'transaction', subtype: 'content', tx };
+					},
 				);
+				// await this.currentBroadcaster.wrapper.sendMessageContentPart(
+				// 	this.currentBroadcaster.link,
+				// 	me.address,
+				// 	uniqueId,
+				// 	initTime,
+				// 	chunks.length,
+				// 	i,
+				// 	chunks[i],
+				// );
 			}
 
-			await this.currentBroadcaster.wrapper.sendBroadcastHeader(
-				this.currentBroadcaster.link,
-				me.address,
-				uniqueId,
-				initTime,
-				feedId,
-				extraPayment,
+			builder.chain(
+				'transaction',
+				'push',
+				{
+					wrapper: this.currentBroadcaster.wrapper,
+					link: this.currentBroadcaster.link,
+					from: me.address,
+					uniqueId,
+					initTime,
+					feedId,
+					extraPayment,
+				},
+				async data => {
+					return data.wrapper.sendBroadcastHeader(
+						data.link,
+						data.from,
+						data.uniqueId,
+						data.initTime,
+						data.feedId,
+						data.extraPayment,
+					);
+				},
+				async tx => {
+					return { type: 'transaction', subtype: 'push', tx };
+				},
 			);
-			// eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
-			return msgId as any;
+			// await this.currentBroadcaster.wrapper.sendBroadcastHeader(
+			// 	this.currentBroadcaster.link,
+			// 	me.address,
+			// 	uniqueId,
+			// 	initTime,
+			// 	feedId,
+			// 	extraPayment,
+			// );
+			// // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
+			// return msgId as any;
 		}
+
+		const sendingProcess = builder.compile(
+			results => {
+				const txs = results.filter(result => result.type === 'transaction') as {
+					type: 'transaction';
+					subtype: 'push' | 'content' | 'both';
+					tx: any;
+				}[];
+
+				// const om = transaction.childTransaction.outMessages;
+				return txs.map(result => ({ type: result.subtype, hash: '' }));
+			},
+			async results => {
+				return { contentId: '', pushes: [] };
+			},
+		);
+
+		return sendingProcess;
 	}
 
 	async decryptMessageKey(

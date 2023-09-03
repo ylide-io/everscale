@@ -6,8 +6,8 @@ settings:
 
 dependencies:
   '@ylide/sdk':
-    specifier: 0.9.0-beta.8
-    version: 0.9.0-beta.8
+    specifier: file:../sdk
+    version: file:../sdk
   '@ylide/smart-buffer':
     specifier: 0.0.17
     version: 0.0.17
@@ -362,19 +362,6 @@ packages:
       '@typescript-eslint/types': 6.4.0
       eslint-visitor-keys: 3.4.3
     dev: true
-
-  /@ylide/sdk@0.9.0-beta.8:
-    resolution: {integrity: sha512-mRgfqAdvIKI/WRCRKGi9vHxbGQv9D7BuyuYGbJkAk1HpQtR7UBOpSRtyF7Z3b2u5dSor24sUbVjpdu9MECFqBw==}
-    dependencies:
-      '@datastructures-js/binary-search-tree': 5.3.1
-      '@datastructures-js/linked-list': 5.2.5
-      '@ylide/smart-buffer': 0.0.17
-      eventemitter3: 5.0.1
-      idb: 7.1.1
-      js-sha256: 0.9.0
-      pako: 2.1.0
-      tweetnacl: 1.0.3
-    dev: false
 
   /@ylide/smart-buffer@0.0.17:
     resolution: {integrity: sha512-qhlw+SwxV5s94BbxLW51EKbTXGJ1ZD29VBvAkYXBEkni72ocG6BwOzZm6yryWl1WjysCSsBPBzPJ5YV7Rc6kYw==}
@@ -1411,3 +1398,17 @@ packages:
     resolution: {integrity: sha512-rVksvsnNCdJ/ohGc6xgPwyN8eheCxsiLM8mxuE/t/mOVqJewPuO1miLpTHQiRgTKCLexL4MeAFVagts7HmNZ2Q==}
     engines: {node: '>=10'}
     dev: true
+
+  file:../sdk:
+    resolution: {directory: ../sdk, type: directory}
+    name: '@ylide/sdk'
+    dependencies:
+      '@datastructures-js/binary-search-tree': 5.3.1
+      '@datastructures-js/linked-list': 5.2.5
+      '@ylide/smart-buffer': 0.0.17
+      eventemitter3: 5.0.1
+      idb: 7.1.1
+      js-sha256: 0.9.0
+      pako: 2.1.0
+      tweetnacl: 1.0.3
+    dev: false
