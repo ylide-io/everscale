@@ -6,7 +6,7 @@ import { getContractMessagesQuery } from './gqlQueries';
 
 type Endpoint = ReturnType<(typeof GqlSocket)['expandAddress']>;
 
-export class GqlSender implements nt.IGqlSender {
+export class GqlSender {
 	private readonly params: GqlSocketParams;
 	private readonly latencyDetectionInterval: number;
 	private readonly endpoints: Endpoint[];
@@ -28,18 +28,23 @@ export class GqlSender implements nt.IGqlSender {
 		return !!this.params.local;
 	}
 
-	async send(data: string) {
+	async send(data: string, options?: { log: ILogService }) {
+		options?.log.log('GqlSender.send start');
 		const now = Date.now();
 		try {
 			let endpoint: Endpoint;
 			if (this.currentEndpoint != null && now < this.nextLatencyDetectionTime) {
+				options?.log.log('Default route');
 				// Default route
 				endpoint = this.currentEndpoint;
 			} else if (this.resolutionPromise != null) {
+				options?.log.log('Already resolving');
 				// Already resolving
 				endpoint = await this.resolutionPromise;
 				delete this.resolutionPromise;
+				options?.log.log('End already resolving');
 			} else {
+				options?.log.log('Start resolving');
 				delete this.currentEndpoint;
 				// Start resolving (current endpoint is null, or it is time to refresh)
 				this.resolutionPromise = this._selectQueryingEndpoint().then(_endpoint => {
@@ -49,15 +54,20 @@ export class GqlSender implements nt.IGqlSender {
 				});
 				endpoint = await this.resolutionPromise;
 				delete this.resolutionPromise;
+				options?.log.log('End start resolving');
 			}
 
+			options?.log.log('Fetch start');
 			return fetch(endpoint.url, {
 				method: 'post',
 				headers: {
 					'Content-Type': 'application/json',
 				},
 				body: data,
-			}).then(response => response.json());
+			}).then(response => {
+				options?.log.log('Fetch end, json parse start');
+				return response.json();
+			});
 		} catch (e: any) {
 			throw e;
 		}
@@ -156,7 +166,7 @@ export class GqlSender implements nt.IGqlSender {
 		options?: { log: ILogService },
 	) {
 		options?.log.log('GqlSender.queryMessages start');
-		const data = await this.query(query, variables);
+		const data = await this.query(query, variables, options);
 		options?.log.log('GqlSender.queryMessages end');
 		if (
 			!data ||
@@ -190,12 +200,13 @@ export class GqlSender implements nt.IGqlSender {
 		return msgs;
 	}
 
-	async query(query: string, variables: Record<string, any> = {}) {
+	async query(query: string, variables: Record<string, any> = {}, options?: { log: ILogService }) {
 		return this.send(
 			JSON.stringify({
 				query,
 				variables,
 			}),
+			options,
 		);
 	}
 }
