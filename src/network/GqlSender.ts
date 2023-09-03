@@ -130,9 +130,10 @@ export class GqlSender implements nt.IGqlSender {
 		cursor: { type: 'before'; cursor: string | null } | { type: 'after'; cursor: string | null },
 		contractAddress: string,
 		limit?: number,
+		options?: { log: ILogService },
 	): Promise<ITVMInternalMessage[]> {
 		const query = getContractMessagesQuery(dst, cursor, contractAddress, limit);
-		return await this.queryMessages(query, sorting);
+		return await this.queryMessages(query, sorting, {}, options);
 	}
 
 	async queryMessage(query: string, variables: Record<string, any> = {}) {

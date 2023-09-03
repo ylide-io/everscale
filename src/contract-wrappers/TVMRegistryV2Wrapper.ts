@@ -146,6 +146,7 @@ export class TVMRegistryV2Wrapper {
 				},
 				registry.address,
 				limit,
+				options,
 			);
 			options?.log.log('RevistryV2 retrieveHistoryAscRaw internal end');
 			return msgs.map(m => this.parseEvent(core, registry, m));
