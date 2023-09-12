@@ -30,6 +30,7 @@ export class GqlSender {
 
 	async send(data: string, options?: { log: ILogService }) {
 		options?.log.log('GqlSender.send start');
+		const timeout = 30_000;
 		const now = Date.now();
 		try {
 			let endpoint: Endpoint;
@@ -57,6 +58,13 @@ export class GqlSender {
 				options?.log.log('End start resolving');
 			}
 
+			const abortController = new AbortController();
+
+			let timer: any = setTimeout(() => {
+				abortController.abort();
+				timer = null;
+			}, timeout);
+
 			options?.log.log('Fetch start');
 			return fetch(endpoint.url, {
 				method: 'post',
@@ -64,7 +72,11 @@ export class GqlSender {
 					'Content-Type': 'application/json',
 				},
 				body: data,
+				signal: abortController.signal,
 			}).then(response => {
+				if (timer) {
+					clearTimeout(timer);
+				}
 				options?.log.log('Fetch end, json parse start');
 				return response.json();
 			});
